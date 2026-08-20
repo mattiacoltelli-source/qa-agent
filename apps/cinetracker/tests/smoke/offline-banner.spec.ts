@@ -24,6 +24,15 @@ test.describe("CineTracker — banner offline", () => {
     context,
   }) => {
     await context.setOffline(true);
+    // Aspettiamo che il banner offline compaia PRIMA di cercare: garantisce
+    // che l'evento "offline" del browser (e quindi navigator.onLine=false)
+    // sia già stato osservato dalla pagina. Senza questa attesa c'è una
+    // finestra di race in cui doSearch() legge ancora navigator.onLine=true
+    // e tenta una vera fetch di rete (che fallisce comunque, ma mostra un
+    // toast "Errore di ricerca." diverso, senza la parola "offline" — da qui
+    // la flakiness osservata in CI).
+    await expect(page.locator("#offlineBanner")).toBeVisible();
+
     // Andare offline fa comparire ANCHE il toast generico di sincronizzazione
     // (stesso evento "offline" del banner): ".toast.error" da solo è
     // ambiguo (strict mode, 2 match). Scopiamo su quello specifico della
