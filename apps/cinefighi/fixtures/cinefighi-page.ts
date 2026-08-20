@@ -26,6 +26,20 @@ export async function gotoFresh(page: Page): Promise<void> {
     });
 }
 
+/** La ricerca può restituire titoli GIÀ nella libreria condivisa del gruppo:
+ * quella card mostra il tag "poster-card__tag" ("✓ Già in libreria...") al
+ * posto dei bottoni Watchlist/Visto (vedi CineFighi/ui.js renderSearchResults).
+ * Prendere sempre `.first()` rischia di beccare proprio quella e bloccarsi in
+ * timeout aspettando un `button[data-status]` che nel DOM non esiste — è
+ * quello che è successo cercando "Inception", già aggiunto da un membro vero
+ * del gruppo. Restituisce la prima card SENZA quel tag, cioè aggiungibile. */
+export function firstAddableSearchCard(page: Page) {
+  return page
+    .locator("#results .poster-card")
+    .filter({ hasNot: page.locator(".poster-card__tag") })
+    .first();
+}
+
 export async function selectExistingUser(page: Page, name: string): Promise<boolean> {
   const btn = page.locator(`.user-pick-btn[data-user="${name}"]`);
   if ((await btn.count()) === 0) return false;

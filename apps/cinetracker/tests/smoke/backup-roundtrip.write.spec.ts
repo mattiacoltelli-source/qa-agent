@@ -54,7 +54,11 @@ test.describe("CineTracker — backup export/import @write", () => {
       // 3. Re-importiamo lo stesso file: deve chiedere conferma (confirm nativo).
       page.once("dialog", (dialog) => dialog.accept());
       await page.locator("#importFileInput").setInputFiles(path!);
-      await expect(page.locator(".toast.success")).toBeVisible({ timeout: 10_000 });
+      // A questo punto possono essere ancora visibili (non scompaiono subito,
+      // restano ~2.8s) anche i toast di "aggiunto a watchlist" e "backup
+      // esportato" dei passi precedenti: ".toast.success" da solo è ambiguo
+      // (strict mode, più match). Scopiamo su quello specifico dell'import.
+      await expect(page.locator(".toast.success", { hasText: "importato" })).toBeVisible({ timeout: 10_000 });
 
       // 4. La libreria deve tornare coerente: il titolo aggiunto è ancora in watchlist.
       await page.locator('.nav__btn[data-screen="home"]').click();

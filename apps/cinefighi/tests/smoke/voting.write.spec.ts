@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ensureQaUserSelected } from "../../fixtures/cinefighi-page.ts";
+import { ensureQaUserSelected, firstAddableSearchCard } from "../../fixtures/cinefighi-page.ts";
 
 // Questi test SCRIVONO sul database Supabase condiviso dal gruppo CineFighi:
 // le credenziali sono hardcoded nel bundle JS dell'app, quindi non esiste un
@@ -10,6 +10,10 @@ import { ensureQaUserSelected } from "../../fixtures/cinefighi-page.ts";
 // cleanup dovesse fallire a metà test, il residuo è comunque riconoscibile
 // (aggiunto da "_QA_Agent_" con il commento "Voto di test automatico (QA)")
 // e rimovibile a mano dall'app.
+//
+// La ricerca usa "Inception" più che altro per garantire risultati stabili:
+// non assumiamo che il PRIMO risultato sia aggiungibile, perché potrebbe
+// essere già nella libreria condivisa (vedi firstAddableSearchCard).
 test.describe("CineFighi — voto e libreria @write", () => {
   test.skip(
     process.env.RUN_WRITE_TESTS !== "true",
@@ -27,7 +31,7 @@ test.describe("CineFighi — voto e libreria @write", () => {
     const expectedVote = "8.5";
 
     await page.locator("#searchInput").fill("Inception");
-    const firstCard = page.locator("#results .poster-card").first();
+    const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
     await firstCard.locator('button[data-status="seen"]').click();
 
@@ -54,7 +58,7 @@ test.describe("CineFighi — voto e libreria @write", () => {
 
   test("rimuovere il proprio voto lo toglie dalla lista voti senza rimuovere il titolo", async ({ page }) => {
     await page.locator("#searchInput").fill("Inception");
-    const firstCard = page.locator("#results .poster-card").first();
+    const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
     await firstCard.locator('button[data-status="seen"]').click();
     await expect(page.locator("#screen-detail")).toBeVisible();
