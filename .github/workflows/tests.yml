@@ -73,10 +73,24 @@ jobs:
         if: always()
         run: node scripts/cleanup-write-residue.mjs
 
+      # Analizza SOLO i test falliti con Claude (causa probabile, severità,
+      # correlazione tra fallimenti con lo stesso pattern) — zero chiamate
+      # se il run non ha fallimenti (il caso più comune, vedi
+      # scripts/analyze-failures.mjs). Non blocca mai il run: se la chiave
+      # manca o la chiamata fallisce, si registra un avviso e si prosegue
+      # senza — l'analisi AI è un arricchimento del riepilogo, non un
+      # requisito. Richiede il secret ANTHROPIC_API_KEY (Settings → Secrets
+      # and variables → Actions).
+      - name: Analizza i fallimenti
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/analyze-failures.mjs
+
       # Scrive un riepilogo leggibile (PASS/FAIL per app, dettaglio dei
-      # fallimenti) direttamente su questa pagina — niente da scaricare,
-      # leggibile anche da telefono. Deterministico: solo dati già raccolti
-      # da Playwright in reports/results.json. Vedi scripts/write-summary.mjs.
+      # fallimenti, più l'analisi Claude quando disponibile) direttamente su
+      # questa pagina — niente da scaricare, leggibile anche da telefono.
+      # Vedi scripts/write-summary.mjs.
       - name: Scrivi il riepilogo nel run
         if: always()
         run: node scripts/write-summary.mjs

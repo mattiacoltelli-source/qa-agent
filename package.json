@@ -13,11 +13,16 @@
     "setup:cinefighi-qa-user": "node scripts/ensure-cinefighi-qa-user.mjs",
     "cleanup:write-residue": "node scripts/cleanup-write-residue.mjs",
     "summary": "node scripts/write-summary.mjs",
+    "analyze": "node scripts/analyze-failures.mjs",
     "report": "playwright show-report reports/html"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
     "@types/node": "^26.2.0",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
+    "zod": "^4.4.3"
   }
 }
