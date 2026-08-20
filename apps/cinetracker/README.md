@@ -20,6 +20,16 @@ hardcoded nel bundle JS, come in CineFighi.
 - Se un cleanup fallisce a metà, il residuo è un titolo con voto/commento
   riconoscibile (es. `vote: "7,5"` aggiunto durante `vote-formats.write`) —
   va rimosso a mano dall'app.
+- **Rete di sicurezza automatica**: `vote-formats.write.spec.ts` scrive nel
+  commento un marcatore fisso (`CINETRACKER_MARKER` in
+  `scripts/cleanup-write-residue.mjs`). In CI, dopo la suite `@write`
+  (sempre, anche se un test fallisce o va in timeout), uno step con
+  `if: always()` esegue quello script: ripulisce su Supabase solo le voci
+  che portano quel marcatore, mai altro — non può toccare un tuo voto vero
+  per coincidenza di valore. `backup-roundtrip.write.spec.ts` non scrive
+  marcatori (non passa dal campo voto/commento), quindi il suo eventuale
+  residuo resta da rimuovere a mano come prima. Lanciabile anche a mano con
+  `npm run cleanup:write-residue`.
 
 ## Variabili d'ambiente
 

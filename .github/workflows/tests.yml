@@ -35,6 +35,14 @@ jobs:
         env:
           RUN_WRITE_TESTS: "true"
 
+      # Rete di sicurezza indipendente dal browser: gira SEMPRE dopo i test
+      # @write (passati, falliti o interrotti a metà) e ripulisce eventuali
+      # residui che il try/finally dei singoli test non fosse riuscito a
+      # rimuovere (crash, pagina bloccata). Vedi scripts/cleanup-write-residue.mjs.
+      - name: Ripulisci eventuali residui dei test @write
+        if: ${{ always() && github.event.inputs.run_write_tests == 'true' }}
+        run: node scripts/cleanup-write-residue.mjs
+
       - name: Carica il report HTML
         if: always()
         uses: actions/upload-artifact@v4

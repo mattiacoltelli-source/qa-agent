@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { gotoFresh, search, addSearchResultAs, removeCurrentDetail } from "../../fixtures/cinetracker-page.ts";
+import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
 
 // Questi test scrivono nella libreria REALE dell'utente (Supabase "Coltel",
 // user_id fisso "default" — è la TUA collezione personale, non un dataset
@@ -11,6 +12,14 @@ import { gotoFresh, search, addSearchResultAs, removeCurrentDetail } from "../..
 // digitato ("7+", "8-", "7,5"...) è normalizzato da sanitizeVoteInput() e
 // salvato come LABEL testuale — non come numero — quindi il valore visto
 // dopo il salvataggio deve corrispondere esattamente, non essere convertito.
+//
+// Ogni salvataggio scrive anche CINETRACKER_MARKER nel commento: è la rete
+// di sicurezza indipendente dal browser (scripts/cleanup-write-residue.mjs,
+// eseguita in CI con `if: always()` dopo la suite @write) che ripulisce un
+// eventuale residuo se il cleanup try/finally qui sotto non arriva in fondo
+// (crash, pagina bloccata). Un voto senza quel marcatore non viene mai
+// toccato dallo script: evita di rischiare un tuo voto vero che avesse per
+// coincidenza lo stesso valore.
 test.describe("CineTracker — formati voto @write", () => {
   test.skip(
     process.env.RUN_WRITE_TESTS !== "true",
@@ -42,6 +51,7 @@ test.describe("CineTracker — formati voto @write", () => {
 
       try {
         await page.locator("#detailVoteInput").fill(input);
+        await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
         await page.locator("#detailSaveNoteBtn").click();
         await expect(page.locator("#detailVoteInput")).toHaveValue(expectedLabel);
       } finally {
@@ -62,6 +72,7 @@ test.describe("CineTracker — formati voto @write", () => {
 
     try {
       await page.locator("#detailVoteInput").fill("15");
+      await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
       await page.locator("#detailSaveNoteBtn").click();
       await expect(page.locator("#detailVoteInput")).toHaveValue("10");
     } finally {
@@ -81,6 +92,7 @@ test.describe("CineTracker — formati voto @write", () => {
 
     try {
       await page.locator("#detailVoteInput").fill("7,5");
+      await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
       await page.locator("#detailSaveNoteBtn").click();
       await expect(page.locator("#detailVoteInput")).toHaveValue("7,5");
 

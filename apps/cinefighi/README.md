@@ -22,7 +22,14 @@ backend di test diverso da qui** — è un vincolo dell'app, non della suite.
 - Ogni test di scrittura ripulisce il titolo che ha aggiunto in un blocco
   `finally`. Se un cleanup dovesse fallire a metà (es. crash del browser),
   il residuo è riconoscibile: aggiunto da `_QA_Agent_`, spesso con il
-  commento `"Voto di test automatico (QA)"` — va rimosso a mano dall'app.
+  commento `"Voto di test automatico (QA)"`.
+- **Rete di sicurezza automatica**: in CI, dopo la suite `@write` (sempre,
+  anche se un test fallisce o va in timeout), uno step con `if: always()`
+  esegue `scripts/cleanup-write-residue.mjs`: ripulisce su Supabase tutti i
+  voti e i titoli legati a `_QA_Agent_`, indipendentemente da come sia
+  andato il browser. È sicuro farlo sempre perché nessun membro reale del
+  gruppo può avere quel nome. Lanciabile anche a mano con
+  `npm run cleanup:write-residue`.
 - **Se il gruppo è già al completo (15/15)** e `_QA_Agent_` non ne fa
   ancora parte, i test falliscono con un errore esplicito: va aggiunto
   manualmente una volta (aprendo l'app e scegliendo "Entra" con quel nome)
