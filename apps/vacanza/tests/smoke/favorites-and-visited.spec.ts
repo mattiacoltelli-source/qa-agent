@@ -43,7 +43,10 @@ test.describe("Spot — preferiti e visitati", () => {
     await firstCard.locator(".fav-btn").click(); // toggle off
 
     await page.locator('[data-favoritesfilter="favorites"]').click();
-    await expect(page.locator(".detail-empty")).toBeVisible();
+    // ".detail-empty" è una classe generica riusata da più blocchi della
+    // pagina (nearby, resultNote, dettaglio): va scoperta nel contenitore
+    // della lista spot, altrimenti il locator è ambiguo (strict mode).
+    await expect(page.locator("#spotList .detail-empty")).toBeVisible();
     await expect(page.locator(".spot-card")).toHaveCount(0);
   });
 

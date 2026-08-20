@@ -34,3 +34,12 @@ export async function grantGeolocation(
   await context.grantPermissions(["geolocation"]);
   await context.setGeolocation({ latitude: lat, longitude: lon });
 }
+
+/** #sailModeToggle è una checkbox nativa resa invisibile via CSS (pattern
+ * "toggle switch": input nascosto + <span> stilizzati dentro la <label>).
+ * Cliccare l'input direttamente fallisce il controllo di visibilità di
+ * Playwright — bisogna cliccare la <label> a cui è associato (comportamento
+ * nativo del browser: il click sulla label attiva comunque l'input). */
+export async function toggleSailModeSwitch(page: Page): Promise<void> {
+  await page.locator('label[for="sailModeToggle"]').click();
+}

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { gotoFresh, switchPage } from "../../fixtures/vacanza-page.ts";
+import { gotoFresh, switchPage, toggleSailModeSwitch } from "../../fixtures/vacanza-page.ts";
 import { mockWeatherApis, WEATHER_PROFILES } from "../../fixtures/weather-mock.ts";
 
 test.describe("Spot — Sail Mode / Travel Mode", () => {
@@ -17,7 +17,7 @@ test.describe("Spot — Sail Mode / Travel Mode", () => {
   test("attivare Sail Mode cambia label, statistiche (vento/onde invece di temp/pioggia) e filtri spot", async ({
     page,
   }) => {
-    await page.locator("#sailModeToggle").click();
+    await toggleSailModeSwitch(page);
     await expect(page.locator("#modeLabelMain")).toHaveText("Sail Mode");
     await expect(page.locator("#modeLabelSub")).toHaveText("Sail mode ON");
     await expect(page.locator("#statsGrid")).toContainText("Onde");
@@ -29,7 +29,7 @@ test.describe("Spot — Sail Mode / Travel Mode", () => {
   });
 
   test("la modalità scelta resta impostata dopo un reload (persistita in localStorage)", async ({ page }) => {
-    await page.locator("#sailModeToggle").click();
+    await toggleSailModeSwitch(page);
     await expect(page.locator("#modeLabelMain")).toHaveText("Sail Mode");
     await page.reload();
     await expect(page.locator("#modeLabelMain")).toHaveText("Sail Mode");

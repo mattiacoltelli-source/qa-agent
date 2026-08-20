@@ -21,10 +21,24 @@ test.describe("CineTracker — avvio", () => {
     await gotoFresh(page);
     // Non assumiamo che la libreria reale sia vuota (persiste tra le run):
     // verifichiamo solo la coerenza shelf/stato-vuoto, qualunque sia il caso.
+    //
+    // gotoFresh() aspetta solo che #screen-home sia visibile (lo è già nel
+    // markup statico, prima ancora che loadDB()/renderAll() finiscano) — un
+    // controllo "a scatto" (evaluate una tantum) può quindi leggere lo stato
+    // grezzo dell'HTML, dove NÉ la shelf NÉ lo stato vuoto hanno ancora la
+    // classe "hidden" applicata. expect.poll ritenta finché il render
+    // asincrono non si stabilizza, invece di leggere un istante arbitrario.
     const watchShelf = page.locator("#watchShelf");
     const watchEmpty = page.locator("#watchShelfEmpty");
-    const shelfHidden = await watchShelf.evaluate((el) => el.classList.contains("hidden"));
-    const emptyHidden = await watchEmpty.evaluate((el) => el.classList.contains("hidden"));
-    expect(shelfHidden).toBe(!emptyHidden);
+    await expect
+      .poll(
+        async () => {
+          const shelfHidden = await watchShelf.evaluate((el) => el.classList.contains("hidden"));
+          const emptyHidden = await watchEmpty.evaluate((el) => el.classList.contains("hidden"));
+          return shelfHidden === !emptyHidden;
+        },
+        { timeout: 10_000 }
+      )
+      .toBe(true);
   });
 });

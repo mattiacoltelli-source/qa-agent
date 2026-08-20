@@ -24,9 +24,14 @@ test.describe("CineTracker — banner offline", () => {
     context,
   }) => {
     await context.setOffline(true);
+    // Andare offline fa comparire ANCHE il toast generico di sincronizzazione
+    // (stesso evento "offline" del banner): ".toast.error" da solo è
+    // ambiguo (strict mode, 2 match). Scopiamo su quello specifico della
+    // ricerca tramite il suo titolo ("Ricerca", passato a showToast()).
     await page.locator("#searchInput").fill("Inception");
     await page.locator("#searchBtn").click();
-    await expect(page.locator(".toast.error")).toContainText(/offline/i);
+    const searchToast = page.locator(".toast.error", { hasText: "Ricerca" });
+    await expect(searchToast).toContainText(/offline/i);
     await context.setOffline(false);
   });
 });
