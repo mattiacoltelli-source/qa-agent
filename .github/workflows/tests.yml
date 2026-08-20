@@ -34,6 +34,18 @@ jobs:
       - name: Installa i browser Playwright (chromium)
         run: npx playwright install --with-deps chromium
 
+      # Crea "_QA_Agent_" nel gruppo CineFighi PRIMA dei test, se non c'è
+      # già: così ogni test che lo seleziona (anche quelli di sola lettura,
+      # vedi user-picker.spec.ts "profilo ESISTENTE") lo trova davvero già
+      # lì, invece di crearlo al volo tramite l'interfaccia. Lo step di
+      # pulizia più sotto lo cancella di nuovo a fine run — non un
+      # provvedimento una tantum come prima, ma un ciclo crea/usa/cancella ad
+      # ogni run, per non lasciarlo visibile per sempre agli amici veri del
+      # gruppo. Solo se questo run tocca davvero CineFighi.
+      - name: Crea l'utente di test CineFighi (se serve)
+        if: ${{ github.event.inputs.app == 'cinefighi' || github.event.inputs.app == 'tutte' || github.event.inputs.app == '' }}
+        run: node scripts/ensure-cinefighi-qa-user.mjs
+
       # "app" seleziona quali progetti Playwright far girare (vedi
       # playwright.config.ts): "tutte" non passa nessun --project e Playwright
       # gira tutti quelli configurati, come faceva prima che questo input
@@ -51,12 +63,14 @@ jobs:
           esac
           npx playwright test $PROJECTS
 
-      # Rete di sicurezza indipendente dal browser: gira SEMPRE dopo i test
-      # @write (passati, falliti o interrotti a metà) e ripulisce eventuali
-      # residui che il try/finally dei singoli test non fosse riuscito a
-      # rimuovere (crash, pagina bloccata). Vedi scripts/cleanup-write-residue.mjs.
-      - name: Ripulisci eventuali residui dei test @write
-        if: ${{ always() && github.event.inputs.run_write_tests == 'true' }}
+      # Rete di sicurezza indipendente dal browser: gira SEMPRE (letture o
+      # scritture, passato o fallito) e ripulisce eventuali residui che il
+      # try/finally dei singoli test non fosse riuscito a rimuovere (crash,
+      # pagina bloccata) — incluso l'utente di test CineFighi creato sopra,
+      # così non resta visibile per sempre nella lista del gruppo. Vedi
+      # scripts/cleanup-write-residue.mjs.
+      - name: Ripulisci eventuali residui dei test
+        if: always()
         run: node scripts/cleanup-write-residue.mjs
 
       - name: Carica il report HTML

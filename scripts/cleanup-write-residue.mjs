@@ -1,16 +1,20 @@
 #!/usr/bin/env node
-// Rete di sicurezza indipendente dalla sessione del browser: ripulisce
-// eventuali residui lasciati dai test @write nel caso il loro try/finally
-// non sia arrivato in fondo (crash del browser, pagina bloccata, timeout).
+// Rete di sicurezza indipendente dalla sessione del browser: gira a fine
+// run (sempre, letture o scritture, passato o fallito) e ripulisce eventuali
+// residui lasciati dai test nel caso il loro try/finally non sia arrivato
+// in fondo (crash del browser, pagina bloccata, timeout).
 //
 // Usa le stesse chiavi "publishable"/anon già hardcoded nei bundle JS delle
 // due app (nessun segreto nuovo, nessun permesso più ampio di quello che il
 // client in un browser qualsiasi ha già) via l'API REST di PostgREST.
 //
 // Agisce SOLO su righe riconducibili in modo inequivocabile ai test:
-// - CineFighi ha un utente di test dedicato ("_QA_Agent_"): nessun membro
-//   reale del gruppo può avere quel nome, quindi ripulire tutto ciò che gli
-//   appartiene è sempre sicuro.
+// - CineFighi ha un utente di test dedicato ("_QA_Agent_"), creato a inizio
+//   run da scripts/ensure-cinefighi-qa-user.mjs: nessun membro reale del
+//   gruppo può avere quel nome, quindi ripulire tutto ciò che gli appartiene
+//   — voti, titoli, e l'account stesso — è sempre sicuro. Cancellare
+//   l'account qui, non solo i suoi voti/titoli, evita che resti visibile per
+//   sempre nella lista condivisa che vedono gli amici veri del gruppo.
 // - CineTracker è single-user: non esiste un "utente di test" separabile, e
 //   i voti scritti dai test ("7", "8+", ...) sono valori plausibili che
 //   potrebbero coincidere con un voto vero. Per questo i test aggiungono un
@@ -62,8 +66,20 @@ async function cleanupCineFighi() {
     "titles",
     `added_by=eq.${encodeURIComponent(QA_USER)}`
   );
+  // Anche l'account di test stesso: creato al volo da
+  // scripts/ensure-cinefighi-qa-user.mjs a inizio run, non deve restare
+  // visibile per sempre nella lista condivisa che vedono gli amici veri del
+  // gruppo. Va cancellato DOPO voti e titoli (nessun vincolo di integrità lo
+  // richiede — l'app stessa permette di eliminare un utente lasciando i suoi
+  // voti storici — ma è più pulito così).
+  const deletedUser = await restDelete(
+    CINEFIGHI_URL,
+    CINEFIGHI_KEY,
+    "users",
+    `name=eq.${encodeURIComponent(QA_USER)}`
+  );
   console.log(
-    `CineFighi: rimossi ${deletedVotes.length} voto/i e ${deletedTitles.length} titolo/i residui di "${QA_USER}".`
+    `CineFighi: rimossi ${deletedVotes.length} voto/i, ${deletedTitles.length} titolo/i e ${deletedUser.length} account di test residui di "${QA_USER}".`
   );
 }
 

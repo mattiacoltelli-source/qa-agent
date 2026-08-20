@@ -16,22 +16,27 @@ backend di test diverso da qui** — è un vincolo dell'app, non della suite.
   `*.write.spec.ts`, taggati `@write`, e **disattivati di default**. Vanno
   eseguiti esplicitamente con `RUN_WRITE_TESTS=true` (`npm run test:write`).
 - Usano tutti un utente di test dedicato, **`_QA_Agent_`**
-  (`fixtures/cinefighi-page.ts`). `addUser()` lato app è idempotente
-  (case-insensitive): richiamarlo più volte non crea duplicati, riusa
-  semplicemente l'utente esistente — quindi è sicuro farlo ad ogni run.
+  (`fixtures/cinefighi-page.ts`). Non è più un account permanente: in CI,
+  `scripts/ensure-cinefighi-qa-user.mjs` lo crea (se non c'è già) **prima**
+  di ogni run, così anche i test di sola lettura che lo *selezionano*
+  (`user-picker.spec.ts`) lo trovano davvero già lì. `addUser()` lato app è
+  comunque idempotente (case-insensitive), quindi è sicuro anche in locale
+  se capita di lanciarlo più volte.
 - Ogni test di scrittura ripulisce il titolo che ha aggiunto in un blocco
   `finally`. Se un cleanup dovesse fallire a metà (es. crash del browser),
   il residuo è riconoscibile: aggiunto da `_QA_Agent_`, spesso con il
   commento `"Voto di test automatico (QA)"`.
-- **Rete di sicurezza automatica**: in CI, dopo la suite `@write` (sempre,
-  anche se un test fallisce o va in timeout), uno step con `if: always()`
-  esegue `scripts/cleanup-write-residue.mjs`: ripulisce su Supabase tutti i
-  voti e i titoli legati a `_QA_Agent_`, indipendentemente da come sia
-  andato il browser. È sicuro farlo sempre perché nessun membro reale del
-  gruppo può avere quel nome. Lanciabile anche a mano con
-  `npm run cleanup:write-residue`.
+- **Rete di sicurezza automatica**: in CI, a fine run (sempre, letture o
+  scritture, passato o fallito), uno step con `if: always()` esegue
+  `scripts/cleanup-write-residue.mjs`: ripulisce su Supabase tutti i voti e
+  i titoli legati a `_QA_Agent_`, e infine **cancella l'account stesso** —
+  così non resta visibile per sempre nella lista condivisa che vedono gli
+  amici veri del gruppo. È sicuro farlo sempre perché nessun membro reale
+  del gruppo può avere quel nome. Lanciabile anche a mano con
+  `npm run cleanup:write-residue` (e la creazione con
+  `npm run setup:cinefighi-qa-user`).
 - **Se il gruppo è già al completo (15/15)** e `_QA_Agent_` non ne fa
-  ancora parte, i test falliscono con un errore esplicito: va aggiunto
+  ancora parte, il setup fallisce con un errore esplicito: va aggiunto
   manualmente una volta (aprendo l'app e scegliendo "Entra" con quel nome)
   prima di far girare la suite.
 

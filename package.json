@@ -10,6 +10,7 @@
     "test:cinetracker": "playwright test --project=cinetracker-mobile --project=cinetracker-desktop",
     "test:vacanza": "playwright test --project=vacanza-mobile --project=vacanza-desktop",
     "test:write": "RUN_WRITE_TESTS=true playwright test --grep @write",
+    "setup:cinefighi-qa-user": "node scripts/ensure-cinefighi-qa-user.mjs",
     "cleanup:write-residue": "node scripts/cleanup-write-residue.mjs",
     "report": "playwright show-report reports/html"
   },
