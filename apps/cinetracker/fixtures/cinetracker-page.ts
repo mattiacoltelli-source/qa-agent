@@ -14,6 +14,15 @@ export async function gotoFresh(page: Page): Promise<void> {
   await clearBrowserStorage(page);
   await page.reload();
   await page.locator("#screen-home").waitFor({ state: "visible", timeout: 10_000 });
+  // #screen-home è visibile nel markup statico ancora prima che bootApp()
+  // finisca: bindEvents() (che aggancia i listener su #searchBtn e sui
+  // bottoni della nav) gira solo dopo l'await loadDB() (round-trip a
+  // Supabase). Un'interazione immediata come .click() — a differenza di un
+  // expect che ritenta — può quindi arrivare prima che il listener sia
+  // agganciato e non fare nulla. app.js aggiunge la classe "app--ready" a
+  // ".app" nel finally di bootApp(), subito dopo bindEvents(): è il segnale
+  // affidabile che l'hydration è completa.
+  await page.locator(".app.app--ready").waitFor({ state: "attached", timeout: 10_000 });
 }
 
 export async function openScreen(
