@@ -5,6 +5,12 @@ multiutente), **CineTracker** (repo `Cos90`, cinema single-user) e **Spot**
 (guida di viaggio Ionio in barca a vela). Repository separato, dedicato solo
 al testing — non entra in nessuna delle app in produzione.
 
+**Uso quotidiano**: si lancia da GitHub Actions (tab **Actions** → "Run
+workflow"), non serve nulla installato — vedi **[FAQ.md](FAQ.md)** per la
+guida pratica (dove trovare l'esito, come testare una sola app, cosa sono i
+test `@write`, ecc.). Il resto di questo file è la documentazione tecnica
+del repository.
+
 ## Struttura
 
 ```
@@ -70,10 +76,3 @@ sono gestite così: TMDB è chiamato dal vivo solo per verifiche di forma
 specifici che potrebbero cambiare; il meteo è sempre mockato con fixture
 fisse (`apps/vacanza/fixtures/weather-mock.ts`).
 
-## Nota sull'ambiente di sviluppo
-
-Questa suite non è mai stata eseguita realmente contro le app live: la rete
-della sessione che l'ha scritta non poteva raggiungere `github.io` (policy
-dell'ambiente). I selettori sono presi dal codice sorgente reale delle tre
-app, ma la prima esecuzione in CI (o in locale) va trattata come primo giro
-di shakeout — è normale dover sistemare qualche selettore o timeout.
