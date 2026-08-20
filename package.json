@@ -1,0 +1,20 @@
+{
+  "name": "qa-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI QA Agent personale: suite Playwright per CineFighi, CineTracker e Spot (Ionio in barca a vela)",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:cinefighi": "playwright test --project=cinefighi-mobile --project=cinefighi-desktop",
+    "test:cinetracker": "playwright test --project=cinetracker-mobile --project=cinetracker-desktop",
+    "test:vacanza": "playwright test --project=vacanza-mobile --project=vacanza-desktop",
+    "test:write": "RUN_WRITE_TESTS=true playwright test --grep @write",
+    "report": "playwright show-report reports/html"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
+  }
+}
