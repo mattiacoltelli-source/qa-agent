@@ -61,9 +61,13 @@ test.describe("CineTracker — backup export/import @write", () => {
       await expect(page.locator(".toast.success", { hasText: "importato" })).toBeVisible({ timeout: 10_000 });
 
       // 4. La libreria deve tornare coerente: il titolo aggiunto è ancora in watchlist.
+      // #libraryList contiene TUTTA la watchlist reale (nel run che ha
+      // scoperto questo bug, 20 titoli): "toContainText" su un locator con
+      // più match va in strict mode violation. Scopiamo sulla riga di
+      // "Inception" specificamente.
       await page.locator('.nav__btn[data-screen="home"]').click();
       await page.locator("#openWatchAll").click();
-      await expect(page.locator("#libraryList .list-item")).toContainText("Inception");
+      await expect(page.locator("#libraryList .list-item", { hasText: "Inception" })).toBeVisible();
     } finally {
       // Cleanup: riapriamo il titolo dalla watchlist e lo rimuoviamo.
       await page.locator('.nav__btn[data-screen="home"]').click();

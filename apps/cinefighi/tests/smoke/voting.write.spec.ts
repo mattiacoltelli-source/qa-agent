@@ -33,12 +33,21 @@ test.describe("CineFighi — voto e libreria @write", () => {
     await page.locator("#searchInput").fill("Inception");
     const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
+    // Il click ha già scritto su Supabase: da qui in poi il try/finally deve
+    // coprire anche l'attesa di #screen-detail, non solo i passi dopo — se
+    // no, un flake proprio su quell'attesa (già successo in CI sotto latenza
+    // di rete) salta il cleanup qui sotto e lascia il residuo alla sola rete
+    // di sicurezza della CI (scripts/cleanup-write-residue.mjs), invece che
+    // ripulirlo subito.
     await firstCard.locator('button[data-status="seen"]').click();
 
-    // handleAddFromSearch apre automaticamente il dettaglio del titolo appena salvato.
-    await expect(page.locator("#screen-detail")).toBeVisible();
-
     try {
+      // handleAddFromSearch apre automaticamente il dettaglio del titolo
+      // appena salvato, ma prima aspetta l'insert su Supabase: il timeout di
+      // default (5s) ha già dato un flake in CI sotto latenza di rete;
+      // allineato ai 10s già usati altrove nella suite per attese di rete.
+      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+
       // Slider 0–10 step 0.5: il valore mostrato deve corrispondere esattamente.
       await page.locator("#detailVoteSlider").fill(expectedVote);
       await page.locator("#detailCommentInput").fill("Voto di test automatico (QA)");
@@ -60,10 +69,12 @@ test.describe("CineFighi — voto e libreria @write", () => {
     await page.locator("#searchInput").fill("Inception");
     const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
+    // Vedi commento gemello nel test precedente: il try/finally copre anche
+    // l'attesa di #screen-detail, non solo i passi dopo.
     await firstCard.locator('button[data-status="seen"]').click();
-    await expect(page.locator("#screen-detail")).toBeVisible();
 
     try {
+      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
       await page.locator("#detailVoteSlider").fill("6");
       await page.locator("#detailSaveVoteBtn").click();
       await expect(page.locator(".vote-row", { hasText: "(tu)" })).toBeVisible();
