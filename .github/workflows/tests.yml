@@ -73,6 +73,14 @@ jobs:
         if: always()
         run: node scripts/cleanup-write-residue.mjs
 
+      # Scrive un riepilogo leggibile (PASS/FAIL per app, dettaglio dei
+      # fallimenti) direttamente su questa pagina — niente da scaricare,
+      # leggibile anche da telefono. Deterministico: solo dati già raccolti
+      # da Playwright in reports/results.json. Vedi scripts/write-summary.mjs.
+      - name: Scrivi il riepilogo nel run
+        if: always()
+        run: node scripts/write-summary.mjs
+
       - name: Carica il report HTML
         if: always()
         uses: actions/upload-artifact@v4
