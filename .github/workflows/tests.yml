@@ -3,6 +3,15 @@ name: QA Agent — smoke tests
 on:
   workflow_dispatch:
     inputs:
+      app:
+        description: "Quale app testare"
+        type: choice
+        default: "tutte"
+        options:
+          - tutte
+          - cinefighi
+          - cinetracker
+          - spot
       run_write_tests:
         description: "Esegui anche i test @write (scrivono su Supabase/librerie reali)"
         type: boolean
@@ -25,15 +34,22 @@ jobs:
       - name: Installa i browser Playwright (chromium)
         run: npx playwright install --with-deps chromium
 
-      - name: Esegui la suite (sola lettura)
-        if: ${{ github.event.inputs.run_write_tests != 'true' }}
-        run: npm test
-
-      - name: Esegui la suite (inclusi i test @write)
-        if: ${{ github.event.inputs.run_write_tests == 'true' }}
-        run: npm test
+      # "app" seleziona quali progetti Playwright far girare (vedi
+      # playwright.config.ts): "tutte" non passa nessun --project e Playwright
+      # gira tutti quelli configurati, come faceva prima che questo input
+      # esistesse. "spot" internamente è il progetto "vacanza" (nome storico
+      # della cartella apps/vacanza, l'app che l'utente conosce come "Spot").
+      - name: Esegui la suite
         env:
-          RUN_WRITE_TESTS: "true"
+          RUN_WRITE_TESTS: ${{ github.event.inputs.run_write_tests == 'true' && 'true' || '' }}
+        run: |
+          case "${{ github.event.inputs.app || 'tutte' }}" in
+            cinefighi) PROJECTS="--project=cinefighi-mobile --project=cinefighi-desktop" ;;
+            cinetracker) PROJECTS="--project=cinetracker-mobile --project=cinetracker-desktop" ;;
+            spot) PROJECTS="--project=vacanza-mobile --project=vacanza-desktop" ;;
+            *) PROJECTS="" ;;
+          esac
+          npx playwright test $PROJECTS
 
       # Rete di sicurezza indipendente dal browser: gira SEMPRE dopo i test
       # @write (passati, falliti o interrotti a metà) e ripulisce eventuali
