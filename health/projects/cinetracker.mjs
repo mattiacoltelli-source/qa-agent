@@ -56,15 +56,6 @@ export async function checkData() {
     });
   }
 
-  // TEMP: anomalia sintetica per verificare dal vivo l'analisi Claude
-  // (da rimuovere subito dopo il test, vedi commit successivo).
-  issues.push({
-    type: "TEST_sintetico",
-    severity: "MEDIUM",
-    count: 1,
-    examples: ["riga di prova inserita apposta per testare l'analisi AI — non è un'anomalia reale"],
-  });
-
   return {
     counts: { entries: rows.length },
     issues,
