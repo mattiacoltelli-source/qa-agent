@@ -1,0 +1,70 @@
+#!/usr/bin/env node
+// Legge reports/api-doctor-results.json (api-doctor/engine.mjs) e scrive un
+// riepilogo leggibile su $GITHUB_STEP_SUMMARY — stesso stile di
+// health/write-summary.mjs e perf/write-summary.mjs. Se
+// reports/api-doctor-ai-analysis.json è presente, incorpora Probabile causa
+// e Fix consigliato sotto ogni endpoint in FAIL — sempre accanto ai dati
+// deterministici, mai al posto loro.
+
+import fs from "node:fs";
+
+const RESULTS_PATH = "reports/api-doctor-results.json";
+const AI_ANALYSIS_PATH = "reports/api-doctor-ai-analysis.json";
+
+function loadAiAnalysis() {
+  if (!fs.existsSync(AI_ANALYSIS_PATH)) return new Map();
+  try {
+    const analyses = JSON.parse(fs.readFileSync(AI_ANALYSIS_PATH, "utf-8"));
+    return new Map(analyses.map((a) => [a.key, a]));
+  } catch {
+    return new Map();
+  }
+}
+
+function icon(result) {
+  return result === "PASS" ? "✅" : "❌";
+}
+
+function main() {
+  if (!fs.existsSync(RESULTS_PATH)) {
+    console.warn(`Nessun ${RESULTS_PATH} trovato: nulla da riassumere.`);
+    return;
+  }
+
+  const data = JSON.parse(fs.readFileSync(RESULTS_PATH, "utf-8"));
+  const aiByKey = loadAiAnalysis();
+
+  const lines = ["# API Doctor Agent — riepilogo", ""];
+
+  for (const [name, app] of Object.entries(data.apps)) {
+    lines.push(`## ${icon(app.result)} ${app.label} — ${app.result}`);
+    lines.push("");
+
+    for (const check of app.checks) {
+      if (check.ok) {
+        lines.push(`- ✅ **${check.name}** — PASS (HTTP ${check.status}, ${check.durationMs}ms)`);
+        continue;
+      }
+
+      lines.push(`- ❌ **${check.name}** — FAIL`);
+      lines.push(`  - Problema: ${check.reason}`);
+      lines.push(`  - Endpoint: \`${check.endpoint}\` (HTTP ${check.status ?? "n/d"})`);
+
+      const ai = aiByKey.get(`${name}::${check.name}`);
+      if (ai) {
+        lines.push(`  - Probabile causa: ${ai.probable_cause}`);
+        lines.push(`  - Fix consigliato: ${ai.suggested_fix}`);
+      }
+    }
+
+    lines.push("");
+  }
+
+  const summary = lines.join("\n");
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + "\n");
+  }
+  console.log(summary);
+}
+
+main();

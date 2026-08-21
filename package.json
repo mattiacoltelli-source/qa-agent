@@ -26,7 +26,13 @@
     "perf:cinetracker": "node perf/engine.mjs cinetracker",
     "perf:spot": "node perf/engine.mjs spot",
     "perf:analyze": "node perf/analyze.mjs",
-    "perf:summary": "node perf/write-summary.mjs"
+    "perf:summary": "node perf/write-summary.mjs",
+    "api-doctor": "node api-doctor/engine.mjs",
+    "api-doctor:cinefighi": "node api-doctor/engine.mjs cinefighi",
+    "api-doctor:cinetracker": "node api-doctor/engine.mjs cinetracker",
+    "api-doctor:spot": "node api-doctor/engine.mjs spot",
+    "api-doctor:analyze": "node api-doctor/analyze.mjs",
+    "api-doctor:summary": "node api-doctor/write-summary.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

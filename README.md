@@ -11,7 +11,7 @@ guida pratica (dove trovare l'esito, come testare una sola app, cosa sono i
 test `@write`, ecc.). Il resto di questo file è la documentazione tecnica
 del repository.
 
-Nello stesso repository ci sono anche due moduli indipendenti in più:
+Nello stesso repository ci sono anche tre moduli indipendenti in più:
 
 - **Data Health Agent**: non testa il comportamento delle app (quello lo fa
   il QA Agent), controlla che siano raggiungibili e che i dati su Supabase
@@ -20,14 +20,19 @@ Nello stesso repository ci sono anche due moduli indipendenti in più:
 - **Performance Agent**: punteggi Lighthouse (performance, accessibilità,
   best practices, SEO) sulle tre app, incluso Spot. Vedi
   **[perf/README.md](perf/README.md)**.
+- **API Doctor Agent**: controlla che le API esterne da cui le app
+  dipendono (TMDB per CineFighi/CineTracker, meteo/mare/alba-tramonto per
+  Spot) rispondano, e nella forma attesa. Vedi
+  **[api-doctor/README.md](api-doctor/README.md)**.
 
-Entrambi con workflow separato, lanciabile da telefono come il QA Agent,
+Tutti con workflow separato, lanciabile da telefono come il QA Agent,
 stessa logica AI-solo-se-serve.
 
-Un quarto workflow, **"Controllo Completo"**
-(`.github/workflows/full-check.yml`), lancia i tre agenti in sequenza con
-un solo bottone — i tre workflow restano comunque richiamabili anche
-singolarmente come prima.
+Un quinto workflow, **"Controllo Completo"**
+(`.github/workflows/full-check.yml`), lancia QA Agent, Data Health Agent e
+Performance Agent in sequenza con un solo bottone (API Doctor non è ancora
+incluso) — i workflow restano comunque richiamabili anche singolarmente
+come prima.
 
 ## Struttura
 

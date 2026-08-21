@@ -1,0 +1,65 @@
+name: API Doctor Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Quale app controllare"
+        type: choice
+        default: "tutte"
+        options:
+          - tutte
+          - cinefighi
+          - cinetracker
+          - spot
+  # Permette a Controllo Completo (full-check.yml) di richiamare questo
+  # workflow come step di una catena sequenziale — vedi la stessa nota in
+  # tests.yml / data-health.yml.
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        default: "tutte"
+
+jobs:
+  api-doctor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installa dipendenze
+        run: npm install
+
+      # Interroga le API esterne reali (TMDB per CineFighi/CineTracker, meteo
+      # /mare/alba-tramonto per Spot): vedi api-doctor/engine.mjs.
+      # Deterministico, nessuna chiamata AI qui. Scrive SEMPRE
+      # reports/api-doctor-results.json, anche se qualche endpoint fallisce.
+      - name: Esegui i controlli
+        run: node api-doctor/engine.mjs "${{ inputs.app || 'tutte' }}"
+
+      # Analizza con Claude SOLO gli endpoint in FAIL — zero chiamate se il
+      # run è tutto PASS (il caso più comune, vedi api-doctor/analyze.mjs).
+      # Non blocca mai il run. Richiede il secret ANTHROPIC_API_KEY (già
+      # usato dal QA Agent).
+      - name: Analizza le anomalie
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node api-doctor/analyze.mjs
+
+      - name: Scrivi il riepilogo nel run
+        if: always()
+        run: node api-doctor/write-summary.mjs
+
+      - name: Carica i risultati JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-doctor-results-json
+          path: reports/api-doctor-results.json
+          retention-days: 30
