@@ -11,6 +11,12 @@ guida pratica (dove trovare l'esito, come testare una sola app, cosa sono i
 test `@write`, ecc.). Il resto di questo file è la documentazione tecnica
 del repository.
 
+Nello stesso repository c'è anche un secondo modulo indipendente, **Data
+Health Agent**: non testa il comportamento delle app (quello lo fa il QA
+Agent), controlla che siano raggiungibili e che i dati su Supabase siano
+integri (righe orfane, duplicati). Workflow separato ("Data Health Agent"),
+stessa logica AI-solo-se-serve. Vedi **[health/README.md](health/README.md)**.
+
 ## Struttura
 
 ```

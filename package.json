@@ -14,7 +14,13 @@
     "cleanup:write-residue": "node scripts/cleanup-write-residue.mjs",
     "summary": "node scripts/write-summary.mjs",
     "analyze": "node scripts/analyze-failures.mjs",
-    "report": "playwright show-report reports/html"
+    "report": "playwright show-report reports/html",
+    "health": "node health/engine.mjs",
+    "health:cinefighi": "node health/engine.mjs cinefighi",
+    "health:cinetracker": "node health/engine.mjs cinetracker",
+    "health:spot": "node health/engine.mjs spot",
+    "health:analyze": "node health/analyze.mjs",
+    "health:summary": "node health/write-summary.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

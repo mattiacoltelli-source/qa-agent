@@ -1,0 +1,57 @@
+name: Data Health Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Quale app controllare"
+        type: choice
+        default: "tutte"
+        options:
+          - tutte
+          - cinefighi
+          - cinetracker
+          - spot
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installa dipendenze
+        run: npm install
+
+      # Uptime + integrità dati (sola lettura su Supabase): vedi
+      # health/engine.mjs. Scrive SEMPRE reports/health-results.json,
+      # anche se qualcosa fallisce qui sotto.
+      - name: Esegui i controlli
+        run: node health/engine.mjs "${{ github.event.inputs.app || 'tutte' }}"
+
+      # Analizza con Claude SOLO le app in WARN/FAIL — zero chiamate se il
+      # run è tutto PASS (il caso più comune, vedi health/analyze.mjs). Non
+      # blocca mai il run: se la chiave manca o la chiamata fallisce, si
+      # registra un avviso e si prosegue senza. Richiede il secret
+      # ANTHROPIC_API_KEY (già usato dal QA Agent).
+      - name: Analizza le anomalie
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node health/analyze.mjs
+
+      - name: Scrivi il riepilogo nel run
+        if: always()
+        run: node health/write-summary.mjs
+
+      - name: Carica i risultati JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-results-json
+          path: reports/health-results.json
+          retention-days: 30
