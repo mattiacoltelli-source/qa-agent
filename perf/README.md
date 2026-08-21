@@ -20,20 +20,21 @@ browser aggiuntivo da scaricare. Gira in modalità **mobile** di default
 Per ogni app: 4 punteggi (0-100), confrontati con le soglie in
 `perf/thresholds.mjs`.
 
-## Soglie: permissive per ora, di proposito
+## Soglie
 
-Le soglie di partenza sono **volutamente larghe**:
+Partite volutamente larghe al primo giro, poi tarate il 21/08/2026 sui
+punteggi reali osservati in produzione (CineFighi 96/91/96/90, CineTracker
+84/88/96/90, Spot 79/89/92/90):
 
 ```js
-{ performance: 50, accessibility: 70, "best-practices": 70, seo: 60 }
+{ performance: 70, accessibility: 80, "best-practices": 85, seo: 80 }
 ```
 
-L'idea: vedere prima i punteggi reali delle tre app in produzione (che
-oggi non conosciamo), poi stringerle in un secondo momento in base a quei
-numeri — partire già rigorosi avrebbe rischiato un FAIL immediato su
-qualcosa che magari è così da sempre, senza che sia un problema nuovo da
-inseguire. Quando saranno pronte a essere alzate, si modifica solo
-`perf/thresholds.mjs`.
+Ogni soglia resta sotto il minimo osservato per quella categoria, non al
+filo: un run normale resta PASS, solo un peggioramento vero fa scattare
+WARN/FAIL. Se le app cambiano sensibilmente (redesign, nuove dipendenze),
+vale la pena ricontrollare i punteggi reali e aggiornare
+`perf/thresholds.mjs` di conseguenza.
 
 ## Risultato per app
 
