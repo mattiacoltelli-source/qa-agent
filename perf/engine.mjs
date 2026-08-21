@@ -1,0 +1,119 @@
+#!/usr/bin/env node
+// Performance Agent — engine: per ogni app, lancia Lighthouse (headless,
+// via lo stesso Chromium già installato per il QA Agent — nessun browser
+// nuovo da scaricare) contro l'URL live e confronta i punteggi con le
+// soglie in perf/thresholds.mjs. Deterministico: nessuna chiamata AI qui
+// (vedi perf/analyze.mjs). Scrive SEMPRE reports/perf-results.json.
+//
+// URL e label delle app sono importati da health/projects/ (non
+// duplicati): sono pure config, condivise dai due moduli.
+//
+// Lighthouse gira in modalità mobile di default (le tre app sono PWA usate
+// principalmente da telefono, stessa premessa del QA Agent).
+
+import fs from "node:fs";
+import * as chromeLauncher from "chrome-launcher";
+import lighthouse from "lighthouse";
+import { chromium } from "playwright-core";
+
+import * as cinefighi from "../health/projects/cinefighi.mjs";
+import * as cinetracker from "../health/projects/cinetracker.mjs";
+import * as vacanza from "../health/projects/vacanza.mjs";
+import { THRESHOLDS } from "./thresholds.mjs";
+
+const PROJECTS = { cinefighi, cinetracker, vacanza };
+const ALIASES = { spot: "vacanza" };
+
+const OUTPUT_PATH = "reports/perf-results.json";
+const CATEGORIES = ["performance", "accessibility", "best-practices", "seo"];
+
+async function runLighthouse(url) {
+  const chrome = await chromeLauncher.launch({
+    chromePath: chromium.executablePath(),
+    chromeFlags: ["--headless=new", "--no-sandbox", "--disable-gpu"],
+  });
+
+  try {
+    const result = await lighthouse(url, {
+      port: chrome.port,
+      output: "json",
+      onlyCategories: CATEGORIES,
+    });
+
+    if (result.lhr.runtimeError) {
+      throw new Error(`Lighthouse non è riuscito a caricare la pagina: ${result.lhr.runtimeError.message}`);
+    }
+
+    const scores = Object.fromEntries(
+      CATEGORIES.map((cat) => [cat, Math.round(result.lhr.categories[cat].score * 100)])
+    );
+
+    // Solo se qualcosa è sotto soglia: le 5 voci con il punteggio audit più
+    // basso, già in linguaggio semi-umano prodotto da Lighthouse stesso —
+    // servono da contesto grezzo per Claude, mai ricalcolate da lui.
+    let topAudits = [];
+    if (CATEGORIES.some((cat) => scores[cat] < THRESHOLDS[cat])) {
+      topAudits = Object.values(result.lhr.audits)
+        .filter((a) => typeof a.score === "number" && a.score < 0.9)
+        .sort((a, b) => a.score - b.score)
+        .slice(0, 5)
+        .map((a) => a.title);
+    }
+
+    return { scores, topAudits };
+  } finally {
+    await chrome.kill();
+  }
+}
+
+function rollup(scores) {
+  const failing = CATEGORIES.filter((cat) => scores[cat] < THRESHOLDS[cat]);
+  if (failing.length === 0) return "PASS";
+  // Più di 20 punti sotto soglia su almeno una categoria: FAIL, altrimenti WARN.
+  const severe = failing.some((cat) => THRESHOLDS[cat] - scores[cat] >= 20);
+  return severe ? "FAIL" : "WARN";
+}
+
+async function checkProject(project) {
+  try {
+    const { scores, topAudits } = await runLighthouse(project.url);
+    return {
+      label: project.label,
+      url: project.url,
+      scores,
+      thresholds: THRESHOLDS,
+      topAudits,
+      result: rollup(scores),
+    };
+  } catch (e) {
+    return { label: project.label, url: project.url, error: e.message, result: "FAIL" };
+  }
+}
+
+async function main() {
+  const requested = process.argv[2] || "tutte";
+  const resolved = ALIASES[requested] || requested;
+  const names = resolved === "tutte" ? Object.keys(PROJECTS) : [resolved];
+
+  const apps = {};
+  for (const name of names) {
+    const project = PROJECTS[name];
+    if (!project) {
+      console.warn(`Progetto sconosciuto: "${name}", salto.`);
+      continue;
+    }
+    apps[name] = await checkProject(project);
+  }
+
+  fs.mkdirSync("reports", { recursive: true });
+  fs.writeFileSync(OUTPUT_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), apps }, null, 2));
+
+  const failed = Object.values(apps).filter((a) => a.result === "FAIL").length;
+  const warned = Object.values(apps).filter((a) => a.result === "WARN").length;
+  console.log(`Performance: ${Object.keys(apps).length} app controllate — ${failed} FAIL, ${warned} WARN.`);
+}
+
+main().catch((e) => {
+  console.error("perf/engine.mjs: errore inatteso:", e.message);
+  process.exit(1);
+});

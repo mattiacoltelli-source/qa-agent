@@ -20,11 +20,19 @@
     "health:cinetracker": "node health/engine.mjs cinetracker",
     "health:spot": "node health/engine.mjs spot",
     "health:analyze": "node health/analyze.mjs",
-    "health:summary": "node health/write-summary.mjs"
+    "health:summary": "node health/write-summary.mjs",
+    "perf": "node perf/engine.mjs",
+    "perf:cinefighi": "node perf/engine.mjs cinefighi",
+    "perf:cinetracker": "node perf/engine.mjs cinetracker",
+    "perf:spot": "node perf/engine.mjs spot",
+    "perf:analyze": "node perf/analyze.mjs",
+    "perf:summary": "node perf/write-summary.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
     "@types/node": "^26.2.0",
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^13.4.1",
     "typescript": "^7.0.2"
   },
   "dependencies": {

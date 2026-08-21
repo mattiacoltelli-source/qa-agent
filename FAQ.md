@@ -123,6 +123,13 @@ Non lanciarlo insieme a un run "QA Agent" con i test `@write` attivi:
 potrebbe leggere dati a metà scrittura e segnalarli come un'anomalia che
 in realtà non lo è. Aspetta che l'altro run sia finito.
 
+## E un "Performance Agent"?
+
+Terzo workflow: punteggi Lighthouse (performance, accessibilità, best
+practices, SEO) sulle tre app, incluso Spot. Le soglie di partenza sono
+volutamente permissive (si stringono più avanti, dopo aver visto i
+punteggi reali). Dettagli: **[perf/README.md](perf/README.md)**.
+
 ## Qualcosa non torna, un test si comporta in modo strano
 
 Prima di tutto: nessuna di queste operazioni tocca mai le app CineFighi,

@@ -1,0 +1,55 @@
+name: Performance Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Quale app controllare"
+        type: choice
+        default: "tutte"
+        options:
+          - tutte
+          - cinefighi
+          - cinetracker
+          - spot
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installa dipendenze
+        run: npm install
+
+      # Stesso Chromium usato dal QA Agent — nessun browser aggiuntivo.
+      - name: Installa i browser Playwright (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Esegui Lighthouse
+        run: node perf/engine.mjs "${{ github.event.inputs.app || 'tutte' }}"
+
+      # Analizza con Claude SOLO le app in WARN/FAIL — zero chiamate se il
+      # run è tutto PASS (vedi perf/analyze.mjs). Non blocca mai il run.
+      - name: Analizza le anomalie
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node perf/analyze.mjs
+
+      - name: Scrivi il riepilogo nel run
+        if: always()
+        run: node perf/write-summary.mjs
+
+      - name: Carica i risultati JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-results-json
+          path: reports/perf-results.json
+          retention-days: 30
