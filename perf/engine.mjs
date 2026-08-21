@@ -27,6 +27,18 @@ const ALIASES = { spot: "vacanza" };
 const OUTPUT_PATH = "reports/perf-results.json";
 const CATEGORIES = ["performance", "accessibility", "best-practices", "seo"];
 
+// Le 5 metriche "Core Web Vitals" che compongono davvero il punteggio
+// performance (pesi in playwright.config.ts non c'entrano, sono di
+// Lighthouse: LCP 25%, TBT 30%, CLS 25%, FCP 10%, SI 10%). Il punteggio
+// 0-100 da solo non dice DOVE va il tempo — queste sì.
+const PERFORMANCE_METRICS = [
+  "first-contentful-paint",
+  "largest-contentful-paint",
+  "total-blocking-time",
+  "cumulative-layout-shift",
+  "speed-index",
+];
+
 async function runLighthouse(url) {
   const chrome = await chromeLauncher.launch({
     chromePath: chromium.executablePath(),
@@ -48,6 +60,13 @@ async function runLighthouse(url) {
       CATEGORIES.map((cat) => [cat, Math.round(result.lhr.categories[cat].score * 100)])
     );
 
+    // Valori grezzi (non il punteggio) delle 5 metriche che compongono
+    // "performance": permettono di capire DOVE va il tempo, non solo il
+    // numero finale — fondamentale per confrontare due app diverse.
+    const metrics = Object.fromEntries(
+      PERFORMANCE_METRICS.map((id) => [id, result.lhr.audits[id]?.displayValue ?? null])
+    );
+
     // Le 5 voci con il punteggio audit più basso, già in linguaggio
     // semi-umano prodotto da Lighthouse stesso. Calcolate SEMPRE, anche se
     // l'app è PASS (è solo un filtro locale su dati che Lighthouse ha già
@@ -60,7 +79,7 @@ async function runLighthouse(url) {
       .slice(0, 5)
       .map((a) => a.title);
 
-    return { scores, topAudits };
+    return { scores, metrics, topAudits };
   } finally {
     await chrome.kill();
   }
@@ -76,12 +95,13 @@ function rollup(scores) {
 
 async function checkProject(project) {
   try {
-    const { scores, topAudits } = await runLighthouse(project.url);
+    const { scores, metrics, topAudits } = await runLighthouse(project.url);
     return {
       label: project.label,
       url: project.url,
       scores,
       thresholds: THRESHOLDS,
+      metrics,
       topAudits,
       result: rollup(scores),
     };

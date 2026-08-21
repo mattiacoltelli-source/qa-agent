@@ -18,7 +18,11 @@ browser aggiuntivo da scaricare. Gira in modalità **mobile** di default
 (le tre app sono PWA usate principalmente da telefono).
 
 Per ogni app: 4 punteggi (0-100), confrontati con le soglie in
-`perf/thresholds.mjs`.
+`perf/thresholds.mjs`, più le 5 metriche grezze che compongono davvero il
+punteggio "performance" (FCP, LCP, TBT, CLS, Speed Index) — il punteggio
+0-100 da solo non dice *dove* va il tempo, queste sì. Utili per confrontare
+due app diverse, non solo per vedere se una singola app peggiora nel
+tempo.
 
 ## Soglie
 

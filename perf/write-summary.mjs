@@ -50,6 +50,13 @@ function main() {
         const mark = score >= threshold ? "✅" : "⚠️";
         lines.push(`- ${cat}: ${mark} ${score}/100 (soglia ${threshold})`);
       }
+      if (app.metrics) {
+        const m = app.metrics;
+        lines.push(
+          `- Metriche performance: FCP ${m["first-contentful-paint"]}, LCP ${m["largest-contentful-paint"]}, ` +
+            `TBT ${m["total-blocking-time"]}, CLS ${m["cumulative-layout-shift"]}, SI ${m["speed-index"]}`
+        );
+      }
       if (app.topAudits?.length > 0) {
         lines.push(`- Principali punti deboli (da Lighthouse): ${app.topAudits.join("; ")}`);
       }
