@@ -48,17 +48,17 @@ async function runLighthouse(url) {
       CATEGORIES.map((cat) => [cat, Math.round(result.lhr.categories[cat].score * 100)])
     );
 
-    // Solo se qualcosa è sotto soglia: le 5 voci con il punteggio audit più
-    // basso, già in linguaggio semi-umano prodotto da Lighthouse stesso —
-    // servono da contesto grezzo per Claude, mai ricalcolate da lui.
-    let topAudits = [];
-    if (CATEGORIES.some((cat) => scores[cat] < THRESHOLDS[cat])) {
-      topAudits = Object.values(result.lhr.audits)
-        .filter((a) => typeof a.score === "number" && a.score < 0.9)
-        .sort((a, b) => a.score - b.score)
-        .slice(0, 5)
-        .map((a) => a.title);
-    }
+    // Le 5 voci con il punteggio audit più basso, già in linguaggio
+    // semi-umano prodotto da Lighthouse stesso. Calcolate SEMPRE, anche se
+    // l'app è PASS (è solo un filtro locale su dati che Lighthouse ha già
+    // prodotto, costo zero) — servono sia da contesto grezzo per Claude
+    // quando c'è un'anomalia, sia da riferimento nel JSON per decidere come
+    // stringere le soglie più avanti, anche su un run tutto verde.
+    const topAudits = Object.values(result.lhr.audits)
+      .filter((a) => typeof a.score === "number" && a.score < 0.9)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 5)
+      .map((a) => a.title);
 
     return { scores, topAudits };
   } finally {
