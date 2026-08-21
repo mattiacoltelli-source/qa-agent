@@ -130,6 +130,15 @@ practices, SEO) sulle tre app, incluso Spot. Le soglie di partenza sono
 volutamente permissive (si stringono più avanti, dopo aver visto i
 punteggi reali). Dettagli: **[perf/README.md](perf/README.md)**.
 
+## Voglio lanciare tutti e tre gli agenti insieme, senza premere tre bottoni
+
+Quarto workflow, **"Controllo Completo"**: lancia QA Agent, Data Health
+Agent e Performance Agent in sequenza (mai in parallelo) sulla stessa
+scelta di app, con un solo "Run workflow". I tre riepiloghi compaiono
+impilati sulla stessa pagina di run — niente da unire a mano. I tre
+workflow restano comunque lanciabili anche singolarmente come prima,
+questo è solo una scorciatoia.
+
 ## Qualcosa non torna, un test si comporta in modo strano
 
 Prima di tutto: nessuna di queste operazioni tocca mai le app CineFighi,

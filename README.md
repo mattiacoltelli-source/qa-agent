@@ -24,6 +24,11 @@ Nello stesso repository ci sono anche due moduli indipendenti in più:
 Entrambi con workflow separato, lanciabile da telefono come il QA Agent,
 stessa logica AI-solo-se-serve.
 
+Un quarto workflow, **"Controllo Completo"**
+(`.github/workflows/full-check.yml`), lancia i tre agenti in sequenza con
+un solo bottone — i tre workflow restano comunque richiamabili anche
+singolarmente come prima.
+
 ## Struttura
 
 ```

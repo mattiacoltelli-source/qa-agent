@@ -12,6 +12,14 @@ on:
           - cinefighi
           - cinetracker
           - spot
+  # Permette a Controllo Completo (full-check.yml) di richiamare questo
+  # workflow come step di una catena sequenziale — vedi la stessa nota in
+  # tests.yml.
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        default: "tutte"
 
 jobs:
   health:
@@ -31,7 +39,7 @@ jobs:
       # health/engine.mjs. Scrive SEMPRE reports/health-results.json,
       # anche se qualcosa fallisce qui sotto.
       - name: Esegui i controlli
-        run: node health/engine.mjs "${{ github.event.inputs.app || 'tutte' }}"
+        run: node health/engine.mjs "${{ inputs.app || 'tutte' }}"
 
       # Analizza con Claude SOLO le app in WARN/FAIL — zero chiamate se il
       # run è tutto PASS (il caso più comune, vedi health/analyze.mjs). Non

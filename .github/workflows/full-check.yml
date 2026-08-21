@@ -1,0 +1,45 @@
+name: Controllo Completo
+
+# Lancia i tre agenti in sequenza (mai in parallelo, per evitare che Data
+# Health legga dati a metà scrittura se in futuro si abilitassero i test
+# @write da qui — vedi FAQ.md) sulla stessa app/e, con un solo bottone. Ogni
+# job scrive il proprio riepilogo nella stessa pagina di run — non serve
+# unirli a mano, GitHub li impila automaticamente uno sotto l'altro.
+#
+# I tre workflow restano comunque lanciabili singolarmente come prima
+# (tests.yml, data-health.yml, performance.yml non sono stati toccati nella
+# logica, solo resi richiamabili anche da qui via workflow_call).
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Quale app controllare (tutti e tre gli agenti)"
+        type: choice
+        default: "tutte"
+        options:
+          - tutte
+          - cinefighi
+          - cinetracker
+          - spot
+
+jobs:
+  qa:
+    uses: ./.github/workflows/tests.yml
+    with:
+      app: ${{ inputs.app }}
+    secrets: inherit
+
+  health:
+    needs: qa
+    uses: ./.github/workflows/data-health.yml
+    with:
+      app: ${{ inputs.app }}
+    secrets: inherit
+
+  performance:
+    needs: health
+    uses: ./.github/workflows/performance.yml
+    with:
+      app: ${{ inputs.app }}
+    secrets: inherit

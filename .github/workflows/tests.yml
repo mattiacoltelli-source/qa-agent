@@ -16,6 +16,19 @@ on:
         description: "Esegui anche i test @write (scrivono su Supabase/librerie reali)"
         type: boolean
         default: false
+  # Permette a Controllo Completo (full-check.yml) di richiamare questo
+  # workflow come step di una catena sequenziale. Stessi input di
+  # workflow_dispatch sopra, ma senza il vincolo "choice" (non supportato
+  # nei reusable workflow) — la scelta resta comunque vincolata a monte,
+  # nel menu a tendina di chi chiama.
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        default: "tutte"
+      run_write_tests:
+        type: boolean
+        default: false
 
 jobs:
   smoke:
@@ -43,7 +56,7 @@ jobs:
       # ogni run, per non lasciarlo visibile per sempre agli amici veri del
       # gruppo. Solo se questo run tocca davvero CineFighi.
       - name: Crea l'utente di test CineFighi (se serve)
-        if: ${{ github.event.inputs.app == 'cinefighi' || github.event.inputs.app == 'tutte' || github.event.inputs.app == '' }}
+        if: ${{ inputs.app == 'cinefighi' || inputs.app == 'tutte' || inputs.app == '' }}
         run: node scripts/ensure-cinefighi-qa-user.mjs
 
       # "app" seleziona quali progetti Playwright far girare (vedi
@@ -53,9 +66,9 @@ jobs:
       # della cartella apps/vacanza, l'app che l'utente conosce come "Spot").
       - name: Esegui la suite
         env:
-          RUN_WRITE_TESTS: ${{ github.event.inputs.run_write_tests == 'true' && 'true' || '' }}
+          RUN_WRITE_TESTS: ${{ inputs.run_write_tests == true && 'true' || '' }}
         run: |
-          case "${{ github.event.inputs.app || 'tutte' }}" in
+          case "${{ inputs.app || 'tutte' }}" in
             cinefighi) PROJECTS="--project=cinefighi-mobile --project=cinefighi-desktop" ;;
             cinetracker) PROJECTS="--project=cinetracker-mobile --project=cinetracker-desktop" ;;
             spot) PROJECTS="--project=vacanza-mobile --project=vacanza-desktop" ;;

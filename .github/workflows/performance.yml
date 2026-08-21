@@ -12,6 +12,14 @@ on:
           - cinefighi
           - cinetracker
           - spot
+  # Permette a Controllo Completo (full-check.yml) di richiamare questo
+  # workflow come step di una catena sequenziale — vedi la stessa nota in
+  # tests.yml.
+  workflow_call:
+    inputs:
+      app:
+        type: string
+        default: "tutte"
 
 jobs:
   performance:
@@ -32,7 +40,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Esegui Lighthouse
-        run: node perf/engine.mjs "${{ github.event.inputs.app || 'tutte' }}"
+        run: node perf/engine.mjs "${{ inputs.app || 'tutte' }}"
 
       # Analizza con Claude SOLO le app in WARN/FAIL — zero chiamate se il
       # run è tutto PASS (vedi perf/analyze.mjs). Non blocca mai il run.
