@@ -16,6 +16,17 @@ creazione/cancellazione automatica, Data Health potrebbe leggere quello
 stato transitorio e segnalarlo come un'anomalia — un falso allarme, non un
 bug reale. Aspetta che l'altro run sia finito.
 
+**Unico agente con un run automatico**: a differenza degli altri tre, gira
+anche da solo ogni 6 giorni alle 03:00 UTC (`schedule` in
+`.github/workflows/data-health.yml`) — orario scelto apposta per essere
+notte fonda anche in Italia, per ridurre la probabilità di sovrapporsi a
+un test `@write` lanciato a mano. Motivo: CineFighi e CineTracker sono su
+Supabase free tier, che sospende un progetto dopo 7 giorni senza richieste
+API — questo giro automatico, facendo comunque query REST reali sui due
+database (vedi "Cosa controlla" sotto), evita la pausa anche se non apri
+le app per un po'. Nessuna notifica collegata: l'esito resta nella tab
+Actions come per un run manuale.
+
 ## Cosa controlla
 
 - **Uptime**: le tre app rispondono (GitHub Pages).

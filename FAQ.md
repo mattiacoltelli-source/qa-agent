@@ -107,10 +107,13 @@ Ma per l'uso normale non ne hai bisogno: il bottone su GitHub basta.
 
 ## Il workflow non parte da solo, vero?
 
-Corretto, di proposito: non ci sono run automatici (né ad ogni push, né
-schedulati). L'unico modo per lanciarlo è il bottone "Run workflow" — così
-hai sempre il controllo di quando i test girano, specialmente quelli
-`@write`.
+Per QA Agent, Performance Agent e API Doctor Agent, corretto, di
+proposito: non ci sono run automatici (né ad ogni push, né schedulati).
+L'unico modo per lanciarli è il bottone "Run workflow" — così hai sempre
+il controllo di quando i test girano, specialmente quelli `@write`.
+
+Data Health Agent è l'unica eccezione: gira anche da solo ogni 6 giorni,
+di notte — vedi la domanda sotto per il perché.
 
 ## C'è anche un "Data Health Agent": come si usa e cosa fa?
 
@@ -118,6 +121,16 @@ hai sempre il controllo di quando i test girano, specialmente quelli
 comportamento delle app ma controlla che siano raggiungibili e che i dati
 su Supabase siano integri (righe orfane, duplicati). Si lancia allo stesso
 modo (tab Actions → "Run workflow"). Dettagli: **[health/README.md](health/README.md)**.
+
+In più, questo agente gira anche **da solo ogni 6 giorni alle 3 UTC** (le 4
+del mattino ora italiana d'inverno, le 5 in ora legale): CineFighi e
+CineTracker usano Supabase free tier, che mette in pausa un progetto dopo
+7 giorni senza richieste API. Se non apri quelle app per una settimana
+(es. in vacanza), Supabase si sospenderebbe da solo — questo giro
+automatico, essendo a sola lettura ma con vere query sul database, evita
+che succeda senza dover ricordarti di aprire l'app. Non è collegato a
+nessuna notifica: se vuoi vedere l'esito, resta da controllare nella tab
+Actions come per un run manuale.
 
 Non lanciarlo insieme a un run "QA Agent" con i test `@write` attivi:
 potrebbe leggere dati a metà scrittura e segnalarli come un'anomalia che

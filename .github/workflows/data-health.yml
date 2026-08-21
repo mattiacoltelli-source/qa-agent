@@ -1,5 +1,23 @@
 name: Data Health Agent
 
+# Unico agente dei quattro con anche un trigger automatico (schedule),
+# eccezione deliberata al "nessun run automatico" degli altri tre — vedi
+# FAQ.md "Il workflow non parte da solo, vero?". Motivo: CineFighi e
+# CineTracker usano Supabase free tier, che mette in pausa un progetto dopo
+# 7 giorni senza richieste API — se non si tocca l'app per una settimana
+# (es. vacanza), il progetto si sospende da solo. Questo agente è a sola
+# lettura e fa comunque query REST autenticate reali su entrambi i
+# progetti (health/projects/cinefighi.mjs, cinetracker.mjs), quindi il giro
+# schedulato tiene "svegli" i due Supabase senza bisogno di aprire le app.
+#
+# Ogni 6 giorni (mai 7, per lasciare un giorno di margine su eventuali
+# ritardi del cron di GitHub Actions), alle 03:00 UTC — le 4 del mattino
+# ora italiana in inverno (CET), le 5 in ora legale (CEST): un orario in
+# cui è improbabile stare lanciando a mano un test @write, per evitare che
+# Data Health legga dati a metà scrittura e segnali un falso allarme (vedi
+# nota più sotto e health/README.md). Nessuna notifica collegata: un run
+# automatico scrive comunque il riepilogo in questa pagina di Actions,
+# consultabile quando capita di passare di qui.
 on:
   workflow_dispatch:
     inputs:
@@ -20,6 +38,8 @@ on:
       app:
         type: string
         default: "tutte"
+  schedule:
+    - cron: "0 3 */6 * *"
 
 jobs:
   health:
