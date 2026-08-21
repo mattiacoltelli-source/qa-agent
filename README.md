@@ -29,10 +29,10 @@ Tutti con workflow separato, lanciabile da telefono come il QA Agent,
 stessa logica AI-solo-se-serve.
 
 Un quinto workflow, **"Controllo Completo"**
-(`.github/workflows/full-check.yml`), lancia QA Agent, Data Health Agent e
-Performance Agent in sequenza con un solo bottone (API Doctor non è ancora
-incluso) — i workflow restano comunque richiamabili anche singolarmente
-come prima.
+(`.github/workflows/full-check.yml`), lancia tutti e quattro gli agenti
+(QA Agent, Data Health Agent, Performance Agent, API Doctor Agent) in
+sequenza con un solo bottone — i workflow restano comunque richiamabili
+anche singolarmente come prima.
 
 ## Struttura
 

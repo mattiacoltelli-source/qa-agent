@@ -138,14 +138,14 @@ due app —, meteo/mare/alba-tramonto per Spot) rispondano, e nella forma
 attesa. Non c'è stato WARN: un endpoint o risponde correttamente o è FAIL.
 Dettagli: **[api-doctor/README.md](api-doctor/README.md)**.
 
-## Voglio lanciare tutti e tre gli agenti insieme, senza premere tre bottoni
+## Voglio lanciare tutti gli agenti insieme, senza premere quattro bottoni
 
 Quinto workflow, **"Controllo Completo"**: lancia QA Agent, Data Health
-Agent e Performance Agent in sequenza (mai in parallelo) sulla stessa
-scelta di app, con un solo "Run workflow". I tre riepiloghi compaiono
-impilati sulla stessa pagina di run — niente da unire a mano. I workflow
-restano comunque lanciabili anche singolarmente come prima, questo è solo
-una scorciatoia. API Doctor non è ancora incluso in questa catena.
+Agent, Performance Agent e API Doctor Agent in sequenza (mai in parallelo)
+sulla stessa scelta di app, con un solo "Run workflow". I quattro riepiloghi
+compaiono impilati sulla stessa pagina di run — niente da unire a mano. I
+workflow restano comunque lanciabili anche singolarmente come prima, questo
+è solo una scorciatoia.
 
 ## Qualcosa non torna, un test si comporta in modo strano
 
