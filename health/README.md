@@ -10,6 +10,12 @@ aprire un browser.
 telefono, come il QA Agent — vedi [../FAQ.md](../FAQ.md) per la guida
 generale al repository.
 
+**Non lanciarlo insieme a un run "QA Agent" con `@write` attivo**: se un
+titolo/voto è a metà scrittura, o l'utente `_QA_Agent_` è nel mezzo della
+creazione/cancellazione automatica, Data Health potrebbe leggere quello
+stato transitorio e segnalarlo come un'anomalia — un falso allarme, non un
+bug reale. Aspetta che l'altro run sia finito.
+
 ## Cosa controlla
 
 - **Uptime**: le tre app rispondono (GitHub Pages).

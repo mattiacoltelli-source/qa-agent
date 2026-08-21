@@ -22,20 +22,32 @@ const ALIASES = { spot: "vacanza" };
 
 const OUTPUT_PATH = "reports/health-results.json";
 const UPTIME_TIMEOUT_MS = 15_000;
+const UPTIME_MAX_RETRIES = 1;
 
-async function checkUptime(url) {
+async function fetchOnce(url) {
   const started = Date.now();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), UPTIME_TIMEOUT_MS);
 
   try {
     const res = await fetch(url, { signal: controller.signal });
-    return { url, ok: res.ok, status: res.status, durationMs: Date.now() - started };
+    return { ok: res.ok, status: res.status, durationMs: Date.now() - started };
   } catch (e) {
-    return { url, ok: false, status: null, durationMs: Date.now() - started, error: e.message };
+    return { ok: false, status: null, durationMs: Date.now() - started, error: e.message };
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Un solo retry silenzioso: un blip di rete isolato non deve bastare a
+// dichiarare un'app FAIL (e a far scattare, a valle, una chiamata AI per un
+// falso allarme).
+async function checkUptime(url) {
+  let result = await fetchOnce(url);
+  for (let attempt = 0; attempt < UPTIME_MAX_RETRIES && !result.ok; attempt++) {
+    result = await fetchOnce(url);
+  }
+  return { url, ...result };
 }
 
 function rollup(uptime, data) {

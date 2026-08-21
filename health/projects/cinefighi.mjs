@@ -49,6 +49,20 @@ export async function checkData() {
     });
   }
 
+  // Titolo aggiunto da un utente che non è (più) in "users": stessa
+  // situazione e stessa severity dei voti orfani sopra, per lo stesso
+  // motivo (un utente può essere cancellato dall'app, vedi FAQ.md "icona
+  // del cestino accanto al nome").
+  const orphanTitles = titles.filter((t) => !userNames.has(String(t.added_by).toLowerCase()));
+  if (orphanTitles.length > 0) {
+    issues.push({
+      type: "orphan_title_added_by",
+      severity: "MEDIUM",
+      count: orphanTitles.length,
+      examples: orphanTitles.slice(0, 5).map((t) => `title_id=${t.id} added_by=${t.added_by}`),
+    });
+  }
+
   // Più voti dello stesso utente sullo stesso titolo: il vincolo unique
   // (title_id, user_name) lato Supabase dovrebbe impedirlo (l'app usa
   // upsert con onConflict) — se compare comunque, il vincolo è saltato.

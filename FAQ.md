@@ -112,6 +112,17 @@ schedulati). L'unico modo per lanciarlo è il bottone "Run workflow" — così
 hai sempre il controllo di quando i test girano, specialmente quelli
 `@write`.
 
+## C'è anche un "Data Health Agent": come si usa e cosa fa?
+
+È un secondo workflow, separato da "QA Agent", che non testa il
+comportamento delle app ma controlla che siano raggiungibili e che i dati
+su Supabase siano integri (righe orfane, duplicati). Si lancia allo stesso
+modo (tab Actions → "Run workflow"). Dettagli: **[health/README.md](health/README.md)**.
+
+Non lanciarlo insieme a un run "QA Agent" con i test `@write` attivi:
+potrebbe leggere dati a metà scrittura e segnalarli come un'anomalia che
+in realtà non lo è. Aspetta che l'altro run sia finito.
+
 ## Qualcosa non torna, un test si comporta in modo strano
 
 Prima di tutto: nessuna di queste operazioni tocca mai le app CineFighi,
