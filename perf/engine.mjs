@@ -56,6 +56,28 @@ async function runLighthouse(url) {
       throw new Error(`Lighthouse non è riuscito a caricare la pagina: ${result.lhr.runtimeError.message}`);
     }
 
+    // TEMP: diagnostica LCP per capire perché CineTracker e Spot hanno un
+    // LCP molto più alto di CineFighi — da rimuovere subito dopo l'analisi.
+    const LCP_DEBUG_IDS = [
+      "largest-contentful-paint-element",
+      "lcp-lazy-loaded",
+      "prioritize-lcp-image",
+      "uses-optimized-images",
+      "modern-image-formats",
+      "render-blocking-resources",
+      "unsized-images",
+      "third-party-summary",
+    ];
+    console.log(`\n=== LCP DEBUG: ${url} ===`);
+    for (const id of LCP_DEBUG_IDS) {
+      const a = result.lhr.audits[id];
+      if (!a) continue;
+      console.log(
+        JSON.stringify({ id, score: a.score, displayValue: a.displayValue, details: a.details }, null, 2)
+      );
+    }
+    console.log(`=== FINE LCP DEBUG: ${url} ===\n`);
+
     const scores = Object.fromEntries(
       CATEGORIES.map((cat) => [cat, Math.round(result.lhr.categories[cat].score * 100)])
     );
