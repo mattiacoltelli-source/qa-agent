@@ -56,26 +56,6 @@ async function runLighthouse(url) {
       throw new Error(`Lighthouse non è riuscito a caricare la pagina: ${result.lhr.runtimeError.message}`);
     }
 
-    // TEMP: diagnostica LCP per capire perché CineTracker e Spot hanno un
-    // LCP molto più alto di CineFighi — da rimuovere subito dopo l'analisi.
-    // Cerca per contenuto (id o title), non per id esatto: Lighthouse 13
-    // ha rinominato molti audit nel nuovo sistema "insights".
-    console.log(`\n=== LCP DEBUG: ${url} ===`);
-    for (const [id, a] of Object.entries(result.lhr.audits)) {
-      const haystack = `${id} ${a.title ?? ""}`.toLowerCase();
-      const isRelevant =
-        haystack.includes("lcp") ||
-        haystack.includes("largest contentful") ||
-        haystack.includes("image delivery") ||
-        haystack.includes("render blocking") ||
-        haystack.includes("render-blocking");
-      if (!isRelevant) continue;
-      console.log(
-        JSON.stringify({ id, score: a.score, displayValue: a.displayValue, details: a.details }, null, 2)
-      );
-    }
-    console.log(`=== FINE LCP DEBUG: ${url} ===\n`);
-
     const scores = Object.fromEntries(
       CATEGORIES.map((cat) => [cat, Math.round(result.lhr.categories[cat].score * 100)])
     );
