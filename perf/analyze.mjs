@@ -2,7 +2,8 @@
 // Analizza con Claude (Sonnet 5) SOLO le app in WARN/FAIL di un run —
 // stesso pattern di health/analyze.mjs e scripts/analyze-failures.mjs.
 // Zero chiamate se tutte le app sono PASS. Riceve i punteggi Lighthouse già
-// calcolati e i "top audit" già estratti da Lighthouse stesso (mai
+// calcolati e i "top audit" già estratti da Lighthouse stesso (titolo,
+// risparmio stimato in byte/ms, risorse specifiche coinvolte — mai
 // ricalcolati o inventati da Claude), li traduce in una spiegazione breve
 // più una priorità. Non blocca mai il run se la chiave manca o la chiamata
 // fallisce.
@@ -34,14 +35,18 @@ CineFighi, CineTracker, Spot — usate principalmente da telefono.
 Ricevi, per ogni app in WARN o FAIL, i punteggi Lighthouse (0-100) per
 performance/accessibility/best-practices/seo, le soglie usate (permissive
 per design, in fase di taratura), e i principali audit già individuati da
-Lighthouse stesso come punti deboli (NON li devi inventare, sono già lì).
+Lighthouse stesso come punti deboli — con risparmio stimato in byte/ms e le
+risorse specifiche coinvolte (es. quale immagine, quanti KB) quando
+disponibili (NON li devi inventare, sono già lì).
 Il tuo compito è, in italiano:
 - riassumere in 1-2 frasi cosa sta abbassando il punteggio, basandoti sugli
   audit forniti;
 - una priorità: HIGH se il punteggio è molto sotto soglia o riguarda
   l'esperienza reale su mobile, MEDIUM se è borderline, LOW se è marginale
   o probabilmente dovuto a soglie ancora larghe;
-- il primo intervento concreto da provare, breve.`;
+- il primo intervento concreto da provare, breve — usa la risorsa specifica
+  (es. il nome del file) quando è tra i dati ricevuti, invece di restare
+  generico.`;
 
 async function main() {
   if (!fs.existsSync(RESULTS_PATH)) {
