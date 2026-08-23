@@ -27,6 +27,22 @@ function icon(result) {
   return "❌";
 }
 
+function formatBytes(bytes) {
+  return typeof bytes === "number" ? `${Math.round(bytes / 1024)} KB` : null;
+}
+
+// Preferisce i numeri espliciti di risparmio (byte/ms) quando l'audit li
+// fornisce; altrimenti ricade sul displayValue che Lighthouse genera da
+// solo (es. audit di accessibilità, che non hanno un risparmio in byte).
+function formatSavings(audit) {
+  const parts = [];
+  const kb = formatBytes(audit.savingsBytes);
+  if (kb) parts.push(`~${kb} risparmiabili`);
+  if (typeof audit.savingsMs === "number") parts.push(`~${Math.round(audit.savingsMs)}ms risparmiabili`);
+  if (parts.length > 0) return parts.join(", ");
+  return audit.displayValue ?? null;
+}
+
 function main() {
   if (!fs.existsSync(RESULTS_PATH)) {
     console.warn(`Nessun ${RESULTS_PATH} trovato: nulla da riassumere.`);
@@ -58,7 +74,15 @@ function main() {
         );
       }
       if (app.topAudits?.length > 0) {
-        lines.push(`- Principali punti deboli (da Lighthouse): ${app.topAudits.join("; ")}`);
+        lines.push(`- Principali punti deboli (da Lighthouse):`);
+        for (const audit of app.topAudits) {
+          const savings = formatSavings(audit);
+          lines.push(`  - ${audit.title}${savings ? ` — ${savings}` : ""}`);
+          for (const item of audit.items ?? []) {
+            const kb = formatBytes(item.wastedBytes ?? item.totalBytes);
+            lines.push(`    - \`${item.url}\`${kb ? ` (${kb})` : ""}`);
+          }
+        }
       }
     }
 

@@ -2,8 +2,11 @@
 // Performance Agent — engine: per ogni app, lancia Lighthouse (headless,
 // via lo stesso Chromium già installato per il QA Agent — nessun browser
 // nuovo da scaricare) contro l'URL live e confronta i punteggi con le
-// soglie in perf/thresholds.mjs. Deterministico: nessuna chiamata AI qui
-// (vedi perf/analyze.mjs). Scrive SEMPRE reports/perf-results.json.
+// soglie in perf/thresholds.mjs. Per i 5 audit più deboli, estrae anche i
+// risparmi stimati (byte/ms) e le risorse specifiche coinvolte quando
+// Lighthouse li fornisce (vedi extractAuditDetail) — stesso identico dato
+// che Lighthouse calcola già, prima scartato. Deterministico: nessuna
+// chiamata AI qui (vedi perf/analyze.mjs). Scrive SEMPRE reports/perf-results.json.
 //
 // URL e label delle app sono importati da health/projects/ (non
 // duplicati): sono pure config, condivise dai due moduli.
@@ -39,6 +42,38 @@ const PERFORMANCE_METRICS = [
   "speed-index",
 ];
 
+// Estrae da un audit Lighthouse i campi di risparmio stimato (byte/ms) e le
+// risorse specifiche coinvolte, quando l'audit li fornisce (tipicamente gli
+// audit "opportunity": immagini non ottimizzate, JS/CSS non usato, risorse
+// che bloccano il render, ecc.). Molti audit (es. accessibilità) non hanno
+// questa forma — in quel caso restano semplicemente null/vuoti, non è un
+// errore: non tutti gli audit rappresentano un risparmio quantificabile.
+function extractAuditDetail(audit) {
+  const details = audit.details;
+  const savingsBytes = typeof details?.overallSavingsBytes === "number" ? details.overallSavingsBytes : null;
+  const savingsMs = typeof details?.overallSavingsMs === "number" ? details.overallSavingsMs : null;
+
+  const items = Array.isArray(details?.items)
+    ? details.items
+        .filter((item) => typeof item?.url === "string")
+        .slice(0, 3)
+        .map((item) => ({
+          url: item.url,
+          wastedBytes: typeof item.wastedBytes === "number" ? item.wastedBytes : null,
+          totalBytes: typeof item.totalBytes === "number" ? item.totalBytes : null,
+        }))
+    : [];
+
+  return {
+    id: audit.id,
+    title: audit.title,
+    displayValue: audit.displayValue ?? null,
+    savingsBytes,
+    savingsMs,
+    items,
+  };
+}
+
 async function runLighthouse(url) {
   const chrome = await chromeLauncher.launch({
     chromePath: chromium.executablePath(),
@@ -67,17 +102,19 @@ async function runLighthouse(url) {
       PERFORMANCE_METRICS.map((id) => [id, result.lhr.audits[id]?.displayValue ?? null])
     );
 
-    // Le 5 voci con il punteggio audit più basso, già in linguaggio
-    // semi-umano prodotto da Lighthouse stesso. Calcolate SEMPRE, anche se
-    // l'app è PASS (è solo un filtro locale su dati che Lighthouse ha già
-    // prodotto, costo zero) — servono sia da contesto grezzo per Claude
-    // quando c'è un'anomalia, sia da riferimento nel JSON per decidere come
-    // stringere le soglie più avanti, anche su un run tutto verde.
+    // Le 5 voci con il punteggio audit più basso, con i dettagli che
+    // Lighthouse calcola già ma che prima scartavamo (byte/ms risparmiabili,
+    // e le risorse specifiche coinvolte per gli audit tipo "opportunity" —
+    // es. quale immagine, quanti KB). Nessuna chiamata in più: sono campi
+    // dello stesso oggetto che Lighthouse produce comunque. Calcolate
+    // SEMPRE, anche se l'app è PASS (costo zero) — servono sia da contesto
+    // per Claude quando c'è un'anomalia, sia da riferimento nel JSON per
+    // decidere come stringere le soglie più avanti, anche su un run verde.
     const topAudits = Object.values(result.lhr.audits)
       .filter((a) => typeof a.score === "number" && a.score < 0.9)
       .sort((a, b) => a.score - b.score)
       .slice(0, 5)
-      .map((a) => a.title);
+      .map(extractAuditDetail);
 
     return { scores, metrics, topAudits };
   } finally {

@@ -24,6 +24,15 @@ punteggio "performance" (FCP, LCP, TBT, CLS, Speed Index) — il punteggio
 due app diverse, non solo per vedere se una singola app peggiora nel
 tempo.
 
+Per i 5 audit con il punteggio più basso, il riepilogo mostra anche il
+risparmio stimato in byte/ms e le risorse specifiche coinvolte, quando
+Lighthouse le fornisce (es. "Efficiently encode images — ~1800 KB
+risparmiabili" seguito dal file immagine coinvolto). Nessuna chiamata in
+più: sono campi che Lighthouse calcola comunque, prima scartati e ora
+letti (vedi `extractAuditDetail` in `engine.mjs`). Non tutti gli audit
+hanno questa forma (es. quelli di accessibilità) — in quel caso resta solo
+il titolo, non è un errore.
+
 ## Soglie
 
 Partite volutamente larghe al primo giro, poi tarate il 21/08/2026 sui
