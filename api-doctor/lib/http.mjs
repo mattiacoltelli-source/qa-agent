@@ -7,6 +7,30 @@
 const TIMEOUT_MS = 15_000;
 const BODY_SNIPPET_MAX = 500;
 
+// Header di rate-limit standard o comunemente usati (nomi diversi a seconda
+// del provider — mai garantiti). Raccolti "a costo zero" quando un'API li
+// invia: nessuna chiamata in più, nessuna nuova credenziale. Nessuna delle
+// API controllate oggi (TMDB, Open-Meteo, sunrise-sunset.org) garantisce di
+// inviarli — se assenti, rateLimit resta null, non è un errore né un FAIL.
+const RATE_LIMIT_HEADER_NAMES = [
+  "x-ratelimit-limit",
+  "x-ratelimit-remaining",
+  "x-ratelimit-reset",
+  "ratelimit-limit",
+  "ratelimit-remaining",
+  "ratelimit-reset",
+  "retry-after",
+];
+
+function extractRateLimitHeaders(headers) {
+  const found = {};
+  for (const name of RATE_LIMIT_HEADER_NAMES) {
+    const value = headers.get(name);
+    if (value !== null) found[name] = value;
+  }
+  return Object.keys(found).length > 0 ? found : null;
+}
+
 // Non stampiamo mai una api_key per intero nei log/report — anche se sono
 // già pubbliche nei bundle delle app, non serve ripeterle inutilmente in un
 // repo pubblico che ogni run aggiorna.
@@ -42,6 +66,7 @@ export async function fetchJson(url, { method = "GET" } = {}) {
       bodySnippet: text.slice(0, BODY_SNIPPET_MAX),
       parseError,
       networkError: null,
+      rateLimit: extractRateLimitHeaders(res.headers),
     };
   } catch (e) {
     return {
@@ -54,6 +79,7 @@ export async function fetchJson(url, { method = "GET" } = {}) {
       bodySnippet: null,
       parseError: null,
       networkError: e.message,
+      rateLimit: null,
     };
   } finally {
     clearTimeout(timer);

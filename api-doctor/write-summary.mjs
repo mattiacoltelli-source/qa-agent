@@ -25,6 +25,16 @@ function icon(result) {
   return result === "PASS" ? "✅" : "❌";
 }
 
+// Solo se l'API ha inviato header di rate-limit (mai garantito, vedi
+// lib/http.mjs) — una riga compatta "nome=valore", non un'interpretazione:
+// il significato esatto dipende dal provider, non proviamo a indovinarlo.
+function formatRateLimit(rateLimit) {
+  if (!rateLimit) return null;
+  return Object.entries(rateLimit)
+    .map(([k, v]) => `${k}=${v}`)
+    .join(", ");
+}
+
 function main() {
   if (!fs.existsSync(RESULTS_PATH)) {
     console.warn(`Nessun ${RESULTS_PATH} trovato: nulla da riassumere.`);
@@ -41,14 +51,18 @@ function main() {
     lines.push("");
 
     for (const check of app.checks) {
+      const rateLimit = formatRateLimit(check.rateLimit);
+
       if (check.ok) {
-        lines.push(`- ✅ **${check.name}** — PASS (HTTP ${check.status}, ${check.durationMs}ms)`);
+        const quota = rateLimit ? ` — quota: ${rateLimit}` : "";
+        lines.push(`- ✅ **${check.name}** — PASS (HTTP ${check.status}, ${check.durationMs}ms)${quota}`);
         continue;
       }
 
       lines.push(`- ❌ **${check.name}** — FAIL`);
       lines.push(`  - Problema: ${check.reason}`);
       lines.push(`  - Endpoint: \`${check.endpoint}\` (HTTP ${check.status ?? "n/d"})`);
+      if (rateLimit) lines.push(`  - Quota: ${rateLimit}`);
 
       const ai = aiByKey.get(`${name}::${check.name}`);
       if (ai) {
