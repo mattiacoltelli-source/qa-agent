@@ -58,6 +58,10 @@ async function main() {
   const totalChecks = Object.values(apps).reduce((n, a) => n + a.checks.length, 0);
   const failedChecks = Object.values(apps).reduce((n, a) => n + a.checks.filter((c) => !c.ok).length, 0);
   console.log(`API Doctor: ${totalChecks} endpoint controllati — ${failedChecks} FAIL.`);
+
+  // Vedi lo stesso commento in health/engine.mjs: un FAIL reale fa fallire
+  // il job (qui non esiste un livello WARN, solo PASS/FAIL per endpoint).
+  if (failedChecks > 0) process.exitCode = 1;
 }
 
 main().catch((e) => {

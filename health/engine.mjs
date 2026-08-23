@@ -100,6 +100,13 @@ async function main() {
   console.log(
     `Data Health: ${Object.keys(apps).length} app controllate — ${failed} FAIL, ${warned} WARN.`
   );
+
+  // Un FAIL reale fa fallire il job (prima usciva sempre con 0 salvo crash
+  // imprevisti): serve al job `notify` di full-check.yml/data-health.yml per
+  // sapere quando avvisare su Telegram, e fa comparire il segno rosso anche
+  // nella tab Actions di GitHub. WARN resta solo nel report, non blocca:
+  // è un segnale più debole, non vogliamo un avviso ad ogni piccola anomalia.
+  if (failed > 0) process.exitCode = 1;
 }
 
 main().catch((e) => {

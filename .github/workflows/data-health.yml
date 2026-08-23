@@ -15,9 +15,13 @@ name: Data Health Agent
 # ora italiana in inverno (CET), le 5 in ora legale (CEST): un orario in
 # cui è improbabile stare lanciando a mano un test @write, per evitare che
 # Data Health legga dati a metà scrittura e segnali un falso allarme (vedi
-# nota più sotto e health/README.md). Nessuna notifica collegata: un run
-# automatico scrive comunque il riepilogo in questa pagina di Actions,
-# consultabile quando capita di passare di qui.
+# nota più sotto e health/README.md).
+#
+# Il job `notify` in fondo manda un messaggio Telegram se questo run
+# schedulato trova un FAIL vero (vedi health/engine.mjs — WARN non basta,
+# resta solo nel report). Richiede gli stessi due secret di
+# full-check.yml — TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID — non ancora
+# impostati: finché mancano, il job li rileva vuoti e non tenta l'invio.
 on:
   workflow_dispatch:
     inputs:
@@ -83,3 +87,25 @@ jobs:
           name: health-results-json
           path: reports/health-results.json
           retention-days: 30
+
+  notify:
+    needs: health
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notifica Telegram (solo se manca la configurazione, non fallisce il run)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          APP_LABEL: ${{ inputs.app || 'tutte' }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID non configurati nei secret del repo: notifica saltata."
+            exit 0
+          fi
+          MESSAGE=$'⚠️ <b>Data Health Agent fallito</b>\nApp: '"${APP_LABEL}"$'\nRun: '"${RUN_URL}"
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "parse_mode=HTML" \
+            --data-urlencode "text=${MESSAGE}"
