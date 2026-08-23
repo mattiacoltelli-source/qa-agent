@@ -37,18 +37,10 @@ export async function search(page: Page, query: string): Promise<void> {
   await page.locator("#searchBtn").click();
 }
 
-/** Le azioni rapide (Visto/Watchlist) su una card di ricerca sono nascoste
- * finché la card non viene "aperta": su mobile si apre toccando il poster
- * (stesso comportamento reale dell'app, non solo hover da desktop). */
-export async function openSearchCardMenu(card: Locator): Promise<void> {
-  await card.locator(".poster-card__img").click();
-}
-
 export async function addSearchResultAs(
   card: Locator,
   action: "seen" | "watch"
 ): Promise<void> {
-  await openSearchCardMenu(card);
   await card.locator(`.action-${action}`).click();
 }
 

@@ -21,13 +21,15 @@ test.describe("CineTracker — ricerca titoli (TMDB live, sola lettura)", () => 
     await expect(empty).toHaveText(/Nessun risultato/);
   });
 
-  test("le azioni rapide di una card di ricerca sono nascoste finché non si tocca il poster", async ({ page }) => {
+  test("le azioni rapide di una card di ricerca sono visibili senza dover toccare il poster", async ({ page }) => {
+    // Da commit 10d43e3 (Cos90): i pulsanti Watchlist/Visto sono sempre
+    // visibili sulla card, non più a comparsa al tap sul poster — un solo
+    // tocco per aggiungere invece di tap-per-rivelare-poi-tap-per-aggiungere.
     await search(page, "Batman");
     const card = page.locator("#results .poster-card").first();
     await expect(card).toBeVisible({ timeout: 10_000 });
-    await expect(card).not.toHaveClass(/is-actions-open/);
-    await card.locator(".poster-card__img").click();
-    await expect(card).toHaveClass(/is-actions-open/);
+    await expect(card.locator(".action-watch")).toBeVisible();
+    await expect(card.locator(".action-seen")).toBeVisible();
   });
 
   test("svuotare la ricerca nasconde di nuovo la sezione risultati", async ({ page }) => {
