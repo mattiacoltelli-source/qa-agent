@@ -115,4 +115,48 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
     await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
   });
+
+  test("lasciando la Home per Statistiche e tornando indietro (tab bar), il puntino sparisce senza reload", async ({ page }) => {
+    // Prima di questo fix, "ultima visita" veniva aggiornata solo all'avvio
+    // dell'app: il puntino restava visibile per tutta la sessione anche dopo
+    // aver visto il titolo, sparendo solo con un reload completo della pagina
+    // (vedi app.js::goToScreen/markHomeSeen).
+    await gotoFreshWithMockedLibrary(page);
+
+    const between = new Date(
+      (new Date(OLD_CREATED_AT).getTime() + new Date(NEW_CREATED_AT).getTime()) / 2
+    ).toISOString();
+    await seedLocalStorage(page, "cinefighiLastSeenAt", between);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
+
+    await page.locator('.nav__btn[data-screen="stats"]').click();
+    await page.locator("#screen-stats").waitFor({ state: "visible", timeout: 5_000 });
+
+    await page.locator('.nav__btn[data-screen="home"]').click();
+    await page.locator("#screen-home").waitFor({ state: "visible", timeout: 5_000 });
+
+    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
+  });
+
+  test("tornando alla Home col bottone indietro del browser dopo aver aperto un dettaglio, il puntino è già sparito", async ({ page }) => {
+    await gotoFreshWithMockedLibrary(page);
+
+    const between = new Date(
+      (new Date(OLD_CREATED_AT).getTime() + new Date(NEW_CREATED_AT).getTime()) / 2
+    ).toISOString();
+    await seedLocalStorage(page, "cinefighiLastSeenAt", between);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
+
+    await page.locator(".shelf-card").first().click();
+    await page.locator("#screen-detail").waitFor({ state: "visible", timeout: 5_000 });
+
+    await page.goBack();
+    await page.locator("#screen-home").waitFor({ state: "visible", timeout: 5_000 });
+
+    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
+  });
 });
