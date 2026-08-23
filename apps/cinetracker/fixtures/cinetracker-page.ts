@@ -58,10 +58,12 @@ export async function addSearchResultAs(
   await card.locator(`.action-${action}`).click();
 }
 
-/** Rimuove il titolo attualmente aperto nel dettaglio. Il pulsante innesca
- * un `confirm()` nativo del browser: va gestito PRIMA del click, altrimenti
- * Playwright lo respinge automaticamente. */
+/** Rimuove il titolo attualmente aperto nel dettaglio. #detailRemoveBtn NON
+ * innesca un confirm() nativo del browser (verificato sul sorgente: askConfirm()
+ * in app.js apre una modale in-page, #confirmOverlay, con conferma esplicita
+ * su #confirmYesBtn) — serve un secondo click, non basta gestire un evento
+ * "dialog" che qui non arriva mai. */
 export async function removeCurrentDetail(page: Page): Promise<void> {
-  page.once("dialog", (dialog) => dialog.accept());
   await page.locator("#detailRemoveBtn").click();
+  await page.locator("#confirmYesBtn").click();
 }

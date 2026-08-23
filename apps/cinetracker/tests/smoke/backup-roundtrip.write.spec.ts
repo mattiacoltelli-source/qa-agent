@@ -9,9 +9,10 @@ import {
 
 // Esporta un backup, lo re-importa e verifica che la libreria risulti
 // identica: il round-trip è l'unico modo pratico di verificare che
-// export/import concordino sul formato dati. L'import chiede conferma con
-// un `confirm()` nativo, quindi il test scrive/sovrascrive la libreria
-// reale dell'utente — gira solo con RUN_WRITE_TESTS=true.
+// export/import concordino sul formato dati. L'import chiede conferma
+// tramite la modale in-page dell'app (#confirmOverlay/#confirmYesBtn, non
+// un confirm() nativo del browser), quindi il test scrive/sovrascrive la
+// libreria reale dell'utente — gira solo con RUN_WRITE_TESTS=true.
 test.describe("CineTracker — backup export/import @write", () => {
   test.skip(
     process.env.RUN_WRITE_TESTS !== "true",
@@ -64,9 +65,12 @@ test.describe("CineTracker — backup export/import @write", () => {
       const path = await download.path();
       expect(path).toBeTruthy();
 
-      // 3. Re-importiamo lo stesso file: deve chiedere conferma (confirm nativo).
-      page.once("dialog", (dialog) => dialog.accept());
+      // 3. Re-importiamo lo stesso file: deve chiedere conferma. NON un
+      // confirm() nativo — importBackup() (app.js) usa askConfirm(), la
+      // stessa modale in-page (#confirmOverlay/#confirmYesBtn) usata da
+      // removeCurrentDetail() nel fixture — serve un click esplicito.
       await page.locator("#importFileInput").setInputFiles(path!);
+      await page.locator("#confirmYesBtn").click();
       // A questo punto possono essere ancora visibili (non scompaiono subito,
       // restano ~2.8s) anche i toast di "aggiunto a watchlist" e "backup
       // esportato" dei passi precedenti: ".toast.success" da solo è ambiguo

@@ -71,7 +71,7 @@ test.describe("CineTracker — formati voto @write", () => {
     page,
   }) => {
     await search(page, "Inception");
-    const card = page.locator("#results .poster-card").first();
+    const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
     await addSearchResultAs(card, "seen");
     await expect(page.locator("#screen-detail")).toBeVisible();
@@ -91,7 +91,7 @@ test.describe("CineTracker — formati voto @write", () => {
     page,
   }) => {
     await search(page, "Inception");
-    const card = page.locator("#results .poster-card").first();
+    const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
     await addSearchResultAs(card, "seen");
     await expect(page.locator("#screen-detail")).toBeVisible();
