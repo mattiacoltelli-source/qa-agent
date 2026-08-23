@@ -37,6 +37,20 @@ export async function search(page: Page, query: string): Promise<void> {
   await page.locator("#searchBtn").click();
 }
 
+/** Il primo risultato di ricerca potrebbe essere già in libreria (per
+ * CineTracker: la libreria REALE dell'utente, non un dataset di prova —
+ * "Inception" può benissimo essere già stato votato in passato): in quel
+ * caso la card non ha .action-seen/.action-watch, solo un tag "Già in
+ * libreria" (vedi ui.js::renderSearchResults), e un click sull'azione
+ * resterebbe in attesa per sempre. Stesso identico problema e stessa
+ * soluzione già usata in apps/cinefighi/fixtures/cinefighi-page.ts. */
+export function firstAddableSearchCard(page: Page): Locator {
+  return page
+    .locator("#results .poster-card")
+    .filter({ hasNot: page.locator(".poster-card__tag") })
+    .first();
+}
+
 export async function addSearchResultAs(
   card: Locator,
   action: "seen" | "watch"

@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { gotoFresh, search, addSearchResultAs, removeCurrentDetail } from "../../fixtures/cinetracker-page.ts";
+import {
+  gotoFresh,
+  search,
+  firstAddableSearchCard,
+  addSearchResultAs,
+  removeCurrentDetail,
+} from "../../fixtures/cinetracker-page.ts";
 
 // Esporta un backup, lo re-importa e verifica che la libreria risulti
 // identica: il round-trip è l'unico modo pratico di verificare che
@@ -37,9 +43,16 @@ test.describe("CineTracker — backup export/import @write", () => {
     page,
   }) => {
     // 1. Aggiungiamo un titolo di test alla watchlist e catturiamo lo stato "prima".
+    // firstAddableSearchCard, non .first(): "Inception" può già essere nella
+    // libreria REALE dell'utente (non un dataset di prova), nel qual caso la
+    // card non ha .action-watch e un click ci resterebbe in attesa per sempre.
+    // Per lo stesso motivo non assumiamo che il titolo scelto sia letteralmente
+    // "Inception" (potrebbe essere un altro risultato della stessa ricerca,
+    // es. un documentario correlato): catturiamo il titolo vero dalla card.
     await search(page, "Inception");
-    const card = page.locator("#results .poster-card").first();
+    const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
+    const addedTitle = await card.locator(".poster-card__title").textContent();
     await addSearchResultAs(card, "watch");
 
     try {
@@ -63,18 +76,27 @@ test.describe("CineTracker — backup export/import @write", () => {
       // 4. La libreria deve tornare coerente: il titolo aggiunto è ancora in watchlist.
       // #libraryList contiene TUTTA la watchlist reale (nel run che ha
       // scoperto questo bug, 20 titoli): "toContainText" su un locator con
-      // più match va in strict mode violation. Scopiamo sulla riga di
-      // "Inception" specificamente.
+      // più match va in strict mode violation. Scopiamo sulla riga del
+      // titolo effettivamente aggiunto.
       await page.locator('.nav__btn[data-screen="home"]').click();
       await page.locator("#openWatchAll").click();
-      await expect(page.locator("#libraryList .list-item", { hasText: "Inception" })).toBeVisible();
+      await expect(page.locator("#libraryList .list-item", { hasText: addedTitle! })).toBeVisible();
     } finally {
-      // Cleanup: riapriamo il titolo dalla watchlist e lo rimuoviamo.
+      // Cleanup: riapriamo il titolo dalla watchlist e lo rimuoviamo. A
+      // questo punto è già in libreria (l'abbiamo appena aggiunto sopra),
+      // quindi ri-cercandolo la card mostra il tag "Già in libreria"
+      // (.poster-card__tag.open-stored-detail), non più .action-details —
+      // quel pulsante esiste solo per risultati NON ancora posseduti (vedi
+      // ui.js::renderSearchResults).
       await page.locator('.nav__btn[data-screen="home"]').click();
       await search(page, "Inception");
-      const cardAgain = page.locator("#results .poster-card").first();
+      const cardAgain = page
+        .locator("#results .poster-card")
+        .filter({ has: page.locator(".poster-card__title", { hasText: addedTitle! }) })
+        .filter({ has: page.locator(".poster-card__tag") })
+        .first();
       await expect(cardAgain).toBeVisible({ timeout: 10_000 });
-      await cardAgain.locator(".action-details").click();
+      await cardAgain.locator(".open-stored-detail").click();
       await expect(page.locator("#screen-detail")).toBeVisible();
       await removeCurrentDetail(page);
       await expect(page.locator("#screen-home")).toBeVisible();

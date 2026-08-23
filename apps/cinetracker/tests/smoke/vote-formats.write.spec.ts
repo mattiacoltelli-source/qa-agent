@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { gotoFresh, search, addSearchResultAs, removeCurrentDetail } from "../../fixtures/cinetracker-page.ts";
+import {
+  gotoFresh,
+  search,
+  firstAddableSearchCard,
+  addSearchResultAs,
+  removeCurrentDetail,
+} from "../../fixtures/cinetracker-page.ts";
 import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
 
 // Questi test scrivono nella libreria REALE dell'utente (Supabase "Coltel",
@@ -44,7 +50,7 @@ test.describe("CineTracker — formati voto @write", () => {
       page,
     }) => {
       await search(page, "Inception");
-      const card = page.locator("#results .poster-card").first();
+      const card = firstAddableSearchCard(page);
       await expect(card).toBeVisible({ timeout: 10_000 });
       await addSearchResultAs(card, "seen");
       await expect(page.locator("#screen-detail")).toBeVisible();

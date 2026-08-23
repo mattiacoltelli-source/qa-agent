@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { gotoFresh, search, addSearchResultAs, removeCurrentDetail } from "../../fixtures/cinetracker-page.ts";
+import {
+  gotoFresh,
+  search,
+  firstAddableSearchCard,
+  addSearchResultAs,
+  removeCurrentDetail,
+} from "../../fixtures/cinetracker-page.ts";
 import { abortRoute } from "../../../../core/network.ts";
 import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
 
@@ -35,8 +41,13 @@ test.describe("CineTracker — salvataggio voto con Supabase irraggiungibile @wr
     page,
   }) => {
     await search(page, "Inception");
-    const card = page.locator("#results .poster-card").first();
+    const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
+    // Non assumiamo che il titolo scelto sia letteralmente "Inception":
+    // firstAddableSearchCard salta i risultati già in libreria (vedi il suo
+    // commento), quindi potrebbe finire su un altro titolo della stessa
+    // ricerca. Catturiamo il titolo vero per le verifiche più sotto.
+    const addedTitle = await card.locator(".poster-card__title").textContent();
     await addSearchResultAs(card, "seen");
     await expect(page.locator("#screen-detail")).toBeVisible();
 
@@ -61,7 +72,7 @@ test.describe("CineTracker — salvataggio voto con Supabase irraggiungibile @wr
       await page.reload({ waitUntil: "domcontentloaded" });
       await page.locator(".app.app--ready").waitFor({ state: "attached", timeout: 15_000 });
 
-      const card2 = page.locator(".shelf-card.open-stored-detail", { hasText: "Inception" }).first();
+      const card2 = page.locator(".shelf-card.open-stored-detail", { hasText: addedTitle! }).first();
       await expect(card2).toBeVisible({ timeout: 10_000 });
       await expect(card2.locator(".shelf-card__vote")).toHaveText("★ 8,5");
       await card2.click();
