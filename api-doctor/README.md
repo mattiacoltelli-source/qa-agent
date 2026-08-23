@@ -23,6 +23,14 @@ generale al repository.
 Per ogni endpoint: raggiungibile? Status HTTP 2xx? Il corpo ha la forma
 attesa (es. TMDB può rispondere 200 con un errore incapsulato nel corpo)?
 
+In più, se la risposta include header di rate-limit/quota (`X-RateLimit-*`,
+`RateLimit-*`, `Retry-After`), vengono riportati nel riepilogo — a costo
+zero, nessuna chiamata in più, nessuna nuova credenziale. **Nessuna delle
+API controllate oggi (TMDB, Open-Meteo, sunrise-sunset.org) garantisce di
+inviarli**: se assenti, il campo resta vuoto, non è un errore né un FAIL —
+è solo pronto per il giorno in cui una di queste API (o una nuova aggiunta
+in futuro) inizia a mandarli.
+
 ## Struttura
 
 ```

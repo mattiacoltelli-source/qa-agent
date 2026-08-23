@@ -2,8 +2,11 @@
 // API Doctor — engine: per ogni app, interroga le API esterne reali che usa
 // davvero (TMDB per CineFighi/CineTracker, meteo/mare/alba-tramonto per
 // Spot — verificate sul sorgente reale, non dedotte) e verifica che
-// rispondano nella forma attesa. Deterministico: nessuna chiamata AI qui
-// (vedi api-doctor/analyze.mjs). Scrive SEMPRE reports/api-doctor-results.json.
+// rispondano nella forma attesa. In più, propaga gli header di rate-limit
+// quando l'API li invia (vedi lib/http.mjs) — nessuna chiamata aggiuntiva,
+// nessuna nuova credenziale: se un'API non li invia, resta null, non è un
+// FAIL. Deterministico: nessuna chiamata AI qui (vedi api-doctor/analyze.mjs).
+// Scrive SEMPRE reports/api-doctor-results.json.
 
 import fs from "node:fs";
 import * as cinefighi from "./endpoints/cinefighi.mjs";
@@ -28,6 +31,7 @@ async function checkProject(name, project) {
       durationMs: c.durationMs,
       reason: c.reason,
       bodySnippet: c.ok ? null : c.bodySnippet, // il corpo grezzo serve solo per diagnosticare un fallimento
+      rateLimit: c.rateLimit, // header di quota/rate-limit se l'API li invia, altrimenti null
     })),
     result: failed.length === 0 ? "PASS" : "FAIL",
   };
