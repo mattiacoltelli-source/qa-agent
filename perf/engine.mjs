@@ -168,6 +168,10 @@ async function main() {
   const failed = Object.values(apps).filter((a) => a.result === "FAIL").length;
   const warned = Object.values(apps).filter((a) => a.result === "WARN").length;
   console.log(`Performance: ${Object.keys(apps).length} app controllate — ${failed} FAIL, ${warned} WARN.`);
+
+  // Vedi lo stesso commento in health/engine.mjs: un FAIL reale fa fallire
+  // il job, WARN resta solo nel report.
+  if (failed > 0) process.exitCode = 1;
 }
 
 main().catch((e) => {

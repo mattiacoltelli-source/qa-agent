@@ -107,13 +107,20 @@ Ma per l'uso normale non ne hai bisogno: il bottone su GitHub basta.
 
 ## Il workflow non parte da solo, vero?
 
-Per QA Agent, Performance Agent e API Doctor Agent, corretto, di
-proposito: non ci sono run automatici (né ad ogni push, né schedulati).
-L'unico modo per lanciarli è il bottone "Run workflow" — così hai sempre
-il controllo di quando i test girano, specialmente quelli `@write`.
+Lanciati singolarmente (QA Agent, Performance Agent, API Doctor Agent),
+corretto, di proposito: non ci sono run automatici né ad ogni push. L'unico
+modo è il bottone "Run workflow" — così hai sempre il controllo di quando i
+test girano, specialmente quelli `@write`.
 
-Data Health Agent è l'unica eccezione: gira anche da solo ogni 6 giorni,
-di notte — vedi la domanda sotto per il perché.
+Due eccezioni, entrambe schedulate:
+- Data Health Agent gira anche da solo ogni 6 giorni, di notte — vedi la
+  domanda sotto per il perché.
+- "Controllo Completo" (i quattro agenti insieme) gira anche da solo una
+  volta a settimana, il lunedì alle 6 UTC — vedi la domanda su "Controllo
+  Completo" più sotto.
+
+Entrambi, se trovano un problema vero (FAIL, non un semplice WARN), mandano
+un avviso su Telegram — vedi "Come funziona la notifica Telegram?".
 
 ## C'è anche un "Data Health Agent": come si usa e cosa fa?
 
@@ -128,9 +135,9 @@ CineTracker usano Supabase free tier, che mette in pausa un progetto dopo
 7 giorni senza richieste API. Se non apri quelle app per una settimana
 (es. in vacanza), Supabase si sospenderebbe da solo — questo giro
 automatico, essendo a sola lettura ma con vere query sul database, evita
-che succeda senza dover ricordarti di aprire l'app. Non è collegato a
-nessuna notifica: se vuoi vedere l'esito, resta da controllare nella tab
-Actions come per un run manuale.
+che succeda senza dover ricordarti di aprire l'app. Se questo giro trova un
+FAIL vero, arriva anche un avviso su Telegram (vedi sotto) — altrimenti,
+come per un run manuale, l'esito resta comunque nella tab Actions.
 
 Non lanciarlo insieme a un run "QA Agent" con i test `@write` attivi:
 potrebbe leggere dati a metà scrittura e segnalarli come un'anomalia che
@@ -159,6 +166,27 @@ sulla stessa scelta di app, con un solo "Run workflow". I quattro riepiloghi
 compaiono impilati sulla stessa pagina di run — niente da unire a mano. I
 workflow restano comunque lanciabili anche singolarmente come prima, questo
 è solo una scorciatoia.
+
+Gira anche **da solo una volta a settimana** (lunedì alle 6 UTC, tutte e
+tre le app): non serve ricordarsi di lanciarlo a mano. Se, in un run
+schedulato, almeno uno dei quattro agenti trova un FAIL vero, arriva un
+avviso su Telegram — vedi la domanda successiva.
+
+## Come funziona la notifica Telegram?
+
+"Controllo Completo" e Data Health Agent (i due workflow schedulati) hanno
+un job `notify` finale: manda un messaggio su Telegram **solo se c'è un FAIL
+vero** (mai per un semplice WARN, e mai quando va tutto bene — niente
+notifica quando non serve). Il messaggio include quale app e un link diretto
+al run.
+
+Serve impostare due secret nel repo (Settings → Secrets and variables →
+Actions): `TELEGRAM_BOT_TOKEN` (creato parlando con
+[@BotFather](https://t.me/BotFather) su Telegram) e `TELEGRAM_CHAT_ID` (il
+tuo ID chat con quel bot). Finché questi due secret non sono impostati, il
+job li trova vuoti e salta l'invio senza far fallire il run — l'assenza
+della notifica non è quindi, di per sé, garanzia che sia tutto a posto:
+finché non li configuri, resta comunque da controllare la tab Actions.
 
 ## Qualcosa non torna, un test si comporta in modo strano
 

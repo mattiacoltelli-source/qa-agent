@@ -17,6 +17,17 @@ name: Controllo Completo
 # partirebbero mai — proprio nel run in cui servirebbe vederli tutti.
 # `!cancelled()` mantiene l'ordine sequenziale ma li fa girare comunque,
 # fermandosi solo se il run viene annullato a mano.
+#
+# `schedule` fa partire il controllo una volta a settimana da solo, senza
+# bisogno di ricordarsi di lanciarlo: il trigger cron non popola `inputs.app`
+# (non esiste un menu a tendina per un run automatico), quindi ogni `with:`
+# usa `inputs.app || 'tutte'` per ricadere sempre su "tutte" in quel caso.
+#
+# Il job `notify` in fondo manda un messaggio Telegram SOLO se almeno uno dei
+# quattro agenti è fallito (nessun avviso quando va tutto bene, per non
+# ridurlo a rumore). Richiede due secret nel repo — TELEGRAM_BOT_TOKEN e
+# TELEGRAM_CHAT_ID — non ancora impostati: finché mancano, il job li rileva
+# vuoti e non tenta l'invio, senza far fallire il run per questo.
 
 on:
   workflow_dispatch:
@@ -30,12 +41,14 @@ on:
           - cinefighi
           - cinetracker
           - spot
+  schedule:
+    - cron: "0 6 * * 1" # ogni lunedì alle 06:00 UTC, tutte e tre le app
 
 jobs:
   qa:
     uses: ./.github/workflows/tests.yml
     with:
-      app: ${{ inputs.app }}
+      app: ${{ inputs.app || 'tutte' }}
     secrets: inherit
 
   health:
@@ -43,7 +56,7 @@ jobs:
     if: ${{ !cancelled() }}
     uses: ./.github/workflows/data-health.yml
     with:
-      app: ${{ inputs.app }}
+      app: ${{ inputs.app || 'tutte' }}
     secrets: inherit
 
   performance:
@@ -51,7 +64,7 @@ jobs:
     if: ${{ !cancelled() }}
     uses: ./.github/workflows/performance.yml
     with:
-      app: ${{ inputs.app }}
+      app: ${{ inputs.app || 'tutte' }}
     secrets: inherit
 
   api-doctor:
@@ -59,5 +72,27 @@ jobs:
     if: ${{ !cancelled() }}
     uses: ./.github/workflows/api-doctor.yml
     with:
-      app: ${{ inputs.app }}
+      app: ${{ inputs.app || 'tutte' }}
     secrets: inherit
+
+  notify:
+    needs: [qa, health, performance, api-doctor]
+    if: ${{ !cancelled() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notifica Telegram (solo se manca la configurazione, non fallisce il run)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          APP_LABEL: ${{ inputs.app || 'tutte' }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID non configurati nei secret del repo: notifica saltata."
+            exit 0
+          fi
+          MESSAGE=$'⚠️ <b>Controllo Completo fallito</b>\nApp: '"${APP_LABEL}"$'\nRun: '"${RUN_URL}"
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "parse_mode=HTML" \
+            --data-urlencode "text=${MESSAGE}"
