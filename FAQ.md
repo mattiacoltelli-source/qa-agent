@@ -188,6 +188,21 @@ job li trova vuoti e salta l'invio senza far fallire il run — l'assenza
 della notifica non è quindi, di per sé, garanzia che sia tutto a posto:
 finché non li configuri, resta comunque da controllare la tab Actions.
 
+## Cos'è l'AI Incident Analyzer nel messaggio Telegram?
+
+Solo nel job `notify` di "Controllo Completo" (non in Data Health Agent da
+solo): prima di mandare la notifica, uno script (`incident/analyze.mjs`)
+legge i **quattro report insieme** e chiede a Claude di correlarli — non
+di ripetere quello che ogni agente ha già detto per conto suo. Se, per
+esempio, QA fallisce e API Doctor segnala la stessa API in errore ma Data
+Health è pulito, la diagnosi indica l'API come causa probabile, non il
+database. Il risultato (causa probabile, gravità, cosa controllare) finisce
+in coda al messaggio Telegram. Dettagli: **[incident/README.md](incident/README.md)**.
+
+Stesso principio degli altri `analyze.mjs`: zero chiamate se, nonostante
+tutto, risulta tutto PASS; nessun errore qui blocca l'invio della
+notifica — è un arricchimento, non un requisito.
+
 ## Qualcosa non torna, un test si comporta in modo strano
 
 Prima di tutto: nessuna di queste operazioni tocca mai le app CineFighi,

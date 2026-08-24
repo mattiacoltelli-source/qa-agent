@@ -32,6 +32,16 @@ name: Controllo Completo
 # anche se tutti gli agenti passano — utile per verificare che i secret
 # siano ancora validi (es. dopo aver rigenerato il token del bot) senza
 # dover aspettare un fallimento vero.
+#
+# Prima della notifica, il job scarica i quattro report JSON (ogni agente li
+# carica come artifact separato: job diversi, filesystem diversi) e li dà in
+# pasto a incident/analyze.mjs, che CORRELA i quattro segnali insieme — non
+# solo quello fallito — per una diagnosi d'insieme (vedi il file per il
+# perché: un singolo agente non può vedere, da solo, che QA fallisce per un
+# problema dell'API esterna anche se Data Health è pulito). Il risultato,
+# se presente, finisce in coda al messaggio Telegram. Zero chiamate a Claude
+# se, nonostante tutto, tutti e quattro i report sono PASS; nessun errore
+# qui blocca l'invio della notifica.
 
 on:
   workflow_dispatch:
@@ -88,13 +98,76 @@ jobs:
     if: ${{ !cancelled() && (contains(needs.*.result, 'failure') || inputs.test_notify) }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Installa dipendenze
+        run: npm install
+
+      # continue-on-error: se un agente non ha prodotto il proprio artifact
+      # (es. crash prima dello step di upload), l'incident analyzer tratta
+      # semplicemente quel report come assente invece di far fallire il job.
+      - name: Scarica il report QA Agent
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: results-json
+          path: reports
+
+      - name: Scarica il report Data Health Agent
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: health-results-json
+          path: reports
+
+      - name: Scarica il report Performance Agent
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: perf-results-json
+          path: reports
+
+      - name: Scarica il report API Doctor Agent
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: api-doctor-results-json
+          path: reports
+
+      # Con test_notify tutti gli agenti sono realmente PASS: senza questo
+      # step l'incident analyzer si fermerebbe subito ("costo zero"), quindi
+      # il pulsante di test non verificherebbe mai la chiamata vera a Claude
+      # né la diagnosi che finisce su Telegram — solo l'invio del messaggio.
+      # Sovrascrive due dei quattro report scaricati con un fallimento
+      # finto, ma realistico (stesso endpoint in errore su QA e API Doctor,
+      # Data Health pulito) — lo stesso scenario di correlazione descritto
+      # in incident/README.md. Locale al job, non tocca nulla di reale.
+      - name: Simula un fallimento correlato (solo con test_notify)
+        if: ${{ inputs.test_notify }}
+        run: |
+          mkdir -p reports
+          cat > reports/results.json << 'EOF'
+          {"suites":[{"specs":[{"title":"[TEST] il voto restituisce errore 500","file":"vote.spec.ts","tests":[{"projectName":"cinefighi-mobile","status":"unexpected","results":[{"duration":1200,"errors":[{"message":"Expected 200, got 500 on POST /rest/v1/votes"}]}]}]}],"suites":[]}]}
+          EOF
+          cat > reports/api-doctor-results.json << 'EOF'
+          {"generatedAt":"2026-01-01T00:00:00Z","apps":{"cinefighi":{"label":"CineFighi","result":"FAIL","checks":[{"name":"[TEST] votes upsert","endpoint":"https://example.supabase.co/rest/v1/votes","method":"POST","status":500,"ok":false,"reason":"server error","bodySnippet":"internal error"}]},"cinetracker":{"label":"CineTracker","result":"PASS","checks":[]},"vacanza":{"label":"Spot","result":"PASS","checks":[]}}}
+          EOF
+
+      - name: Incident analyzer (correla i quattro report con Claude)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node incident/analyze.mjs
+
       - name: Notifica Telegram (solo se manca la configurazione, non fallisce il run)
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           APP_LABEL: ${{ inputs.app || 'tutte' }}
-          IS_TEST: ${{ inputs.test_notify }}
           HAS_FAILURE: ${{ contains(needs.*.result, 'failure') }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
@@ -107,6 +180,9 @@ jobs:
             TITLE="🧪 <b>Test notifica Controllo Completo</b> (nessun fallimento reale)"
           fi
           MESSAGE=$'\nApp: '"${APP_LABEL}"$'\nRun: '"${RUN_URL}"
+          if [ -f reports/incident-summary.txt ]; then
+            MESSAGE="${MESSAGE}"$'\n\n'"$(cat reports/incident-summary.txt)"
+          fi
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
             --data-urlencode "parse_mode=HTML" \
