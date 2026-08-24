@@ -26,8 +26,12 @@ name: Controllo Completo
 # Il job `notify` in fondo manda un messaggio Telegram SOLO se almeno uno dei
 # quattro agenti è fallito (nessun avviso quando va tutto bene, per non
 # ridurlo a rumore). Richiede due secret nel repo — TELEGRAM_BOT_TOKEN e
-# TELEGRAM_CHAT_ID — non ancora impostati: finché mancano, il job li rileva
-# vuoti e non tenta l'invio, senza far fallire il run per questo.
+# TELEGRAM_CHAT_ID.
+#
+# `test_notify`: forza comunque l'invio di un messaggio Telegram di prova,
+# anche se tutti gli agenti passano — utile per verificare che i secret
+# siano ancora validi (es. dopo aver rigenerato il token del bot) senza
+# dover aspettare un fallimento vero.
 
 on:
   workflow_dispatch:
@@ -41,6 +45,10 @@ on:
           - cinefighi
           - cinetracker
           - spot
+      test_notify:
+        description: "Manda comunque un messaggio Telegram di prova (anche se tutto passa)"
+        type: boolean
+        default: false
   schedule:
     - cron: "0 6 * * 1" # ogni lunedì alle 06:00 UTC, tutte e tre le app
 
@@ -77,7 +85,7 @@ jobs:
 
   notify:
     needs: [qa, health, performance, api-doctor]
-    if: ${{ !cancelled() && contains(needs.*.result, 'failure') }}
+    if: ${{ !cancelled() && (contains(needs.*.result, 'failure') || inputs.test_notify) }}
     runs-on: ubuntu-latest
     steps:
       - name: Notifica Telegram (solo se manca la configurazione, non fallisce il run)
@@ -86,13 +94,20 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           APP_LABEL: ${{ inputs.app || 'tutte' }}
+          IS_TEST: ${{ inputs.test_notify }}
+          HAS_FAILURE: ${{ contains(needs.*.result, 'failure') }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
             echo "TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID non configurati nei secret del repo: notifica saltata."
             exit 0
           fi
-          MESSAGE=$'⚠️ <b>Controllo Completo fallito</b>\nApp: '"${APP_LABEL}"$'\nRun: '"${RUN_URL}"
+          if [ "$HAS_FAILURE" = "true" ]; then
+            TITLE="⚠️ <b>Controllo Completo fallito</b>"
+          else
+            TITLE="🧪 <b>Test notifica Controllo Completo</b> (nessun fallimento reale)"
+          fi
+          MESSAGE=$'\nApp: '"${APP_LABEL}"$'\nRun: '"${RUN_URL}"
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
             --data-urlencode "parse_mode=HTML" \
-            --data-urlencode "text=${MESSAGE}"
+            --data-urlencode "text=${TITLE}${MESSAGE}"
