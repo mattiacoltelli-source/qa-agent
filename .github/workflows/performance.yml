@@ -42,6 +42,21 @@ jobs:
       - name: Esegui Lighthouse
         run: node perf/engine.mjs "${{ inputs.app || 'tutte' }}"
 
+      # TEMPORANEO: diagnosi dell'LCP a 4s di CineTracker (perf/diagnose-lcp.mjs).
+      # Da rimuovere insieme allo script una volta chiusa l'indagine.
+      - name: Diagnosi LCP temporanea (CineTracker)
+        run: node perf/diagnose-lcp.mjs
+
+      - name: Carica la diagnosi LCP temporanea
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinetracker-lcp-diagnosis
+          path: |
+            reports/cinetracker-lcp-diagnosis.txt
+            reports/cinetracker-lhr-full.json
+          retention-days: 3
+
       # Analizza con Claude SOLO le app in WARN/FAIL — zero chiamate se il
       # run è tutto PASS (vedi perf/analyze.mjs). Non blocca mai il run.
       - name: Analizza le anomalie
