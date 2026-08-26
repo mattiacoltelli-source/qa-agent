@@ -73,7 +73,22 @@ export async function ensureQaUserSelected(page: Page): Promise<void> {
 
 export async function openScreen(
   page: Page,
-  screen: "home" | "stats" | "tonight"
+  screen: "home" | "stats" | "tonight" | "report"
 ): Promise<void> {
   await page.locator(`.nav__btn[data-screen="${screen}"]`).click();
+}
+
+/** Compila #searchInput e lancia la ricerca. Da fix 45a67f8: non c'è più
+ * ricerca live al variare del testo, serve un click su #searchBtn (o Invio,
+ * gestito a parte da app.js sullo stesso handler doSearch) — un .fill() da
+ * solo non innesca più nulla. */
+export async function search(page: Page, query: string): Promise<void> {
+  await page.locator("#searchInput").fill(query);
+  await page.locator("#searchBtn").click();
+}
+
+/** Cambia il filtro Mia/Gruppo della watchlist in Home (d114b13). Di default
+ * è "me" ("Io"): mostra solo i titoli aggiunti dall'utente corrente. */
+export async function setWatchlistMode(page: Page, mode: "me" | "group"): Promise<void> {
+  await page.locator(`#watchlistModeToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
 }

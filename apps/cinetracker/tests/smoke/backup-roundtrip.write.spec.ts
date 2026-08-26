@@ -5,6 +5,7 @@ import {
   firstAddableSearchCard,
   addSearchResultAs,
   removeCurrentDetail,
+  openBackupViaSecretGesture,
 } from "../../fixtures/cinetracker-page.ts";
 
 // Esporta un backup, lo re-importa e verifica che la libreria risulti
@@ -25,7 +26,7 @@ test.describe("CineTracker — backup export/import @write", () => {
   });
 
   test("esportare un backup produce un file JSON con seen[] e watchlist[]", async ({ page }) => {
-    await page.locator('.nav__btn[data-screen="backup"]').click();
+    await openBackupViaSecretGesture(page);
     const downloadPromise = page.waitForEvent("download");
     await page.locator("#exportBtn").click();
     const download = await downloadPromise;
@@ -58,7 +59,7 @@ test.describe("CineTracker — backup export/import @write", () => {
 
     try {
       // 2. Esportiamo: questo È lo stato di riferimento del round-trip.
-      await page.locator('.nav__btn[data-screen="backup"]').click();
+      await openBackupViaSecretGesture(page);
       const downloadPromise = page.waitForEvent("download");
       await page.locator("#exportBtn").click();
       const download = await downloadPromise;

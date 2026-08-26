@@ -27,9 +27,23 @@ export async function gotoFresh(page: Page): Promise<void> {
 
 export async function openScreen(
   page: Page,
-  screen: "home" | "stats" | "tonight" | "backup"
+  screen: "home" | "stats" | "tonight" | "report"
 ): Promise<void> {
   await page.locator(`.nav__btn[data-screen="${screen}"]`).click();
+}
+
+/** Apre #screen-backup tramite il gesto nascosto (7 tap entro 500ms,
+ * ovunque nella pagina — vedi lo script "ACCESSO NASCOSTO AL BACKUP" in
+ * index.html). Da 52c529c "Backup" non ha più un bottone in nav: il tab è
+ * stato sostituito da "Report". Il bottone Home attivo è un bersaglio
+ * sicuro per i tap ripetuti — è già la schermata corrente, quindi i click
+ * in più sono no-op per app.js. */
+export async function openBackupViaSecretGesture(page: Page): Promise<void> {
+  const homeBtn = page.locator('.nav__btn[data-screen="home"]');
+  for (let i = 0; i < 7; i++) {
+    await homeBtn.click();
+  }
+  await page.locator("#screen-backup").waitFor({ state: "visible", timeout: 5_000 });
 }
 
 export async function search(page: Page, query: string): Promise<void> {

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { clearBrowserStorage, seedLocalStorage } from "../../../../core/storage.ts";
 import { mockJson } from "../../../../core/network.ts";
-import { QA_USER, selectExistingUser } from "../../fixtures/cinefighi-page.ts";
+import { QA_USER, selectExistingUser, setWatchlistMode } from "../../fixtures/cinefighi-page.ts";
 
 // Verifica il puntino discreto sui titoli aggiunti da altri dopo l'ultima
 // apertura (storage.js::getLastSeenAt/setLastSeenAt, ui.js::renderShelf).
@@ -66,6 +66,10 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
   const picked = await selectExistingUser(page, QA_USER);
   if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+  // I titoli finti sono tutti added_by "Un Amico" (il punto del test è il
+  // puntino su roba aggiunta da altri): col default "Io" (d114b13) la
+  // watchlist Home li nasconderebbe tutti. Passiamo a "Gruppo" per vederli.
+  await setWatchlistMode(page, "group");
   await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
@@ -90,6 +94,10 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     ).toISOString();
     await seedLocalStorage(page, "cinefighiLastSeenAt", between);
     await page.reload({ waitUntil: "domcontentloaded" });
+    // watchlistMode (app.js) è una variabile in memoria, non persistita: ogni
+    // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
+    // titoli finti (added_by "Un Amico").
+    await setWatchlistMode(page, "group");
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
 
     const newCard = page.locator(".shelf-card", { hasText: "Titolo Recentissimo QA" });
@@ -106,12 +114,20 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     ).toISOString();
     await seedLocalStorage(page, "cinefighiLastSeenAt", between);
     await page.reload({ waitUntil: "domcontentloaded" });
+    // watchlistMode (app.js) è una variabile in memoria, non persistita: ogni
+    // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
+    // titoli finti (added_by "Un Amico").
+    await setWatchlistMode(page, "group");
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
     await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
 
     // init() aggiorna subito "l'ultima visita" a ora: una seconda apertura,
     // senza nulla di nuovo aggiunto nel frattempo, non deve più mostrarlo.
     await page.reload({ waitUntil: "domcontentloaded" });
+    // watchlistMode (app.js) è una variabile in memoria, non persistita: ogni
+    // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
+    // titoli finti (added_by "Un Amico").
+    await setWatchlistMode(page, "group");
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
     await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
   });
@@ -128,6 +144,10 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     ).toISOString();
     await seedLocalStorage(page, "cinefighiLastSeenAt", between);
     await page.reload({ waitUntil: "domcontentloaded" });
+    // watchlistMode (app.js) è una variabile in memoria, non persistita: ogni
+    // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
+    // titoli finti (added_by "Un Amico").
+    await setWatchlistMode(page, "group");
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
     await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
 
@@ -148,6 +168,10 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     ).toISOString();
     await seedLocalStorage(page, "cinefighiLastSeenAt", between);
     await page.reload({ waitUntil: "domcontentloaded" });
+    // watchlistMode (app.js) è una variabile in memoria, non persistita: ogni
+    // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
+    // titoli finti (added_by "Un Amico").
+    await setWatchlistMode(page, "group");
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
     await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
 
