@@ -45,11 +45,17 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
   const picked = await selectExistingUser(page, QA_USER);
   if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+  // selectUser() (app.js) imposta currentUser ma NON richiama renderHome():
+  // la Home resta quindi ferma al render fatto al boot, con currentUser
+  // ancora null (nessun titolo "mio" può comparire finché qualcosa non la
+  // ridisegna). Il click sul toggle Mia/Gruppo lo fa — vedi setWatchlistMode
+  // in ogni test, anche quando il mode risultante è quello già "attivo".
 }
 
 test.describe("CineFighi — watchlist Home Mia/Gruppo", () => {
   test('di default ("Io") mostra solo i titoli aggiunti dall\'utente corrente', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
+    await setWatchlistMode(page, "me");
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
 
     await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Mio QA" })).toBeVisible();
@@ -58,9 +64,9 @@ test.describe("CineFighi — watchlist Home Mia/Gruppo", () => {
 
   test('passando a "Gruppo" si vedono anche i titoli aggiunti da altri', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
+    await setWatchlistMode(page, "group");
     await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
 
-    await setWatchlistMode(page, "group");
     await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Di Un Amico QA" })).toBeVisible();
     await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Mio QA" })).toBeVisible();
   });

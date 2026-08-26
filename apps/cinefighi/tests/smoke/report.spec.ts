@@ -19,8 +19,21 @@ test.describe("CineFighi — tab Report (sola lettura)", () => {
 
     const gate = page.locator("#reportGate");
     const body = page.locator("#reportBody");
-    const gateHidden = await gate.evaluate((el) => el.classList.contains("hidden"));
-    const bodyHidden = await body.evaluate((el) => el.classList.contains("hidden"));
-    expect(gateHidden).not.toBe(bodyHidden);
+    // renderReport() (app.js) è async (attende Supabase prima di chiamare
+    // renderReportScreen()): un .evaluate() secco subito dopo il click su
+    // "Report" può leggere il markup statico pre-render, dove nessuno dei
+    // due ha ancora la classe "hidden" applicata correttamente — da qui il
+    // poll, che ritenta finché lo stato non si stabilizza (o va in timeout
+    // se l'invariante è davvero violata).
+    await expect
+      .poll(
+        async () => {
+          const gateHidden = await gate.evaluate((el) => el.classList.contains("hidden"));
+          const bodyHidden = await body.evaluate((el) => el.classList.contains("hidden"));
+          return gateHidden !== bodyHidden;
+        },
+        { timeout: 10_000 }
+      )
+      .toBe(true);
   });
 });

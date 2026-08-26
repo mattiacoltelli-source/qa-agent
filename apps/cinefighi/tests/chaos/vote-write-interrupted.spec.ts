@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ensureQaUserSelected, firstAddableSearchCard } from "../../fixtures/cinefighi-page.ts";
+import { ensureQaUserSelected, firstAddableSearchCard, search } from "../../fixtures/cinefighi-page.ts";
 
 // "Chaos test" (vedi apps/cinetracker/tests/chaos/ per la spiegazione della
 // categoria), variante "crash recovery": qui non interrompiamo la rete
@@ -28,7 +28,8 @@ test.describe("CineFighi — interruzione di rete durante il salvataggio del vot
   test("un'interruzione di rete a metà salvataggio non registra il voto a metà, né lo mostra come salvato", async ({
     page,
   }) => {
-    await page.locator("#searchInput").fill("Inception");
+    // Da fix 45a67f8: niente più ricerca live, serve un click su Cerca/Invio.
+    await search(page, "Inception");
     const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
     // Il click ha già scritto il titolo su Supabase: da qui il try/finally

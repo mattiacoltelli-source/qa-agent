@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ensureQaUserSelected, firstAddableSearchCard } from "../../fixtures/cinefighi-page.ts";
+import { ensureQaUserSelected, firstAddableSearchCard, search } from "../../fixtures/cinefighi-page.ts";
 
 // Questi test SCRIVONO sul database Supabase condiviso dal gruppo CineFighi:
 // le credenziali sono hardcoded nel bundle JS dell'app, quindi non esiste un
@@ -30,7 +30,8 @@ test.describe("CineFighi — voto e libreria @write", () => {
   }) => {
     const expectedVote = "8.5";
 
-    await page.locator("#searchInput").fill("Inception");
+    // Da fix 45a67f8: niente più ricerca live, serve un click su Cerca/Invio.
+    await search(page, "Inception");
     const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
     // Il click ha già scritto su Supabase: da qui in poi il try/finally deve
@@ -66,7 +67,8 @@ test.describe("CineFighi — voto e libreria @write", () => {
   });
 
   test("rimuovere il proprio voto lo toglie dalla lista voti senza rimuovere il titolo", async ({ page }) => {
-    await page.locator("#searchInput").fill("Inception");
+    // Da fix 45a67f8: niente più ricerca live, serve un click su Cerca/Invio.
+    await search(page, "Inception");
     const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
     // Vedi commento gemello nel test precedente: il try/finally copre anche

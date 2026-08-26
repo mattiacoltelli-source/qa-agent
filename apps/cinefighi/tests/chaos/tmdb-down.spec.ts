@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ensureQaUserSelected } from "../../fixtures/cinefighi-page.ts";
+import { ensureQaUserSelected, search } from "../../fixtures/cinefighi-page.ts";
 import { abortRoute } from "../../../../core/network.ts";
 
 // "Chaos test" (vedi apps/cinetracker/tests/chaos/ per la spiegazione della
@@ -19,7 +19,10 @@ test.describe("CineFighi — TMDB irraggiungibile durante una ricerca", () => {
   test("la ricerca fallisce con un messaggio chiaro, non resta bloccata in silenzio", async ({ page }) => {
     await abortRoute(page, /api\.themoviedb\.org/);
 
-    await page.locator("#searchInput").fill("Inception");
+    // Da fix 45a67f8: niente più ricerca live al variare del testo, serve
+    // un click su Cerca/Invio per far partire doSearch() — un .fill() da
+    // solo non innescherebbe mai il catch che vogliamo verificare qui.
+    await search(page, "Inception");
 
     const empty = page.locator("#resultsEmpty");
     await expect(empty).toBeVisible({ timeout: 10_000 });
