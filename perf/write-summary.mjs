@@ -4,12 +4,23 @@
 // health/write-summary.mjs e scripts/write-summary.mjs. Se
 // reports/perf-ai-analysis.json è presente, incorpora l'analisi Claude
 // sotto ogni app in WARN/FAIL — sempre accanto ai punteggi, mai al posto
-// loro.
+// loro. Se reports/perf-trend.json è presente (perf/history.mjs), incorpora
+// l'andamento dei punteggi rispetto al run precedente PER QUELLA APP.
 
 import fs from "node:fs";
 
 const RESULTS_PATH = "reports/perf-results.json";
 const AI_ANALYSIS_PATH = "reports/perf-ai-analysis.json";
+const TREND_PATH = "reports/perf-trend.json";
+
+function loadTrend() {
+  if (!fs.existsSync(TREND_PATH)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(TREND_PATH, "utf-8"));
+  } catch {
+    return {};
+  }
+}
 
 function loadAiAnalysis() {
   if (!fs.existsSync(AI_ANALYSIS_PATH)) return new Map();
@@ -51,6 +62,7 @@ function main() {
 
   const data = JSON.parse(fs.readFileSync(RESULTS_PATH, "utf-8"));
   const aiByApp = loadAiAnalysis();
+  const trendByApp = loadTrend();
 
   const lines = ["# Performance Agent — riepilogo", ""];
 
@@ -83,6 +95,15 @@ function main() {
             lines.push(`    - \`${item.url}\`${kb ? ` (${kb})` : ""}`);
           }
         }
+      }
+    }
+
+    const trend = trendByApp[name];
+    if (trend?.drops?.length > 0) {
+      lines.push("");
+      lines.push("📈 **Andamento rispetto al run precedente**:");
+      for (const d of trend.drops) {
+        lines.push(`  - ${d.metric}: ${d.previous} → ${d.current} (${d.delta} punti)`);
       }
     }
 

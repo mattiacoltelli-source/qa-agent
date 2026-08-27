@@ -26,6 +26,11 @@ jobs:
   scale:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Serve solo per lo step "Salva lo storico" in fondo (commit+push su
+    # history/data/scale.jsonl): il GITHUB_TOKEN di default è a sola
+    # lettura. Nessun altro step scrive nel repo.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -57,6 +62,13 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scale/analyze.mjs
 
+      # Confronta il run di oggi con l'ultimo registrato e scrive
+      # reports/scale-trend.json — PRIMA del riepilogo, che lo legge (vedi
+      # scale/history.mjs). Non fa mai fallire il run.
+      - name: Aggiorna lo storico
+        if: always()
+        run: node scale/history.mjs
+
       - name: Scrivi il riepilogo nel run
         if: always()
         run: node scale/write-summary.mjs
@@ -68,3 +80,33 @@ jobs:
           name: scale-results-json
           path: reports/scale-results.json
           retention-days: 30
+
+      # Salva la voce di storico appena scritta da scale/history.mjs
+      # (history/data/scale.jsonl) direttamente nel repo — nessun database,
+      # solo Git. Non blocca mai il run: se non c'è nulla da salvare esce
+      # subito, se il push viene rifiutato (un altro run concorrente ha
+      # scritto nel frattempo) riprova con un fetch+rebase, e se anche
+      # questo fallisce i dati restano comunque nell'artifact JSON qui
+      # sopra — non è una perdita.
+      - name: Salva lo storico
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -z "$(git status --porcelain history/data/scale.jsonl)" ]; then
+            echo "Nessuna nuova voce di storico da salvare."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add history/data/scale.jsonl
+          git commit -m "chore(scale): aggiorna storico run [skip ci]"
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rifiutato (run concorrente?), tentativo $i/3: riprovo dopo un fetch+rebase."
+            sleep $((i * 5))
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}" || { echo "Rebase in conflitto: abbandono, i dati restano comunque nell'artifact JSON."; git rebase --abort; exit 0; }
+          done
+          echo "Push non riuscito dopo i tentativi: non blocco il run, i dati restano nell'artifact JSON."

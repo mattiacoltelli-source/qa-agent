@@ -52,6 +52,19 @@ PASS. Riceve l'elenco delle vulnerabilità già estratte da `npm audit`
 priorità, e il primo intervento concreto — tipicamente `npm audit fix`
 quando un fix automatico è già disponibile.
 
+## Storico
+
+`security/history.mjs` gira dopo `analyze.mjs` e prima del riepilogo:
+confronta i conteggi di oggi con l'ultimo run registrato. Non usa una
+percentuale (i conteggi sono quasi sempre vicini allo zero, dove 0→1 è
+"+Infinity%" e non dice niente) — segnala semplicemente se critical o high
+sono aumentati rispetto all'ultima volta. Ogni run accoda una riga
+compatta a `history/data/security.jsonl` (committata direttamente nel repo
+dal workflow — vedi `history/lib/record.mjs` per il meccanismo condiviso a
+tutti e quattro gli agenti che ne dispongono). Nessun database: solo un
+file JSONL in Git, letto/scritto in modo arithmetic-only (nessuna IA
+coinvolta). Non fa mai fallire il run.
+
 ## Credenziali
 
 Nessuna nuova. `npm audit` legge solo `package-lock.json` e interroga il

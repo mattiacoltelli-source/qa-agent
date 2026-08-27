@@ -4,12 +4,14 @@
 // perf/write-summary.mjs e scale/write-summary.mjs. Se
 // reports/security-ai-analysis.json è presente, incorpora l'analisi
 // Claude in coda — sempre accanto all'elenco delle vulnerabilità, mai al
-// posto loro.
+// posto loro. Se reports/security-trend.json è presente (security/history.mjs),
+// incorpora l'andamento rispetto al run precedente.
 
 import fs from "node:fs";
 
 const RESULTS_PATH = "reports/security-results.json";
 const AI_ANALYSIS_PATH = "reports/security-ai-analysis.json";
+const TREND_PATH = "reports/security-trend.json";
 
 function icon(result) {
   if (result === "PASS") return "✅";
@@ -56,6 +58,21 @@ function main() {
             lines.push(`    - ${adv.title ?? "advisory"}${adv.url ? ` (${adv.url})` : ""}`);
           }
         }
+      }
+    }
+
+    if (fs.existsSync(TREND_PATH)) {
+      try {
+        const trend = JSON.parse(fs.readFileSync(TREND_PATH, "utf-8"));
+        if (trend.worsened) {
+          lines.push("");
+          lines.push(
+            `📈 **Andamento**: vulnerabilità critical/high aumentate rispetto al run precedente ` +
+              `(critical ${trend.previous.critical}→${trend.current.critical}, high ${trend.previous.high}→${trend.current.high}).`
+          );
+        }
+      } catch {
+        /* file corrotto o assente: il riepilogo deterministico resta comunque completo */
       }
     }
 

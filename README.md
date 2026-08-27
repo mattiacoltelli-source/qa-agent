@@ -11,7 +11,7 @@ guida pratica (dove trovare l'esito, come testare una sola app, cosa sono i
 test `@write`, ecc.). Il resto di questo file è la documentazione tecnica
 del repository.
 
-Nello stesso repository ci sono anche tre moduli indipendenti in più:
+Nello stesso repository ci sono anche cinque moduli indipendenti in più:
 
 - **Data Health Agent**: non testa il comportamento delle app (quello lo fa
   il QA Agent), controlla che siano raggiungibili e che i dati su Supabase
@@ -24,15 +24,27 @@ Nello stesso repository ci sono anche tre moduli indipendenti in più:
   dipendono (TMDB per CineFighi/CineTracker, meteo/mare/alba-tramonto per
   Spot) rispondano, e nella forma attesa. Vedi
   **[api-doctor/README.md](api-doctor/README.md)**.
+- **Scale Agent**: testa la Home/Libreria/Statistiche di CineFighi con
+  molti più titoli di quelli reali (mockati, mai scritti su Supabase), per
+  scoprire prima chi lo dice il gruppo se qualcosa rallenta troppo. Vedi
+  **[scale/README.md](scale/README.md)**.
+- **Security Agent**: `npm audit` sulle dipendenze di qa-agent stesso.
+  Vedi **[security/README.md](security/README.md)**.
 
 Tutti con workflow separato, lanciabile da telefono come il QA Agent,
-stessa logica AI-solo-se-serve.
+stessa logica AI-solo-se-serve. Data Health, Performance, Scale e Security
+tengono anche uno storico compatto dei propri run (nessun database — solo
+un file JSONL per agente in `history/data/`, committato nel repo dal
+workflow stesso) per segnalare quando qualcosa peggiora rispetto
+all'ultima volta, non solo rispetto a una soglia fissa. Vedi
+**[history/lib/record.mjs](history/lib/record.mjs)** per il meccanismo
+condiviso.
 
-Un quinto workflow, **"Controllo Completo"**
-(`.github/workflows/full-check.yml`), lancia tutti e quattro gli agenti
-(QA Agent, Data Health Agent, Performance Agent, API Doctor Agent) in
-sequenza con un solo bottone — i workflow restano comunque richiamabili
-anche singolarmente come prima.
+Un settimo workflow, **"Controllo Completo"**
+(`.github/workflows/full-check.yml`), lancia tutti e sei gli agenti (QA
+Agent, Data Health Agent, Performance Agent, API Doctor Agent, Scale
+Agent, Security Agent) in sequenza con un solo bottone — i workflow
+restano comunque richiamabili anche singolarmente come prima.
 
 ## Struttura
 

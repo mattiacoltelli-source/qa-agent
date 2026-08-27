@@ -75,6 +75,19 @@ PASS. Riceve i tempi e le soglie già confrontate (mai ricalcolati da
 Claude) e li traduce in una spiegazione breve, una priorità, e un primo
 intervento concreto da provare.
 
+## Storico
+
+`scale/history.mjs` gira dopo `analyze.mjs` e prima del riepilogo:
+confronta i tempi di oggi (Home/Libreria/Statistiche) con l'ultimo run
+registrato, ma SOLO se l'extra di titoli è lo stesso della volta precedente
+— confrontare tempi tra un run da 1000 extra e uno da 15000 darebbe un
+numero fuorviante, non un vero peggioramento. Ogni run accoda una riga
+compatta a `history/data/scale.jsonl` (committata direttamente nel repo dal
+workflow — vedi `history/lib/record.mjs` per il meccanismo condiviso a
+tutti e quattro gli agenti che ne dispongono). Nessun database: solo un
+file JSONL in Git, letto/scritto in modo arithmetic-only (nessuna IA
+coinvolta). Non fa mai fallire il run.
+
 ## Credenziali
 
 Nessuna nuova. Stessa chiave "publishable"/anon già hardcoded nei bundle JS

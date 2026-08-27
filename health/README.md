@@ -63,8 +63,20 @@ health/
     vacanza.mjs              idem per Spot (solo uptime, nessun checkData)
   engine.mjs                orchestratore: gira i controlli, scrive reports/health-results.json
   analyze.mjs                analisi Claude, SOLO se qualcosa non è PASS
+  history.mjs                 confronta con l'ultimo run, scrive reports/health-trend.json
   write-summary.mjs          riepilogo leggibile su GITHUB_STEP_SUMMARY
 ```
+
+## Storico
+
+`health/history.mjs` gira dopo `analyze.mjs` e prima del riepilogo:
+confronta i conteggi di oggi (utenti/titoli/voti, per app) con l'ultimo run
+registrato PER QUELLA APP, e segnala se il numero di anomalie è aumentato.
+Ogni run accoda una riga compatta a `history/data/data-health.jsonl`
+(committata direttamente nel repo dal workflow — vedi `history/lib/record.mjs`
+per il meccanismo condiviso a tutti e quattro gli agenti che ne dispongono).
+Nessun database: solo un file JSONL in Git, letto/scritto in modo
+arithmetic-only (nessuna IA coinvolta). Non fa mai fallire il run.
 
 Per aggiungere una quarta app: creare `health/projects/<nome>.mjs` che
 esporta `{ label, url, checkData? }`, poi aggiungere una riga in

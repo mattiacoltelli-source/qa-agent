@@ -65,6 +65,20 @@ individuati da Lighthouse stesso (mai inventati da Claude) e li traduce in
 una spiegazione breve, una priorità, e un primo intervento concreto da
 provare — non ricalcola né rimette in discussione i punteggi.
 
+## Storico
+
+`perf/history.mjs` gira dopo `analyze.mjs` e prima del riepilogo:
+confronta i quattro punteggi Lighthouse di oggi con l'ultimo run
+registrato PER QUELLA APP. Non usa una percentuale — un calo assoluto di
+punti conta più della percentuale che rappresenta (90→85 è solo -5.5% ma è
+un calo reale; 40→38 è -5% ma quasi ininfluente a un livello già basso) —
+segnala un calo di almeno 5 punti su una categoria. Ogni run accoda una
+riga compatta a `history/data/performance.jsonl` (committata direttamente
+nel repo dal workflow — vedi `history/lib/record.mjs` per il meccanismo
+condiviso a tutti e quattro gli agenti che ne dispongono). Nessun
+database: solo un file JSONL in Git, letto/scritto in modo
+arithmetic-only (nessuna IA coinvolta). Non fa mai fallire il run.
+
 ## Credenziali
 
 Nessuna nuova. Lighthouse legge solo l'HTML/JS pubblico delle tre app,

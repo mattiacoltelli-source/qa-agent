@@ -65,6 +65,16 @@ on:
   schedule:
     - cron: "0 6 * * 1" # ogni lunedì alle 06:00 UTC, tutte e tre le app
 
+# I permessi di un workflow chiamante sono un tetto massimo per quelli
+# richiamati con `uses:` — senza questo, lo step "Salva lo storico" di
+# data-health/performance/scale/security (che dichiara contents:write al
+# proprio interno) si troverebbe comunque bloccato in sola lettura quando
+# lanciato da qui, e lo storico non verrebbe mai salvato in un run di
+# Controllo Completo. Non serve su tests.yml/api-doctor.yml, che non
+# scrivono nel repo.
+permissions:
+  contents: write
+
 jobs:
   qa:
     uses: ./.github/workflows/tests.yml

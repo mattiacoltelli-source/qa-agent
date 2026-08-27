@@ -5,12 +5,16 @@
 // Stesso stile di scripts/write-summary.mjs (QA Agent). Se
 // reports/health-ai-analysis.json è presente (scritto da health/analyze.mjs),
 // incorpora anche l'analisi Claude sotto ogni app in WARN/FAIL — sempre
-// accanto ai dati deterministici, mai al posto loro.
+// accanto ai dati deterministici, mai al posto loro. Se
+// reports/health-trend.json è presente (health/history.mjs), incorpora
+// l'andamento (crescita conteggi, issue peggiorate) rispetto al run
+// precedente PER QUELLA APP.
 
 import fs from "node:fs";
 
 const RESULTS_PATH = "reports/health-results.json";
 const AI_ANALYSIS_PATH = "reports/health-ai-analysis.json";
+const TREND_PATH = "reports/health-trend.json";
 
 function loadAiAnalysis() {
   if (!fs.existsSync(AI_ANALYSIS_PATH)) return new Map();
@@ -19,6 +23,15 @@ function loadAiAnalysis() {
     return new Map(analyses.map((a) => [a.app, a]));
   } catch {
     return new Map();
+  }
+}
+
+function loadTrend() {
+  if (!fs.existsSync(TREND_PATH)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(TREND_PATH, "utf-8"));
+  } catch {
+    return {};
   }
 }
 
@@ -36,6 +49,7 @@ function main() {
 
   const data = JSON.parse(fs.readFileSync(RESULTS_PATH, "utf-8"));
   const aiByApp = loadAiAnalysis();
+  const trendByApp = loadTrend();
 
   const lines = ["# Data Health Agent — riepilogo", ""];
 
@@ -61,6 +75,17 @@ function main() {
         for (const issue of app.data.issues) {
           lines.push(`  - **${issue.type}** (${issue.severity}): ${issue.count} — es. ${issue.examples.join("; ")}`);
         }
+      }
+
+      const trend = trendByApp[name];
+      if (trend?.growth?.length > 0 || trend?.issuesWorsened) {
+        lines.push("");
+        lines.push("📈 **Andamento rispetto al run precedente**:");
+        for (const g of trend.growth ?? []) {
+          const sign = g.deltaPct > 0 ? "+" : "";
+          lines.push(`  - ${g.metric}: ${g.previous} → ${g.current} (${sign}${g.deltaPct}%)`);
+        }
+        if (trend.issuesWorsened) lines.push(`  - ⚠️ Numero di anomalie aumentato rispetto al run precedente.`);
       }
 
       const ai = aiByApp.get(name);
