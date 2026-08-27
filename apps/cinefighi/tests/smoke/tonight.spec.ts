@@ -16,7 +16,11 @@ test.describe("CineFighi — Stasera cosa guardo (TMDB discover live)", () => {
   test("il pulsante consigli produce sempre un esito valido, mai un errore silenzioso o un caricamento infinito", async ({ page }) => {
     await page.locator("#tonightBtn").click();
     const result = page.locator("#tonightResult");
-    await expect(result).not.toContainText("Cerco qualcosa per te…", { timeout: 15_000 });
+    // Il testo di caricamento reale (app.js) è "🔍 Sto cercando 6 titoli
+    // adatti…" — stesso fix del file gemello in CineTracker
+    // (tonight.spec.ts), dove la stringa sbagliata ha causato un
+    // fallimento reale in CI (hintVisible letto a metà del re-render).
+    await expect(result).not.toContainText("Sto cercando", { timeout: 15_000 });
 
     const hint = result.locator(".tonight__hint");
     const cards = result.locator(".poster-card");
