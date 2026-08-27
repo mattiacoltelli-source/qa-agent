@@ -116,7 +116,7 @@ test girano, specialmente quelli `@write`.
 Due eccezioni, entrambe schedulate:
 - Data Health Agent gira anche da solo ogni 6 giorni, di notte — vedi la
   domanda sotto per il perché.
-- "Controllo Completo" (i quattro agenti insieme) gira anche da solo una
+- "Controllo Completo" (i cinque agenti insieme) gira anche da solo una
   volta a settimana, il lunedì alle 6 UTC — vedi la domanda su "Controllo
   Completo" più sotto.
 
@@ -164,22 +164,23 @@ Dettagli: **[api-doctor/README.md](api-doctor/README.md)**.
 Quinto workflow, solo CineFighi: legge quanti titoli ci sono davvero ora
 nella libreria condivisa (sola lettura) e testa il client con quel numero
 **+1000** titoli finti mockati — mai scritti sul database vero — per vedere
-se Home, Libreria e Statistiche reggono quando la libreria cresce. Non è
-incluso in "Controllo Completo" (sotto): va lanciato a parte. Dettagli:
+se Home, Libreria e Statistiche reggono quando la libreria cresce. Incluso
+anche in "Controllo Completo" (sotto). Dettagli:
 **[scale/README.md](scale/README.md)**.
 
-## Voglio lanciare tutti gli agenti insieme, senza premere quattro bottoni
+## Voglio lanciare tutti gli agenti insieme, senza premere cinque bottoni
 
 Sesto workflow, **"Controllo Completo"**: lancia QA Agent, Data Health
-Agent, Performance Agent e API Doctor Agent in sequenza (mai in parallelo)
-sulla stessa scelta di app, con un solo "Run workflow". I quattro riepiloghi
-compaiono impilati sulla stessa pagina di run — niente da unire a mano. I
-workflow restano comunque lanciabili anche singolarmente come prima, questo
-è solo una scorciatoia.
+Agent, Performance Agent, API Doctor Agent e Scale Agent in sequenza (mai
+in parallelo) sulla stessa scelta di app (Scale Agent gira comunque, è solo
+CineFighi), con un solo "Run workflow". I cinque riepiloghi compaiono
+impilati sulla stessa pagina di run — niente da unire a mano. I workflow
+restano comunque lanciabili anche singolarmente come prima, questo è solo
+una scorciatoia.
 
 Gira anche **da solo una volta a settimana** (lunedì alle 6 UTC, tutte e
 tre le app): non serve ricordarsi di lanciarlo a mano. Se, in un run
-schedulato, almeno uno dei quattro agenti trova un FAIL vero, arriva un
+schedulato, almeno uno dei cinque agenti trova un FAIL vero, arriva un
 avviso su Telegram — vedi la domanda successiva.
 
 ## Come funziona la notifica Telegram?
@@ -202,7 +203,7 @@ finché non li configuri, resta comunque da controllare la tab Actions.
 
 Solo nel job `notify` di "Controllo Completo" (non in Data Health Agent da
 solo): prima di mandare la notifica, uno script (`incident/analyze.mjs`)
-legge i **quattro report insieme** e chiede a Claude di correlarli — non
+legge i **cinque report insieme** e chiede a Claude di correlarli — non
 di ripetere quello che ogni agente ha già detto per conto suo. Se, per
 esempio, QA fallisce e API Doctor segnala la stessa API in errore ma Data
 Health è pulito, la diagnosi indica l'API come causa probabile, non il
