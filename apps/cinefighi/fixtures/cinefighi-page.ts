@@ -92,3 +92,11 @@ export async function search(page: Page, query: string): Promise<void> {
 export async function setWatchlistMode(page: Page, mode: "me" | "group"): Promise<void> {
   await page.locator(`#watchlistModeToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
 }
+
+/** Cambia il filtro Io/Gruppo delle Statistiche — di default "group": card
+ * numeriche, generi e classifica calcolati sull'intero gruppo invece che sui
+ * soli voti dell'utente corrente. Toggle indipendente da quello della
+ * watchlist in Home (stessa classe CSS .stats-toggle-btn, id diverso). */
+export async function setStatsMode(page: Page, mode: "me" | "group"): Promise<void> {
+  await page.locator(`#statsIoGruppoToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
+}
