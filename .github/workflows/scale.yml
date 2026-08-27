@@ -36,6 +36,12 @@ jobs:
       - name: Installa dipendenze
         run: npm install
 
+      # Test unitari sulla logica pura (parseExtraTitles/rollup in
+      # scale/lib/rollup.mjs) — istantanei, nessuna rete/browser. Prima del
+      # test vero e proprio: una regressione qui va fermata subito.
+      - name: Test unitari
+        run: npm run test:unit
+
       # Stesso Chromium usato dal QA Agent — nessun browser aggiuntivo.
       - name: Installa i browser Playwright (chromium)
         run: npx playwright install --with-deps chromium

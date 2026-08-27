@@ -35,6 +35,13 @@ jobs:
       - name: Installa dipendenze
         run: npm install
 
+      # Test unitari sulla logica pura (classify/rollup PASS-FAIL-INFRA_ERROR
+      # in api-doctor/lib/classify.mjs) — istantanei, nessuna rete. Prima
+      # dei controlli veri: una regressione qui va fermata subito, non
+      # scoperta a valle in un run che sembra passare per il motivo sbagliato.
+      - name: Test unitari
+        run: npm run test:unit
+
       # Interroga le API esterne reali (TMDB per CineFighi/CineTracker, meteo
       # /mare/alba-tramonto per Spot): vedi api-doctor/engine.mjs.
       # Deterministico, nessuna chiamata AI qui. Scrive SEMPRE

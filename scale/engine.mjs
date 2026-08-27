@@ -26,15 +26,9 @@ import { chromium } from "playwright-core";
 
 import { fetchAllRows } from "../health/lib/supabase-rest.mjs";
 import { measureScale } from "./lib/cinefighi-scale.mjs";
-import { THRESHOLDS } from "./thresholds.mjs";
+import { parseExtraTitles, rollup } from "./lib/rollup.mjs";
 
 const OUTPUT_PATH = "reports/scale-results.json";
-const DEFAULT_EXTRA_TITLES = 1000;
-
-function parseExtraTitles(arg) {
-  const n = Number.parseInt(arg, 10);
-  return Number.isFinite(n) && n > 0 ? n : DEFAULT_EXTRA_TITLES;
-}
 
 // Stessa chiave "publishable" hardcoded nel bundle JS di CineFighi, già
 // riusata da health/projects/cinefighi.mjs e scripts/ensure-cinefighi-qa-user.mjs.
@@ -44,22 +38,6 @@ const SUPABASE_KEY = "sb_publishable_6kaInTs-_PDPHUszpj8N5w_Sb1zCXI9";
 async function countRealTitles() {
   const rows = await fetchAllRows(SUPABASE_URL, SUPABASE_KEY, "titles", { select: "id" });
   return rows.length;
-}
-
-function rollup(metrics) {
-  const checks = Object.entries(THRESHOLDS).map(([key, { warn, fail }]) => {
-    const value = metrics[key];
-    const status = value >= fail ? "FAIL" : value >= warn ? "WARN" : "PASS";
-    return { metric: key, value, warn, fail, status };
-  });
-
-  const result = checks.some((c) => c.status === "FAIL")
-    ? "FAIL"
-    : checks.some((c) => c.status === "WARN")
-      ? "WARN"
-      : "PASS";
-
-  return { checks, result };
 }
 
 async function main() {

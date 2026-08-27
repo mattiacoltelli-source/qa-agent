@@ -59,6 +59,12 @@ jobs:
       - name: Installa dipendenze
         run: npm install
 
+      # Test unitari sulla logica pura (rilevamento residui in
+      # health/lib/staleness.mjs) — istantanei, nessuna rete. Prima dei
+      # controlli veri: una regressione qui va fermata subito.
+      - name: Test unitari
+        run: npm run test:unit
+
       # Uptime + integrità dati (sola lettura su Supabase): vedi
       # health/engine.mjs. Scrive SEMPRE reports/health-results.json,
       # anche se qualcosa fallisce qui sotto.

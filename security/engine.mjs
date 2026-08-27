@@ -17,7 +17,7 @@
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 
-import { FAIL_SEVERITIES, WARN_SEVERITIES } from "./thresholds.mjs";
+import { summarizeVulnerabilities, rollup } from "./lib/rollup.mjs";
 
 const OUTPUT_PATH = "reports/security-results.json";
 
@@ -30,36 +30,6 @@ function runNpmAudit() {
     throw new Error(`npm audit non ha prodotto output (stderr: ${result.stderr || "vuoto"})`);
   }
   return JSON.parse(result.stdout);
-}
-
-// Ogni voce di `via` è o una stringa (nome di un altro pacchetto vulnerabile
-// a monte, catena transitiva) o un oggetto con i dettagli veri (titolo,
-// URL, severity, range). Teniamo solo gli oggetti: sono l'informazione
-// utile per il riepilogo e per Claude.
-function extractAdvisories(via) {
-  return (via || [])
-    .filter((v) => typeof v === "object")
-    .map((v) => ({ title: v.title, url: v.url, severity: v.severity, range: v.range }));
-}
-
-function summarizeVulnerabilities(audit) {
-  const entries = Object.values(audit.vulnerabilities || {});
-  return entries.map((v) => ({
-    name: v.name,
-    severity: v.severity,
-    isDirect: v.isDirect,
-    range: v.range,
-    fixAvailable: v.fixAvailable === true ? true : (v.fixAvailable?.name ?? false),
-    advisories: extractAdvisories(v.via),
-  }));
-}
-
-function rollup(counts) {
-  const failing = FAIL_SEVERITIES.filter((s) => counts[s] > 0);
-  if (failing.length > 0) return "FAIL";
-  const warning = WARN_SEVERITIES.filter((s) => counts[s] > 0);
-  if (warning.length > 0) return "WARN";
-  return "PASS";
 }
 
 async function main() {

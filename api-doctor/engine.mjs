@@ -21,15 +21,11 @@ import fs from "node:fs";
 import * as cinefighi from "./endpoints/cinefighi.mjs";
 import * as cinetracker from "./endpoints/cinetracker.mjs";
 import * as spot from "./endpoints/spot.mjs";
+import { classify, rollupApp } from "./lib/classify.mjs";
 
 const PROJECTS = { cinefighi, cinetracker, spot };
 
 const OUTPUT_PATH = "reports/api-doctor-results.json";
-
-function classify(c) {
-  if (c.ok) return "PASS";
-  return c.networkError ? "INFRA_ERROR" : "FAIL";
-}
 
 async function checkProject(name, project) {
   const checks = await project.checks();
@@ -47,11 +43,7 @@ async function checkProject(name, project) {
     rateLimit: c.rateLimit, // header di quota/rate-limit se l'API li invia, altrimenti null
   }));
 
-  const hasFail = classified.some((c) => c.kind === "FAIL");
-  const hasInfra = classified.some((c) => c.kind === "INFRA_ERROR");
-  const result = hasFail ? "FAIL" : hasInfra ? "INFRA_ERROR" : "PASS";
-
-  return { label: project.label, checks: classified, result };
+  return { label: project.label, checks: classified, result: rollupApp(classified) };
 }
 
 async function main() {

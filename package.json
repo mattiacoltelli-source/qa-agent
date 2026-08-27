@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
+    "test:unit": "node --test",
     "test:cinefighi": "playwright test --project=cinefighi-mobile --project=cinefighi-desktop",
     "test:cinetracker": "playwright test --project=cinetracker-mobile --project=cinetracker-desktop",
     "test:vacanza": "playwright test --project=vacanza-mobile --project=vacanza-desktop",

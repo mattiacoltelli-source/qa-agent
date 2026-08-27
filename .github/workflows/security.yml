@@ -26,6 +26,12 @@ jobs:
       - name: Installa dipendenze
         run: npm install
 
+      # Test unitari sulla logica pura (rollup di severità in
+      # security/lib/rollup.mjs) — istantanei, nessuna rete. Prima del
+      # controllo vero: una regressione qui va fermata subito.
+      - name: Test unitari
+        run: npm run test:unit
+
       - name: Esegui npm audit
         run: node security/engine.mjs
 

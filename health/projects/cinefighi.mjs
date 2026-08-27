@@ -4,6 +4,7 @@
 // scritta o cancellata da questo modulo.
 
 import { fetchAllRows } from "../lib/supabase-rest.mjs";
+import { findStaleQaAgentResidue } from "../lib/staleness.mjs";
 
 export const label = "CineFighi";
 export const url = process.env.CINEFIGHI_BASE_URL ?? "https://mattiacoltelli-source.github.io/CineFighi/";
@@ -119,24 +120,12 @@ export async function checkData() {
   // che gira SUBITO DOPO questo controllo). Severity LOW: non è mai un
   // bug dell'app, solo dell'infrastruttura di test, e si autorisolve al
   // prossimo giro di pulizia.
-  const now = Date.now();
-  const staleUser = users.find(
-    (u) => String(u.name).toLowerCase() === QA_USER.toLowerCase() && now - Date.parse(u.created_at) > STALE_RESIDUE_THRESHOLD_MS
-  );
-  const staleTitles = titles.filter(
-    (t) => String(t.added_by).toLowerCase() === QA_USER.toLowerCase() && now - Date.parse(t.created_at) > STALE_RESIDUE_THRESHOLD_MS
-  );
-  if (staleUser || staleTitles.length > 0) {
-    issues.push({
-      type: "stale_qa_agent_residue",
-      severity: "LOW",
-      count: (staleUser ? 1 : 0) + staleTitles.length,
-      examples: [
-        ...(staleUser ? [`utente "${QA_USER}" creato ${staleUser.created_at}`] : []),
-        ...staleTitles.slice(0, 5).map((t) => `title_id=${t.id} creato ${t.created_at}`),
-      ],
-    });
-  }
+  const staleResidue = findStaleQaAgentResidue(users, titles, {
+    qaUser: QA_USER,
+    now: Date.now(),
+    thresholdMs: STALE_RESIDUE_THRESHOLD_MS,
+  });
+  if (staleResidue) issues.push(staleResidue);
 
   return {
     counts: { users: users.length, titles: titles.length, votes: votes.length },
