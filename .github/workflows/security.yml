@@ -1,0 +1,50 @@
+name: Security Agent
+
+# Solo le dipendenze npm di qa-agent stesso: le tre app non hanno un
+# package.json proprio (vendorizzano gli SDK come file JS già pronti) —
+# vedi security/README.md. Nessun selettore "app" quindi, a differenza
+# degli altri workflow.
+
+on:
+  workflow_dispatch:
+  # Permette a Controllo Completo (full-check.yml) di richiamare questo
+  # workflow come step della sua catena sequenziale — stessa nota in
+  # tests.yml/performance.yml/api-doctor.yml/scale.yml.
+  workflow_call:
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Installa dipendenze
+        run: npm install
+
+      - name: Esegui npm audit
+        run: node security/engine.mjs
+
+      # Analizza con Claude SOLO se il run è in WARN/FAIL — zero chiamate su
+      # un run PASS (vedi security/analyze.mjs). Non blocca mai il run.
+      - name: Analizza le anomalie
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node security/analyze.mjs
+
+      - name: Scrivi il riepilogo nel run
+        if: always()
+        run: node security/write-summary.mjs
+
+      - name: Carica i risultati JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-results-json
+          path: reports/security-results.json
+          retention-days: 30

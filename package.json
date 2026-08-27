@@ -36,7 +36,10 @@
     "api-doctor:summary": "node api-doctor/write-summary.mjs",
     "scale": "node scale/engine.mjs",
     "scale:analyze": "node scale/analyze.mjs",
-    "scale:summary": "node scale/write-summary.mjs"
+    "scale:summary": "node scale/write-summary.mjs",
+    "security": "node security/engine.mjs",
+    "security:analyze": "node security/analyze.mjs",
+    "security:summary": "node security/write-summary.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
