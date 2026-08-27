@@ -98,6 +98,17 @@ test.describe("CineFighi — Statistiche", () => {
 
   test('modalità "Io": generi e classifica solo sui titoli che ho votato io', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
+    // init() (app.js) fa più giri di reloadLibrary() ravvicinati (uno al
+    // boot, uno dopo la selezione utente): ognuno richiama renderStats() in
+    // modalità "group", letta dal vivo al momento della chiamata — se uno di
+    // questi arriva DOPO il click su "Io" invece che prima, è l'ultimo a
+    // scrivere sui contatori animati e lascia a video il valore di gruppo
+    // (osservato in CI, non un'ipotesi: gli stessi contatori restavano a "3"
+    // anche con animateValue corretto, mentre generi/classifica — non
+    // animati — mostravano già "Io" giusto). Aspettiamo che la rete si
+    // calmi PRIMA di cambiare modalità, così il click è garantito essere
+    // l'ultimo a ridisegnare.
+    await page.waitForLoadState("networkidle");
     await setStatsMode(page, "me");
 
     // myVoted = Film A (voto mio 8) + Film B (voto mio 6): Film C esclusa,
