@@ -257,3 +257,57 @@ test.describe("CineFighi — Statistiche — Curiosità", () => {
     await expect(page.locator("#curiositaVoting .podium-card")).toHaveCount(3);
   });
 });
+
+// ─── CLASSIFICA: "Mostra tutti" ──────────────────────────────────────────
+// Un solo votante (QA_USER): media di gruppo e voto personale coincidono,
+// quindi lo stesso ordine vale sia in "Gruppo" che in "Io" — utile qui
+// proprio per verificare che il tasto "Mostra tutti" si comporti allo
+// stesso modo in entrambe le modalità, senza dover costruire due fixture.
+
+const EXPAND_TITLES = Array.from({ length: 7 }, (_, i) =>
+  fakeTitle(932000 + i + 1, `Expand Film ${i + 1}`, "Thriller")
+);
+const EXPAND_VOTES = EXPAND_TITLES.map((t, i) => ({ title_id: t.id, user_name: QA_USER, vote: 9 - i }));
+
+test.describe("CineFighi — Statistiche — Classifica, tasto Mostra tutti", () => {
+  test("mostra podio + 2 di default, espande al tocco, in Gruppo e in Io", async ({ page }) => {
+    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
+    await mockJson(page, /rest\/v1\/titles/, EXPAND_TITLES);
+    await mockJson(page, /rest\/v1\/votes/, EXPAND_VOTES);
+    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+    await page.goto(".");
+    await clearBrowserStorage(page);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    const picked = await selectExistingUser(page, QA_USER);
+    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+    await page.locator('.nav__btn[data-screen="stats"]').click();
+    await page.locator("#rankingPodium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+
+    // 7 titoli votati: podio (3) + 2 righe di default = 5, altri 2 dietro
+    // al tasto "Mostra tutti".
+    await expect(page.locator("#rankingCountBadge")).toHaveText("7");
+    await expect(page.locator("#rankingPodium .podium-card")).toHaveCount(3);
+    await expect(page.locator("#rankingList .rank-row")).toHaveCount(2);
+    const expandBtn = page.locator("#rankingExpandBtn");
+    await expect(expandBtn).toBeVisible();
+    await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveText("· 2");
+
+    await expandBtn.click();
+    await expect(page.locator("#rankingList .rank-row")).toHaveCount(4);
+    await expect(expandBtn).toBeHidden();
+
+    // In "Io" lo stesso comportamento: un nuovo render riparte collassato
+    // (non resta espanso da prima), stesso tasto, stesso conteggio — unico
+    // votante, quindi stesso ordine di "Gruppo".
+    await setStatsMode(page, "me");
+    await expect(page.locator("#rankingList .rank-row")).toHaveCount(2);
+    await expect(expandBtn).toBeVisible();
+    await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveText("· 2");
+
+    await expandBtn.click();
+    await expect(page.locator("#rankingList .rank-row")).toHaveCount(4);
+    await expect(expandBtn).toBeHidden();
+  });
+});
