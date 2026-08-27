@@ -76,9 +76,10 @@ composto da cinque agenti indipendenti, eseguiti in sequenza:
 - apiDoctor: raggiungibilità e correttezza delle API esterne (TMDB, meteo),
   sulle stesse tre app
 - scale: SOLO CineFighi — testa se il rendering client-side regge quando la
-  libreria condivisa cresce (simula "titoli reali oggi + 1000", mockati,
-  mai scritti sul database vero); un FAIL qui è un problema di scalabilità
-  del client, non di rete o di dati — non correlarlo automaticamente con
+  libreria condivisa cresce (simula "titoli reali oggi + un extra", di
+  default 1000 ma scelto al lancio del workflow, mai scritti sul database
+  vero); un FAIL qui è un problema di scalabilità del client, non di rete
+  o di dati — non correlarlo automaticamente con
   api-doctor o health a meno che i dati non lo suggeriscano davvero
 
 Ricevi lo stato di tutte e tre le app per ognuno degli agenti in questo

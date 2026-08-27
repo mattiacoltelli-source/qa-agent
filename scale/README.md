@@ -25,20 +25,31 @@ backend).
 2. Lancia un Chromium headless (lo stesso già installato per QA Agent e
    Performance Agent) su una pagina fresca dell'app reale, e intercetta le
    risposte Supabase (`rest/v1/titles|votes|users`) restituendo **titoli
-   reali + 1000** titoli finti generati al volo (generi/voti vari) — mai
-   scritti sul database vero, tutto renderizzato nel browser dallo stesso
-   `app.js`/`ui.js` di produzione. Stessa logica di
-   `scripts/stress-cinefighi.mjs` (uso manuale, a conteggi scelti a mano),
-   condivisa in `scale/lib/cinefighi-scale.mjs`.
+   reali + un extra** (di default 1000, scelto al lancio — vedi sotto)
+   titoli finti generati al volo (generi/voti vari) — mai scritti sul
+   database vero, tutto renderizzato nel browser dallo stesso `app.js`/
+   `ui.js` di produzione. Stessa logica di `scripts/stress-cinefighi.mjs`
+   (uso manuale, a conteggi assoluti scelti a mano), condivisa in
+   `scale/lib/cinefighi-scale.mjs`.
 3. Misura tre tempi: apertura Home, apertura Libreria ("Vedi tutto", prima
    pagina), apertura Statistiche — più il numero di righe caricate prima e
    dopo alcuni scroll nella Libreria.
 4. Confronta ciascun tempo con le soglie in `scale/thresholds.mjs`.
 
-Perché "+1000" e non un numero fisso: così il test resta rilevante anche se
-la libreria reale cresce nel tempo — misura sempre "quanto margine c'è
-oltre lo stato attuale", non un singolo scenario che diventa via via meno
-rappresentativo.
+Perché "reali + extra" e non un numero fisso: così il test resta rilevante
+anche se la libreria reale cresce nel tempo — misura sempre "quanto
+margine c'è oltre lo stato attuale", non un singolo scenario che diventa
+via via meno rappresentativo.
+
+## Scegliere l'extra al lancio
+
+Da GitHub Actions, il campo **"Extra di titoli finti da aggiungere a
+quelli reali"** accetta qualunque intero positivo (default `1000` se
+lasciato vuoto) — per un test più aggressivo basta mettere, ad esempio,
+`15000`. Le soglie sotto restano comunque tarate sull'uso tipico (~1000):
+un extra molto più grande può far scattare legittimamente un WARN/FAIL su
+"Statistiche" senza che sia una regressione reale, solo un test a una
+scala diversa.
 
 ## Soglie
 
@@ -48,7 +59,7 @@ ben sopra i valori osservati, non al filo. Statistiche cresce linearmente
 col numero di titoli (ricalcola le medie su tutta la libreria ad ogni
 apertura), le altre due restano piatte grazie a paginazione/slice — è
 normale che Statistiche sia la più vicina alla soglia WARN quando la
-libreria reale sarà cresciuta molto.
+libreria reale sarà cresciuta molto, o quando si sceglie un extra grande.
 
 ## Risultato
 

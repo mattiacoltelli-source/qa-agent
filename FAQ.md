@@ -104,7 +104,7 @@ Ma per l'uso normale non ne hai bisogno: il bottone su GitHub basta.
 | `npm run cleanup:write-residue` | Lancia a mano la pulizia dei residui (normalmente gira da sola a fine run) |
 | `npm run setup:cinefighi-qa-user` | Crea a mano l'utente `_QA_Agent_` (normalmente gira da solo a inizio run) |
 | `npm run summary` | Rigenera il riepilogo leggibile da un `reports/results.json` già presente |
-| `npm run stress:cinefighi -- --counts=3000,8000` | Stress test manuale di CineFighi a conteggi scelti a mano (lo Scale Agent automatico usa sempre "titoli reali + 1000") |
+| `npm run stress:cinefighi -- --counts=3000,8000` | Stress test manuale di CineFighi a conteggi assoluti scelti a mano (lo Scale Agent automatico usa sempre "titoli reali + extra", extra scelto al lancio del workflow) |
 
 ## Il workflow non parte da solo, vero?
 
@@ -163,10 +163,12 @@ Dettagli: **[api-doctor/README.md](api-doctor/README.md)**.
 
 Quinto workflow, solo CineFighi: legge quanti titoli ci sono davvero ora
 nella libreria condivisa (sola lettura) e testa il client con quel numero
-**+1000** titoli finti mockati — mai scritti sul database vero — per vedere
-se Home, Libreria e Statistiche reggono quando la libreria cresce. Incluso
-anche in "Controllo Completo" (sotto). Dettagli:
-**[scale/README.md](scale/README.md)**.
+**+ un extra** di titoli finti mockati — mai scritti sul database vero —
+per vedere se Home, Libreria e Statistiche reggono quando la libreria
+cresce. L'extra è **1000 di default**, ma lo scegli tu al lancio (campo
+"Extra di titoli" quando premi "Run workflow" — puoi mettere anche
+15000). Incluso anche in "Controllo Completo" (sotto), sempre con
+l'extra di default. Dettagli: **[scale/README.md](scale/README.md)**.
 
 ## Voglio lanciare tutti gli agenti insieme, senza premere cinque bottoni
 

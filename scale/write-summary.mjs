@@ -38,7 +38,7 @@ function main() {
     lines.push(`## ${icon(app.result)} CineFighi — ${app.result}`);
     lines.push("");
     lines.push(`- Titoli reali in libreria al momento del run: **${app.realCount}**`);
-    lines.push(`- Titoli testati (reali + 1000): **${app.targetCount}**`);
+    lines.push(`- Titoli testati (reali + ${app.extraTitles}): **${app.targetCount}**`);
     lines.push("");
 
     if (app.error) {

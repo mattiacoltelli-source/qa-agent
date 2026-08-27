@@ -8,8 +8,15 @@
 // osservati, non al filo: un run normale resta PASS, solo un peggioramento
 // vero fa scattare WARN/FAIL. Da rivedere se la libreria reale di CineFighi
 // dovesse crescere ulteriormente di ordini di grandezza (oggi nell'ordine
-// delle centinaia di titoli, quindi "reali + 1000" resta a lungo
-// nell'ordine di 1000-2000).
+// delle centinaia di titoli, quindi con l'extra di default 1000 il totale
+// resta a lungo nell'ordine di 1000-2000).
+//
+// L'extra è configurabile al lancio (workflow_dispatch.inputs.extra_titles
+// in .github/workflows/scale.yml, default 1000): un run manuale con un
+// extra molto più grande (es. 15000) può legittimamente finire in
+// WARN/FAIL su "statsReadyMs" (cresce linearmente col numero di titoli)
+// senza che sia una regressione reale dell'app — solo un test a una scala
+// diversa da quella su cui queste soglie sono tarate.
 
 export const THRESHOLDS = {
   homeReadyMs: { warn: 3000, fail: 6000 },

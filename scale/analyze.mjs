@@ -23,13 +23,16 @@ const AnalysisSchema = z.object({
 
 const SYSTEM_PROMPT = `Sei un assistente di triage per uno Scale Agent automatico: testa
 CineFighi (PWA di cinema multiutente, gruppo condiviso, backend Supabase)
-simulando la libreria condivisa con "numero di titoli reali oggi + 1000"
-titoli finti mockati lato client (mai scritti sul database vero), per
-vedere se il rendering regge quando la libreria cresce.
+simulando la libreria condivisa con "numero di titoli reali oggi + un
+extra" (di default 1000, ma scelto al lancio del workflow — può essere
+molto più grande, es. 15000) titoli finti mockati lato client (mai scritti
+sul database vero), per vedere se il rendering regge quando la libreria
+cresce.
 
 Ricevi i tempi misurati (Home pronta, apertura Libreria, apertura
 Statistiche, in millisecondi) e le soglie usate (warn/fail), più il numero
-di titoli reale e quello testato. Il tuo compito è, in italiano:
+di titoli reale, l'extra scelto e il totale testato. Il tuo compito è, in
+italiano:
 - riassumere in 1-2 frasi quale schermata sta rallentando e perché,
   ragionando sull'architettura nota (Home e Libreria sono paginate/slice,
   quindi dovrebbero restare piatte al crescere di N; Statistiche invece
@@ -75,6 +78,7 @@ async function analyze(app) {
   const payload = {
     result: app.result,
     realCount: app.realCount,
+    extraTitles: app.extraTitles,
     targetCount: app.targetCount,
     metrics: app.metrics ?? null,
     checks: app.checks ?? [],

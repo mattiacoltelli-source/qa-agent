@@ -7,10 +7,20 @@ name: Scale Agent
 
 on:
   workflow_dispatch:
+    inputs:
+      extra_titles:
+        description: "Extra di titoli finti da aggiungere a quelli reali (es. 1000, 15000)"
+        type: string
+        default: "1000"
   # Permette a Controllo Completo (full-check.yml) di richiamare questo
-  # workflow come step di una catena sequenziale, se in futuro verrà
-  # agganciato lì — stessa nota in tests.yml/performance.yml/api-doctor.yml.
+  # workflow come step della sua catena sequenziale — stessa nota in
+  # tests.yml/performance.yml/api-doctor.yml. Oggi full-check.yml non
+  # specifica extra_titles, quindi ogni run agganciato lì usa il default.
   workflow_call:
+    inputs:
+      extra_titles:
+        type: string
+        default: "1000"
 
 jobs:
   scale:
@@ -30,8 +40,8 @@ jobs:
       - name: Installa i browser Playwright (chromium)
         run: npx playwright install --with-deps chromium
 
-      - name: Esegui il test di scala (titoli reali + 1000, mockati)
-        run: node scale/engine.mjs
+      - name: Esegui il test di scala (titoli reali + extra, mockati)
+        run: node scale/engine.mjs "${{ inputs.extra_titles || '1000' }}"
 
       # Analizza con Claude SOLO se il run è in WARN/FAIL — zero chiamate su
       # un run PASS (vedi scale/analyze.mjs). Non blocca mai il run.
