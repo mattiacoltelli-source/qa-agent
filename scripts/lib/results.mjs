@@ -23,6 +23,26 @@ export function cleanError(text, max) {
   return max && plain.length > max ? `${plain.slice(0, max)}…` : plain;
 }
 
+// Playwright non separa "l'infrastruttura ha ceduto" (browser/runner) da
+// "l'app ha risposto male" in un campo strutturato: bisogna interpretare il
+// testo dell'errore. Deliberatamente conservativo: solo pattern
+// INEQUIVOCABILI di infrastruttura (mai riconducibili a un bug dell'app)
+// classificano INFRA_ERROR — tutto il resto, incluso un timeout generico
+// (può benissimo essere l'app lenta, non lo sappiamo), resta FAIL. Un falso
+// FAIL viene comunque rivisto da un umano; un falso INFRA_ERROR rischia di
+// far ignorare un bug vero.
+const INFRA_ERROR_PATTERNS = [
+  /Target (page|context|browser)(,.*)? (has been closed|closed|crashed)/i,
+  /browserType\.launch/i,
+  /net::ERR_(CONNECTION_REFUSED|CONNECTION_RESET|NAME_NOT_RESOLVED|INTERNET_DISCONNECTED|EMPTY_RESPONSE|TIMED_OUT)/,
+  /\b(ECONNREFUSED|ENOTFOUND|ETIMEDOUT)\b/,
+];
+
+export function classifyFailure(errorMessage) {
+  if (!errorMessage) return "FAIL";
+  return INFRA_ERROR_PATTERNS.some((re) => re.test(errorMessage)) ? "INFRA_ERROR" : "FAIL";
+}
+
 // I risultati sono annidati in un albero di suite (una per file, a volte per
 // progetto). Attraversiamo tutto ricorsivamente per arrivare a spec/test.
 export function collectTests(suites, out = []) {
@@ -49,6 +69,7 @@ export function collectFailures(suites) {
   for (const { spec, test } of collectTests(suites)) {
     if (test.status !== "unexpected") continue;
     const lastResult = test.results[test.results.length - 1];
+    const errorMessage = lastResult?.errors?.[0]?.message;
     failures.push({
       key: failureKey(spec, test),
       title: spec.title,
@@ -56,7 +77,8 @@ export function collectFailures(suites) {
       project: test.projectName,
       app: appNameFromProject(test.projectName),
       duration: lastResult?.duration ?? 0,
-      error: cleanError(lastResult?.errors?.[0]?.message, undefined),
+      error: cleanError(errorMessage, undefined),
+      kind: classifyFailure(errorMessage),
     });
   }
   return failures;

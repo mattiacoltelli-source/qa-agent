@@ -34,6 +34,19 @@ Actions come per un run manuale.
   Supabase — Spot no, solo `localStorage`): righe orfane, duplicati,
   incoerenze tra colonne. Sola lettura: questo modulo non scrive né
   cancella mai nulla su Supabase.
+- **Residui di test rimasti indietro** (solo CineFighi): un utente
+  `_QA_Agent_` o un titolo aggiunto da lui più vecchio di qualche ora non
+  può essere un test `@write` in corso — solo un cleanup che non è
+  arrivato in fondo (il cleanup immediato in `tests.yml` gira sempre a
+  fine run, l'unico modo per cui questo può succedere è che l'intero
+  job/runner sia morto prima: raro, ma possibile). Severity LOW: non è mai
+  un bug dell'app.
+
+Subito dopo questi controlli, il workflow (non questo modulo) rilancia
+`scripts/cleanup-write-residue.mjs` — la stessa rete di sicurezza già
+usata da `tests.yml`, qui come secondo giro indipendente. Va DOPO i
+controlli sopra, non prima, altrimenti l'eventuale segnalazione andrebbe
+persa prima ancora di comparire nel report.
 
 Lo schema delle tabelle usato nei controlli (`health/projects/*.mjs`) è
 stato verificato sul sorgente reale delle due app (`storage.js`), non
@@ -62,7 +75,9 @@ né il QA Agent.
 
 - **PASS**: uptime ok, nessuna anomalia.
 - **WARN**: uptime ok, anomalie rilevate ma tutte di severity LOW/MEDIUM
-  (es. un voto orfano dopo la rimozione di un utente — atteso, non un bug).
+  (es. un voto orfano dopo la rimozione di un utente — atteso, non un bug;
+  oppure un residuo di test rimasto indietro, vedi sopra — si autorisolve
+  al passo di cleanup subito dopo).
 - **FAIL**: sito irraggiungibile, oppure almeno un'anomalia HIGH (dati
   duplicati o orfani che non dovrebbero poter esistere).
 
@@ -80,8 +95,12 @@ dove guardare — in italiano.
 Stessa chiave `sb_publishable_...` già hardcoded nei bundle JS delle due
 app (la trovi anche in `scripts/cleanup-write-residue.mjs`): nessun
 segreto nuovo, nessun permesso più ampio del client che gira in un browser
-qualsiasi. Nessuna `service_role key`, nessuna connection string Postgres:
-questo modulo fa solo `GET` via REST, mai scritture.
+qualsiasi. Nessuna `service_role key`, nessuna connection string Postgres.
+`health/engine.mjs` (i controlli veri e propri) fa solo `GET` via REST,
+mai scritture — il workflow, subito dopo, fa anche un `DELETE`, ma tramite
+lo stesso script già in uso da `tests.yml`, scoperto in modo inequivocabile
+solo su righe riconducibili a `_QA_Agent_` (vedi
+`scripts/cleanup-write-residue.mjs` per il dettaglio).
 
 Unico secret riusato: `ANTHROPIC_API_KEY` (già configurato per il QA
 Agent, Settings → Secrets and variables → Actions).

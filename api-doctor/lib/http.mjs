@@ -6,6 +6,12 @@
 
 const TIMEOUT_MS = 15_000;
 const BODY_SNIPPET_MAX = 500;
+// Un solo retry silenzioso, SOLO su errore di rete (la richiesta non è
+// nemmeno arrivata a destinazione) — mai su una risposta HTTP vera, quella
+// è già un esito definitivo. Stesso identico principio già usato in
+// health/lib/supabase-rest.mjs: un blip di rete isolato non deve bastare a
+// far scattare un FAIL (qui, a valle in engine.mjs, un INFRA_ERROR).
+const NETWORK_ERROR_MAX_RETRIES = 1;
 
 // Header di rate-limit standard o comunemente usati (nomi diversi a seconda
 // del provider — mai garantiti). Raccolti "a costo zero" quando un'API li
@@ -38,7 +44,7 @@ export function redact(url) {
   return url.replace(/([?&](?:api_key|key|token)=)[^&]+/gi, "$1***");
 }
 
-export async function fetchJson(url, { method = "GET" } = {}) {
+async function fetchJsonOnce(url, method) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   const startedAt = Date.now();
@@ -84,4 +90,12 @@ export async function fetchJson(url, { method = "GET" } = {}) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+export async function fetchJson(url, { method = "GET" } = {}) {
+  let result = await fetchJsonOnce(url, method);
+  for (let attempt = 0; attempt < NETWORK_ERROR_MAX_RETRIES && result.networkError; attempt++) {
+    result = await fetchJsonOnce(url, method);
+  }
+  return result;
 }

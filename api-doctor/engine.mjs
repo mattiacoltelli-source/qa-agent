@@ -7,6 +7,15 @@
 // nessuna nuova credenziale: se un'API non li invia, resta null, non è un
 // FAIL. Deterministico: nessuna chiamata AI qui (vedi api-doctor/analyze.mjs).
 // Scrive SEMPRE reports/api-doctor-results.json.
+//
+// Ogni check distingue un FAIL vero (l'API ha risposto, ma male: status
+// sbagliato, corpo malformato) da un INFRA_ERROR (la richiesta non è
+// nemmeno arrivata a destinazione — DNS, timeout, connessione rifiutata:
+// vedi networkError in lib/http.mjs, che già fa un retry silenzioso prima
+// di arrendersi). Un FAIL vero fa fallire il job (e quindi, a valle,
+// notifica su Telegram); un INFRA_ERROR puro no — non è un problema
+// dell'app, è un blip di rete del runner, e trattarlo come un vero
+// allarme è la ricetta per finire per ignorare le notifiche.
 
 import fs from "node:fs";
 import * as cinefighi from "./endpoints/cinefighi.mjs";
@@ -17,24 +26,32 @@ const PROJECTS = { cinefighi, cinetracker, spot };
 
 const OUTPUT_PATH = "reports/api-doctor-results.json";
 
+function classify(c) {
+  if (c.ok) return "PASS";
+  return c.networkError ? "INFRA_ERROR" : "FAIL";
+}
+
 async function checkProject(name, project) {
   const checks = await project.checks();
-  const failed = checks.filter((c) => !c.ok);
-  return {
-    label: project.label,
-    checks: checks.map((c) => ({
-      name: c.name,
-      endpoint: c.url,
-      method: c.method,
-      status: c.status,
-      ok: c.ok,
-      durationMs: c.durationMs,
-      reason: c.reason,
-      bodySnippet: c.ok ? null : c.bodySnippet, // il corpo grezzo serve solo per diagnosticare un fallimento
-      rateLimit: c.rateLimit, // header di quota/rate-limit se l'API li invia, altrimenti null
-    })),
-    result: failed.length === 0 ? "PASS" : "FAIL",
-  };
+  const classified = checks.map((c) => ({
+    name: c.name,
+    endpoint: c.url,
+    method: c.method,
+    status: c.status,
+    ok: c.ok,
+    infra: !!c.networkError,
+    kind: classify(c),
+    durationMs: c.durationMs,
+    reason: c.reason,
+    bodySnippet: c.ok ? null : c.bodySnippet, // il corpo grezzo serve solo per diagnosticare un fallimento
+    rateLimit: c.rateLimit, // header di quota/rate-limit se l'API li invia, altrimenti null
+  }));
+
+  const hasFail = classified.some((c) => c.kind === "FAIL");
+  const hasInfra = classified.some((c) => c.kind === "INFRA_ERROR");
+  const result = hasFail ? "FAIL" : hasInfra ? "INFRA_ERROR" : "PASS";
+
+  return { label: project.label, checks: classified, result };
 }
 
 async function main() {
@@ -56,11 +73,14 @@ async function main() {
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), apps }, null, 2));
 
   const totalChecks = Object.values(apps).reduce((n, a) => n + a.checks.length, 0);
-  const failedChecks = Object.values(apps).reduce((n, a) => n + a.checks.filter((c) => !c.ok).length, 0);
-  console.log(`API Doctor: ${totalChecks} endpoint controllati — ${failedChecks} FAIL.`);
+  const failedChecks = Object.values(apps).reduce((n, a) => n + a.checks.filter((c) => c.kind === "FAIL").length, 0);
+  const infraChecks = Object.values(apps).reduce((n, a) => n + a.checks.filter((c) => c.kind === "INFRA_ERROR").length, 0);
+  console.log(`API Doctor: ${totalChecks} endpoint controllati — ${failedChecks} FAIL, ${infraChecks} INFRA_ERROR.`);
 
-  // Vedi lo stesso commento in health/engine.mjs: un FAIL reale fa fallire
-  // il job (qui non esiste un livello WARN, solo PASS/FAIL per endpoint).
+  // Solo un FAIL vero fa fallire il job (e quindi notifica su Telegram, vedi
+  // full-check.yml). Un INFRA_ERROR puro NON lo fa fallire: resta visibile
+  // nel riepilogo di questo run per chi vuole controllarlo, ma non genera un
+  // falso allarme — vedi il commento in testa al file.
   if (failedChecks > 0) process.exitCode = 1;
 }
 

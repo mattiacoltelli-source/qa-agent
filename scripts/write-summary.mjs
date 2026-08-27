@@ -11,7 +11,7 @@
 // al messaggio d'errore originale, mai al posto suo.
 
 import fs from "node:fs";
-import { collectTests, appNameFromProject, cleanError } from "./lib/results.mjs";
+import { collectTests, appNameFromProject, cleanError, classifyFailure } from "./lib/results.mjs";
 
 const RESULTS_PATH = "reports/results.json";
 const AI_ANALYSIS_PATH = "reports/ai-analysis.json";
@@ -43,7 +43,7 @@ function main() {
   const byApp = new Map();
   for (const { spec, test } of allTests) {
     const app = appNameFromProject(test.projectName);
-    if (!byApp.has(app)) byApp.set(app, { passed: 0, failed: 0, flaky: 0, skipped: 0, failures: [] });
+    if (!byApp.has(app)) byApp.set(app, { passed: 0, failed: 0, infra: 0, flaky: 0, skipped: 0, failures: [] });
     const bucket = byApp.get(app);
 
     if (test.status === "expected") bucket.passed++;
@@ -54,13 +54,17 @@ function main() {
     } else if (test.status === "unexpected") {
       bucket.failed++;
       const lastResult = test.results[test.results.length - 1];
+      const errorMessage = lastResult?.errors?.[0]?.message;
+      const kind = classifyFailure(errorMessage);
+      if (kind === "INFRA_ERROR") bucket.infra++;
       const key = `${test.projectName}::${spec.file}::${spec.title}`;
       bucket.failures.push({
         title: spec.title,
         file: spec.file,
         project: test.projectName,
         duration: lastResult?.duration ?? 0,
-        error: cleanError(lastResult?.errors?.[0]?.message, MAX_ERROR_CHARS),
+        error: cleanError(errorMessage, MAX_ERROR_CHARS),
+        kind,
         ai: aiByKey.get(key),
       });
     }
@@ -77,9 +81,14 @@ function main() {
 
   for (const [app, bucket] of byApp) {
     lines.push(`### ${app}`);
+    // bucket.failed include anche gli eventuali bucket.infra (Playwright li
+    // conta comunque come "unexpected"): mostrarli separati aiuta a capire a
+    // colpo d'occhio quanti sono probabilmente un blip di infrastruttura
+    // (browser/rete del runner) invece che un bug reale dell'app.
     lines.push(
       `✅ ${bucket.passed} PASS` +
-        (bucket.failed ? `  ❌ ${bucket.failed} FAIL` : "") +
+        (bucket.failed ? `  ❌ ${bucket.failed - bucket.infra} FAIL` : "") +
+        (bucket.infra ? `  🌐 ${bucket.infra} INFRA_ERROR` : "") +
         (bucket.flaky ? `  🔁 ${bucket.flaky} FLAKY` : "") +
         (bucket.skipped ? `  ⏭️ ${bucket.skipped} SKIP` : "")
     );
@@ -103,7 +112,8 @@ function main() {
     }
 
     for (const f of allFailures) {
-      lines.push(`**${f.title}** \`(${f.project}, ${(f.duration / 1000).toFixed(1)}s)\``);
+      const infraTag = f.kind === "INFRA_ERROR" ? " 🌐 _probabile INFRA_ERROR, non un bug dell'app_" : "";
+      lines.push(`**${f.title}**${infraTag} \`(${f.project}, ${(f.duration / 1000).toFixed(1)}s)\``);
       lines.push(`<sub>${f.file}</sub>`);
       lines.push("");
       lines.push("```");

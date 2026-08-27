@@ -174,8 +174,14 @@ function buildPayload() {
   );
   const apiDoctor = summarizeAgentApps(apiDoctorData, (a) => ({
     failedChecks: (a.checks || [])
-      .filter((c) => !c.ok)
+      .filter((c) => c.kind === "FAIL")
       .map((c) => ({ name: c.name, endpoint: c.endpoint, status: c.status, reason: c.reason })),
+    // Solo un blip di rete del runner, non un problema dell'API — riportato
+    // separato così Claude non lo confonde con un failedCheck vero (vedi
+    // api-doctor/engine.mjs).
+    infraChecks: (a.checks || [])
+      .filter((c) => c.kind === "INFRA_ERROR")
+      .map((c) => ({ name: c.name, endpoint: c.endpoint, reason: c.reason })),
   }));
   const scale = summarizeAgentApps(scaleData, (a) =>
     a.error

@@ -48,7 +48,10 @@ Ogni test di scrittura ripulisce da solo quello che aggiunge, e in più c'è
 una rete di sicurezza automatica (`scripts/cleanup-write-residue.mjs`) che
 gira a fine di **ogni** run e ripulisce eventuali residui rimasti se un test
 si fosse interrotto a metà (crash del browser, ecc.) — verificata più volte
-contro dati reali. Dettagli completi: `apps/cinefighi/README.md` e
+contro dati reali. Data Health Agent rilancia lo stesso script anche nel
+suo giro automatico ogni 6 giorni, come **secondo livello indipendente**:
+copre il caso (raro) in cui muoia l'intero job/runner prima ancora che il
+primo cleanup parta. Dettagli completi: `apps/cinefighi/README.md` e
 `apps/cinetracker/README.md`.
 
 ## Chi è "_QA_Agent_"? Perché a volte lo vedo nella lista di CineFighi e a volte no?
@@ -60,11 +63,17 @@ sta girando potresti vederlo per qualche secondo/minuto, ma a run finito
 sparisce di nuovo. Se lo vedi rimasto lì a lungo dopo un run concluso,
 qualcosa è andato storto nel cleanup — puoi cancellarlo a mano dall'app
 (icona del cestino accanto al nome) senza problemi, si ricrea da solo al
-prossimo test.
+prossimo test, oppure aspettare: Data Health Agent lo segnala (WARN,
+`stale_qa_agent_residue`) e lo ripulisce da solo al giro automatico
+successivo, entro 6 giorni al massimo.
 
 ## Un test è fallito — è un bug della mia app o un bug nel test?
 
-Guarda il messaggio d'errore nel riepilogo:
+Guarda il riepilogo: ogni fallimento QA ha un'etichetta 🌐 **INFRA_ERROR**
+quando il messaggio è inequivocabilmente un problema di infrastruttura
+(browser crashato, connessione al sito rifiutata) — non un bug dell'app né
+del test, e Claude non lo analizza (non c'è nulla da diagnosticare
+sull'app). Tutto il resto resta un normale fallimento, dove:
 
 - Se parla di un **selettore che non trova un elemento**, un **timeout**, o
   un **testo ambiguo** ("resolved to N elements") — è quasi sempre un bug
@@ -75,6 +84,12 @@ Guarda il messaggio d'errore nel riepilogo:
   all'utente, un bottone che non fa nulla) — allora è un bug vero
   nell'app, e vale la pena approfondire con lo screenshot/trace di quel
   test.
+
+Nota: la classificazione INFRA_ERROR di QA Agent è euristica (basata su
+pattern noti nel messaggio d'errore), quindi deliberatamente prudente —
+un timeout generico resta un normale fallimento anche se in realtà fosse
+solo un rallentamento del runner, per non rischiare di nascondere un bug
+vero dietro un'etichetta "non è colpa dell'app".
 
 Nel dubbio, apri la trace del test fallito (`playwright-report` in fondo
 alla pagina del run) — mostra passo per passo cosa ha visto il browser.
@@ -157,7 +172,10 @@ punteggi reali). Dettagli: **[perf/README.md](perf/README.md)**.
 Quarto workflow: controlla, per ognuna delle tre app, che le API esterne da
 cui dipende davvero (TMDB per CineFighi/CineTracker — chiavi diverse tra le
 due app —, meteo/mare/alba-tramonto per Spot) rispondano, e nella forma
-attesa. Non c'è stato WARN: un endpoint o risponde correttamente o è FAIL.
+attesa. Non c'è stato WARN: un endpoint o risponde correttamente, o è un
+FAIL vero, o — se la richiesta non è nemmeno arrivata a destinazione,
+tipo un blip di rete del runner — un 🌐 **INFRA_ERROR**, che non fa
+fallire il job né notifica su Telegram (non è un problema dell'API).
 Dettagli: **[api-doctor/README.md](api-doctor/README.md)**.
 
 ## E uno "Scale Agent"?

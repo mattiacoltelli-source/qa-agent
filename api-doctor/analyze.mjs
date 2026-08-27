@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// Analizza con Claude (Sonnet 5) SOLO gli endpoint in FAIL — stesso pattern
-// di health/analyze.mjs e perf/analyze.mjs. Zero chiamate se tutto è PASS
-// (il caso più comune). Riceve endpoint, richiesta, status, errore e un
-// pezzo della risposta grezza (mai la api_key, redatta a monte in
-// api-doctor/lib/http.mjs), interpreta — non ricalcola nulla di
-// deterministico. Non blocca mai il run.
+// Analizza con Claude (Sonnet 5) SOLO gli endpoint in FAIL VERO — stesso
+// pattern di health/analyze.mjs e perf/analyze.mjs. Zero chiamate se tutto è
+// PASS (il caso più comune) o se gli unici problemi sono INFRA_ERROR (la
+// richiesta non è nemmeno arrivata a destinazione — non c'è nulla da
+// diagnosticare sull'API, vedi api-doctor/engine.mjs). Riceve endpoint,
+// richiesta, status, errore e un pezzo della risposta grezza (mai la
+// api_key, redatta a monte in api-doctor/lib/http.mjs), interpreta — non
+// ricalcola nulla di deterministico. Non blocca mai il run.
 
 import fs from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
@@ -50,12 +52,12 @@ async function main() {
   const failedByKey = [];
   for (const [appName, app] of Object.entries(data.apps || {})) {
     for (const check of app.checks) {
-      if (!check.ok) failedByKey.push({ appName, label: app.label, check });
+      if (check.kind === "FAIL") failedByKey.push({ appName, label: app.label, check });
     }
   }
 
   if (failedByKey.length === 0) {
-    console.log("Tutti gli endpoint controllati sono PASS: nessuna chiamata a Claude (costo zero).");
+    console.log("Nessun FAIL vero (solo PASS e/o INFRA_ERROR): nessuna chiamata a Claude (costo zero).");
     return;
   }
 

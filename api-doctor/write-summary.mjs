@@ -22,7 +22,9 @@ function loadAiAnalysis() {
 }
 
 function icon(result) {
-  return result === "PASS" ? "✅" : "❌";
+  if (result === "PASS") return "✅";
+  if (result === "INFRA_ERROR") return "🌐";
+  return "❌";
 }
 
 // Solo se l'API ha inviato header di rate-limit (mai garantito, vedi
@@ -56,6 +58,13 @@ function main() {
       if (check.ok) {
         const quota = rateLimit ? ` — quota: ${rateLimit}` : "";
         lines.push(`- ✅ **${check.name}** — PASS (HTTP ${check.status}, ${check.durationMs}ms)${quota}`);
+        continue;
+      }
+
+      if (check.kind === "INFRA_ERROR") {
+        lines.push(`- 🌐 **${check.name}** — INFRA_ERROR (richiesta mai arrivata a destinazione, non un problema dell'API)`);
+        lines.push(`  - Dettaglio: ${check.reason}`);
+        lines.push(`  - Endpoint: \`${check.endpoint}\``);
         continue;
       }
 

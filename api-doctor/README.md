@@ -52,19 +52,30 @@ esporta `{ label, checks() }`, poi aggiungere una riga in `PROJECTS` in
 ## Risultato per app
 
 - **PASS**: tutti gli endpoint controllati rispondono nella forma attesa.
-- **FAIL**: almeno un endpoint non raggiungibile, HTTP non-2xx, o risposta
-  200 ma con una forma diversa da quella attesa (incluso l'errore
-  incapsulato tipico di TMDB).
+- **FAIL**: almeno un endpoint ha risposto, ma male — HTTP non-2xx, o
+  risposta 200 con una forma diversa da quella attesa (incluso l'errore
+  incapsulato tipico di TMDB). Fa fallire il job (e quindi notificare su
+  Telegram, vedi `full-check.yml`).
+- **INFRA_ERROR**: la richiesta non è nemmeno arrivata a destinazione (DNS,
+  timeout, connessione rifiutata — dopo un retry silenzioso, vedi
+  `lib/http.mjs`). **Non** fa fallire il job: non è un problema dell'API,
+  è un blip di rete del runner GitHub Actions — trattarlo come un FAIL
+  vero produrrebbe falsi allarmi e farebbe finire per ignorare le notifiche
+  reali. Resta comunque visibile nel riepilogo di questo run.
 
-Non c'è uno stato WARN qui: un'API esterna o risponde correttamente o no.
+Non c'è uno stato WARN qui: un'API esterna o risponde correttamente o no —
+INFRA_ERROR non è una via di mezzo, è un tipo di problema diverso (del
+runner, non dell'API).
 
 ## AI: solo quando serve
 
-Claude viene chiamato **solo** per gli endpoint in FAIL, mai su un run
-completamente PASS (costo zero in quel caso — verificabile nel log del
-run: "nessuna chiamata a Claude"). Non decide PASS/FAIL: quello lo fa
-`api-doctor/engine.mjs` con codice deterministico, già certo prima che
-Claude veda niente. Per ogni FAIL restituisce, in italiano:
+Claude viene chiamato **solo** per gli endpoint in FAIL vero, mai su un run
+completamente PASS né su un run con solo INFRA_ERROR (costo zero in
+entrambi i casi — verificabile nel log del run: "nessuna chiamata a
+Claude"; non ha senso chiedere una diagnosi applicativa se il problema è
+che il runner non ha raggiunto l'endpoint). Non decide PASS/FAIL/INFRA_ERROR:
+quello lo fa `api-doctor/engine.mjs` con codice deterministico, già certo
+prima che Claude veda niente. Per ogni FAIL restituisce, in italiano:
 
 - **Probabile causa** (es. chiave scaduta/revocata, rate limit, l'API ha
   cambiato formato risposta, servizio esterno down, timeout di rete);

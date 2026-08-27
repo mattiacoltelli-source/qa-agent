@@ -71,10 +71,14 @@ async function main() {
   }
 
   const data = JSON.parse(fs.readFileSync(RESULTS_PATH, "utf-8"));
-  const failures = collectFailures(data.suites || []);
+  // Esclude i fallimenti classificati INFRA_ERROR (browser/rete del runner,
+  // vedi classifyFailure in lib/results.mjs): non c'è nulla da diagnosticare
+  // sull'app se il problema è che il browser è crashato, e chiederlo a
+  // Claude sarebbe solo una chiamata sprecata.
+  const failures = collectFailures(data.suites || []).filter((f) => f.kind === "FAIL");
 
   if (failures.length === 0) {
-    console.log("Nessun test fallito in questo run: nessuna chiamata a Claude (costo zero).");
+    console.log("Nessun test fallito per un motivo diverso da INFRA_ERROR: nessuna chiamata a Claude (costo zero).");
     return;
   }
 

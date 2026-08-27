@@ -11,10 +11,21 @@ export const url = process.env.CINEFIGHI_BASE_URL ?? "https://mattiacoltelli-sou
 const SUPABASE_URL = "https://dxzukpujouayxlomwryc.supabase.co";
 const SUPABASE_KEY = "sb_publishable_6kaInTs-_PDPHUszpj8N5w_Sb1zCXI9";
 
+// Stesso utente di test dedicato usato dalla suite Playwright (QA_USER in
+// apps/cinefighi/fixtures/cinefighi-page.ts) e dagli script di
+// setup/cleanup (scripts/ensure-cinefighi-qa-user.mjs,
+// scripts/cleanup-write-residue.mjs) — duplicato qui come stringa
+// letterale, stessa convenzione già in uso in quei due script.
+const QA_USER = "_QA_Agent_";
+// Ben oltre la durata di un run reale (minuti): un residuo più vecchio di
+// così non può essere un test in corso, solo un cleanup che non è arrivato
+// in fondo (vedi il controllo più sotto).
+const STALE_RESIDUE_THRESHOLD_MS = 3 * 60 * 60 * 1000;
+
 export async function checkData() {
   const [users, titles, votes] = await Promise.all([
-    fetchAllRows(SUPABASE_URL, SUPABASE_KEY, "users", { select: "name" }),
-    fetchAllRows(SUPABASE_URL, SUPABASE_KEY, "titles", { select: "id,added_by" }),
+    fetchAllRows(SUPABASE_URL, SUPABASE_KEY, "users", { select: "name,created_at" }),
+    fetchAllRows(SUPABASE_URL, SUPABASE_KEY, "titles", { select: "id,added_by,created_at" }),
     fetchAllRows(SUPABASE_URL, SUPABASE_KEY, "votes", { select: "title_id,user_name" }),
   ]);
 
@@ -95,6 +106,35 @@ export async function checkData() {
       severity: "MEDIUM",
       count: dupUsers.length,
       examples: dupUsers.slice(0, 5).map(([k, n]) => `${k} x${n}`),
+    });
+  }
+
+  // Rete di sicurezza per i test @write: il cleanup immediato
+  // (scripts/cleanup-write-residue.mjs) gira SEMPRE a fine run, anche su
+  // test falliti — l'unico modo per cui un residuo di "_QA_Agent_" può
+  // restare qui è che l'intero job/runner sia morto prima che quello step
+  // partisse (crash, OOM: raro ma possibile). Un residuo così vecchio non
+  // può essere un test in corso, quindi è sempre sicuro segnalarlo (e
+  // rimuoverlo — vedi il nuovo step in .github/workflows/data-health.yml,
+  // che gira SUBITO DOPO questo controllo). Severity LOW: non è mai un
+  // bug dell'app, solo dell'infrastruttura di test, e si autorisolve al
+  // prossimo giro di pulizia.
+  const now = Date.now();
+  const staleUser = users.find(
+    (u) => String(u.name).toLowerCase() === QA_USER.toLowerCase() && now - Date.parse(u.created_at) > STALE_RESIDUE_THRESHOLD_MS
+  );
+  const staleTitles = titles.filter(
+    (t) => String(t.added_by).toLowerCase() === QA_USER.toLowerCase() && now - Date.parse(t.created_at) > STALE_RESIDUE_THRESHOLD_MS
+  );
+  if (staleUser || staleTitles.length > 0) {
+    issues.push({
+      type: "stale_qa_agent_residue",
+      severity: "LOW",
+      count: (staleUser ? 1 : 0) + staleTitles.length,
+      examples: [
+        ...(staleUser ? [`utente "${QA_USER}" creato ${staleUser.created_at}`] : []),
+        ...staleTitles.slice(0, 5).map((t) => `title_id=${t.id} creato ${t.created_at}`),
+      ],
     });
   }
 
