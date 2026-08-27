@@ -109,14 +109,15 @@ Ma per l'uso normale non ne hai bisogno: il bottone su GitHub basta.
 ## Il workflow non parte da solo, vero?
 
 Lanciati singolarmente (QA Agent, Performance Agent, API Doctor Agent,
-Scale Agent), corretto, di proposito: non ci sono run automatici né ad ogni push. L'unico
-modo è il bottone "Run workflow" — così hai sempre il controllo di quando i
-test girano, specialmente quelli `@write`.
+Scale Agent, Security Agent), corretto, di proposito: non ci sono run
+automatici né ad ogni push. L'unico modo è il bottone "Run workflow" —
+così hai sempre il controllo di quando i test girano, specialmente quelli
+`@write`.
 
 Due eccezioni, entrambe schedulate:
 - Data Health Agent gira anche da solo ogni 6 giorni, di notte — vedi la
   domanda sotto per il perché.
-- "Controllo Completo" (i cinque agenti insieme) gira anche da solo una
+- "Controllo Completo" (i sei agenti insieme) gira anche da solo una
   volta a settimana, il lunedì alle 6 UTC — vedi la domanda su "Controllo
   Completo" più sotto.
 
@@ -170,19 +171,29 @@ cresce. L'extra è **1000 di default**, ma lo scegli tu al lancio (campo
 15000). Incluso anche in "Controllo Completo" (sotto), sempre con
 l'extra di default. Dettagli: **[scale/README.md](scale/README.md)**.
 
-## Voglio lanciare tutti gli agenti insieme, senza premere cinque bottoni
+## E un "Security Agent"?
 
-Sesto workflow, **"Controllo Completo"**: lancia QA Agent, Data Health
-Agent, Performance Agent, API Doctor Agent e Scale Agent in sequenza (mai
-in parallelo) sulla stessa scelta di app (Scale Agent gira comunque, è solo
-CineFighi), con un solo "Run workflow". I cinque riepiloghi compaiono
-impilati sulla stessa pagina di run — niente da unire a mano. I workflow
-restano comunque lanciabili anche singolarmente come prima, questo è solo
-una scorciatoia.
+Sesto workflow, non lega a nessuna delle tre app: controlla le
+**dipendenze npm di qa-agent stesso** (`npm audit`) — le tre app non hanno
+un `package.json` proprio, quindi non c'è nulla da controllare lì con
+questo metodo. FAIL su vulnerabilità high/critical, WARN su moderate.
+Conta comunque: `qa-agent` gira in CI con accesso a segreti reali (chiave
+Anthropic, token Telegram, push su GitHub). Incluso anche in "Controllo
+Completo" (sotto). Dettagli: **[security/README.md](security/README.md)**.
+
+## Voglio lanciare tutti gli agenti insieme, senza premere sei bottoni
+
+Settimo workflow, **"Controllo Completo"**: lancia QA Agent, Data Health
+Agent, Performance Agent, API Doctor Agent, Scale Agent e Security Agent
+in sequenza (mai in parallelo) sulla stessa scelta di app (Scale Agent e
+Security Agent girano comunque, non dipendono dalla scelta), con un solo
+"Run workflow". I sei riepiloghi compaiono impilati sulla stessa pagina
+di run — niente da unire a mano. I workflow restano comunque lanciabili
+anche singolarmente come prima, questo è solo una scorciatoia.
 
 Gira anche **da solo una volta a settimana** (lunedì alle 6 UTC, tutte e
 tre le app): non serve ricordarsi di lanciarlo a mano. Se, in un run
-schedulato, almeno uno dei cinque agenti trova un FAIL vero, arriva un
+schedulato, almeno uno dei sei agenti trova un FAIL vero, arriva un
 avviso su Telegram — vedi la domanda successiva.
 
 ## Come funziona la notifica Telegram?
@@ -205,7 +216,7 @@ finché non li configuri, resta comunque da controllare la tab Actions.
 
 Solo nel job `notify` di "Controllo Completo" (non in Data Health Agent da
 solo): prima di mandare la notifica, uno script (`incident/analyze.mjs`)
-legge i **cinque report insieme** e chiede a Claude di correlarli — non
+legge i **sei report insieme** e chiede a Claude di correlarli — non
 di ripetere quello che ogni agente ha già detto per conto suo. Se, per
 esempio, QA fallisce e API Doctor segnala la stessa API in errore ma Data
 Health è pulito, la diagnosi indica l'API come causa probabile, non il

@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 // AI Incident Analyzer: a differenza degli analyze.mjs dei singoli agenti
 // (health/analyze.mjs, perf/analyze.mjs, api-doctor/analyze.mjs,
-// scale/analyze.mjs, scripts/analyze-failures.mjs — ognuno interpreta SOLO i
-// propri dati), questo legge i cinque report insieme e cerca una
-// correlazione tra loro: es. QA e API Doctor falliscono ma Data Health è
-// pulito → il problema è probabilmente nell'API esterna, non nel database.
-// Nessuno dei cinque agenti, da solo, può vedere questo tipo di segnale
-// incrociato.
+// scale/analyze.mjs, security/analyze.mjs, scripts/analyze-failures.mjs —
+// ognuno interpreta SOLO i propri dati), questo legge i sei report insieme
+// e cerca una correlazione tra loro: es. QA e API Doctor falliscono ma
+// Data Health è pulito → il problema è probabilmente nell'API esterna, non
+// nel database. Nessuno dei sei agenti, da solo, può vedere questo tipo di
+// segnale incrociato.
 //
 // Chiamato solo dal job `notify` di full-check.yml, solo quando almeno un
 // agente è fallito (vedi la condizione `if` del job). Zero chiamate se,
-// nonostante questo, tutti e cinque i report risultano PASS (difesa in
+// nonostante questo, tutti e sei i report risultano PASS (difesa in
 // più, stesso principio "costo zero quando non serve" degli altri
 // analyze.mjs). Nessun errore qui blocca il run: se manca la chiave o la
 // chiamata fallisce, si registra un avviso e si esce senza rompere la
@@ -33,6 +33,7 @@ const PATHS = {
   performance: "reports/perf-results.json",
   apiDoctor: "reports/api-doctor-results.json",
   scale: "reports/scale-results.json",
+  security: "reports/security-results.json",
 };
 const ANALYSIS_OUTPUT_PATH = "reports/incident-analysis.json";
 const SUMMARY_OUTPUT_PATH = "reports/incident-summary.txt";
@@ -47,7 +48,7 @@ const IncidentSchema = z.object({
   probable_cause: z
     .string()
     .describe(
-      "Causa probabile più verosimile, ottenuta CORRELANDO i segnali dei cinque agenti " +
+      "Causa probabile più verosimile, ottenuta CORRELANDO i segnali dei sei agenti " +
         "(es. se QA e API Doctor falliscono ma Data Health è pulito, il problema è probabilmente " +
         "nell'API esterna, non nel database) — 1-3 frasi, in italiano, senza markup"
     ),
@@ -67,7 +68,7 @@ const IncidentSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `Sei un assistente di incident response per un sistema di monitoraggio
-composto da cinque agenti indipendenti, eseguiti in sequenza:
+composto da sei agenti indipendenti, eseguiti in sequenza:
 - qa: Playwright, simula utenti reali (flussi, offline, errori JS) su
   CineFighi, CineTracker e Spot
 - health: integrità dati e raggiungibilità di Supabase, sulle stesse tre app
@@ -81,13 +82,19 @@ composto da cinque agenti indipendenti, eseguiti in sequenza:
   vero); un FAIL qui è un problema di scalabilità del client, non di rete
   o di dati — non correlarlo automaticamente con
   api-doctor o health a meno che i dati non lo suggeriscano davvero
+- security: NON riguarda nessuna delle tre app — controlla le dipendenze
+  npm del tool stesso che esegue tutti questi agenti (npm audit); un FAIL
+  qui è una vulnerabilità nella toolchain CI (accesso a segreti reali:
+  chiave Anthropic, token Telegram, push su GitHub), non un problema delle
+  app monitorate — non correlarlo mai con gli altri cinque segnali, è per
+  costruzione un segnale a sé
 
 Ricevi lo stato di tutte e tre le app per ognuno degli agenti in questo
-run (scale solo per CineFighi) — non solo quelli falliti: un agente "PASS"
-è un segnale importante quanto uno "FAIL", perché aiuta a escludere delle
-cause. Il tuo compito è correlare i cinque segnali per capire cosa è
-successo davvero, non ripetere quello che ogni agente ha già detto per
-conto suo.
+run (scale solo per CineFighi, security non è per-app) — non solo quelli
+falliti: un agente "PASS" è un segnale importante quanto uno "FAIL",
+perché aiuta a escludere delle cause. Il tuo compito è correlare i sei
+segnali per capire cosa è successo davvero, non ripetere quello che ogni
+agente ha già detto per conto suo.
 
 Esempio del tipo di ragionamento richiesto: se "qa" fallisce con un errore
 HTTP 500 su un'azione, "apiDoctor" segnala un tasso di errore alto sulla
@@ -98,7 +105,7 @@ sembrava un problema dell'app stessa.
 Rispondi in italiano, breve (il risultato finisce in un messaggio Telegram):
 una frase di riepilogo, una severity, una causa probabile basata SOLO sui
 dati forniti (non inventare dettagli), 2-4 cose concrete da controllare per
-prime. Se i cinque segnali non bastano per una diagnosi chiara, dillo
+prime. Se i sei segnali non bastano per una diagnosi chiara, dillo
 onestamente con una confidence bassa invece di inventare una causa
 plausibile ma non supportata dai dati.`;
 
@@ -136,11 +143,12 @@ function summarizeQA(data) {
   return byApp;
 }
 
-// I cinque summarizer sopra non condividono una forma unica: qa ritorna la
+// I sei summarizer sopra non condividono una forma unica: qa ritorna la
 // stringa "PASS" o un oggetto per-app SOLO quando ci sono fallimenti;
-// health/performance/apiDoctor/scale ritornano SEMPRE un oggetto per-app
-// (scale con la sola chiave "cinefighi"), dove ogni valore è "PASS" o un
-// dettaglio. null significa report assente.
+// health/performance/apiDoctor/scale/security ritornano SEMPRE un oggetto
+// per-app (scale con la sola chiave "cinefighi", security con la sola
+// chiave "qa-agent"), dove ogni valore è "PASS" o un dettaglio. null
+// significa report assente.
 function isAgentAllPass(summary) {
   if (summary === null || summary === "PASS") return true;
   if (typeof summary === "object") return Object.values(summary).every((v) => v === "PASS");
@@ -157,6 +165,7 @@ function buildPayload() {
   const perfData = readJson(PATHS.performance);
   const apiDoctorData = readJson(PATHS.apiDoctor);
   const scaleData = readJson(PATHS.scale);
+  const securityData = readJson(PATHS.security);
 
   const qa = summarizeQA(qaData);
   const health = summarizeAgentApps(healthData, (a) => ({ issues: a.data?.issues ?? [] }));
@@ -177,8 +186,11 @@ function buildPayload() {
           failedChecks: (a.checks || []).filter((c) => c.status !== "PASS"),
         }
   );
+  const security = summarizeAgentApps(securityData, (a) =>
+    a.error ? { error: a.error } : { counts: a.counts, vulnerabilities: a.vulnerabilities ?? [] }
+  );
 
-  return { qa, health, performance, apiDoctor, scale };
+  return { qa, health, performance, apiDoctor, scale, security };
 }
 
 function escapeHtml(text) {
@@ -199,8 +211,10 @@ function writeSummaryText(result) {
 async function main() {
   const payload = buildPayload();
 
-  if (!anyFailure(payload.qa, payload.health, payload.performance, payload.apiDoctor, payload.scale)) {
-    console.log("Nessun FAIL in nessuno dei cinque report: nessuna chiamata a Claude (costo zero).");
+  if (
+    !anyFailure(payload.qa, payload.health, payload.performance, payload.apiDoctor, payload.scale, payload.security)
+  ) {
+    console.log("Nessun FAIL in nessuno dei sei report: nessuna chiamata a Claude (costo zero).");
     return;
   }
 
@@ -226,7 +240,7 @@ async function analyze(payload) {
     messages: [
       {
         role: "user",
-        content: `Stato dei cinque agenti in questo run:\n\n${JSON.stringify(payload, null, 2)}`,
+        content: `Stato dei sei agenti in questo run:\n\n${JSON.stringify(payload, null, 2)}`,
       },
     ],
     output_config: { format: zodOutputFormat(IncidentSchema) },
