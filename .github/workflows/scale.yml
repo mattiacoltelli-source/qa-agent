@@ -1,0 +1,54 @@
+name: Scale Agent
+
+# Solo CineFighi: è l'unica delle tre app con una libreria condivisa che può
+# crescere in modo imprevedibile (CineTracker è single-user, Spot non ha
+# backend) — vedi scale/README.md. Nessun selettore "app" quindi, a
+# differenza degli altri workflow.
+
+on:
+  workflow_dispatch:
+  # Permette a Controllo Completo (full-check.yml) di richiamare questo
+  # workflow come step di una catena sequenziale, se in futuro verrà
+  # agganciato lì — stessa nota in tests.yml/performance.yml/api-doctor.yml.
+  workflow_call:
+
+jobs:
+  scale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Installa dipendenze
+        run: npm install
+
+      # Stesso Chromium usato dal QA Agent — nessun browser aggiuntivo.
+      - name: Installa i browser Playwright (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Esegui il test di scala (titoli reali + 1000, mockati)
+        run: node scale/engine.mjs
+
+      # Analizza con Claude SOLO se il run è in WARN/FAIL — zero chiamate su
+      # un run PASS (vedi scale/analyze.mjs). Non blocca mai il run.
+      - name: Analizza le anomalie
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scale/analyze.mjs
+
+      - name: Scrivi il riepilogo nel run
+        if: always()
+        run: node scale/write-summary.mjs
+
+      - name: Carica i risultati JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scale-results-json
+          path: reports/scale-results.json
+          retention-days: 30

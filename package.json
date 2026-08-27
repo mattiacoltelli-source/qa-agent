@@ -33,7 +33,10 @@
     "api-doctor:cinetracker": "node api-doctor/engine.mjs cinetracker",
     "api-doctor:spot": "node api-doctor/engine.mjs spot",
     "api-doctor:analyze": "node api-doctor/analyze.mjs",
-    "api-doctor:summary": "node api-doctor/write-summary.mjs"
+    "api-doctor:summary": "node api-doctor/write-summary.mjs",
+    "scale": "node scale/engine.mjs",
+    "scale:analyze": "node scale/analyze.mjs",
+    "scale:summary": "node scale/write-summary.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

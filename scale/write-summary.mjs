@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+// Legge reports/scale-results.json (scale/engine.mjs) e scrive un riepilogo
+// leggibile su $GITHUB_STEP_SUMMARY — stesso stile di
+// perf/write-summary.mjs. Se reports/scale-ai-analysis.json è presente,
+// incorpora l'analisi Claude in coda — sempre accanto ai tempi misurati,
+// mai al posto loro.
+
+import fs from "node:fs";
+
+const RESULTS_PATH = "reports/scale-results.json";
+const AI_ANALYSIS_PATH = "reports/scale-ai-analysis.json";
+
+function icon(result) {
+  if (result === "PASS") return "✅";
+  if (result === "WARN") return "⚠️";
+  return "❌";
+}
+
+const METRIC_LABELS = {
+  homeReadyMs: "Home pronta",
+  libraryFirstPageMs: "Apertura Libreria (1a pagina)",
+  statsReadyMs: "Apertura Statistiche",
+};
+
+function main() {
+  if (!fs.existsSync(RESULTS_PATH)) {
+    console.warn(`Nessun ${RESULTS_PATH} trovato: nulla da riassumere.`);
+    return;
+  }
+
+  const data = JSON.parse(fs.readFileSync(RESULTS_PATH, "utf-8"));
+  const app = data.apps?.cinefighi;
+  const lines = ["# Scale Agent — riepilogo", ""];
+
+  if (!app) {
+    lines.push("Nessun dato disponibile.");
+  } else {
+    lines.push(`## ${icon(app.result)} CineFighi — ${app.result}`);
+    lines.push("");
+    lines.push(`- Titoli reali in libreria al momento del run: **${app.realCount}**`);
+    lines.push(`- Titoli testati (reali + 1000): **${app.targetCount}**`);
+    lines.push("");
+
+    if (app.error) {
+      lines.push(`- Errore: ${app.error}`);
+    } else {
+      for (const check of app.checks ?? []) {
+        const mark = check.status === "PASS" ? "✅" : check.status === "WARN" ? "⚠️" : "❌";
+        const label = METRIC_LABELS[check.metric] ?? check.metric;
+        lines.push(`- ${label}: ${mark} ${check.value}ms (warn ≥${check.warn}ms, fail ≥${check.fail}ms)`);
+      }
+      lines.push("");
+      lines.push(
+        `- Righe libreria: ${app.metrics.initialLibraryRows} iniziali → ${app.metrics.libraryRowsAfterScroll} ` +
+          `dopo scroll (${app.metrics.scrollMs}ms)`
+      );
+    }
+
+    if (fs.existsSync(AI_ANALYSIS_PATH)) {
+      try {
+        const ai = JSON.parse(fs.readFileSync(AI_ANALYSIS_PATH, "utf-8"));
+        lines.push("");
+        lines.push(`**AI analysis** _(priority: ${ai.priority})_: ${ai.summary}`);
+        lines.push(`Primo intervento: ${ai.first_fix}`);
+      } catch {
+        /* file corrotto o assente: il riepilogo deterministico resta comunque completo */
+      }
+    }
+  }
+
+  lines.push("");
+  const summary = lines.join("\n");
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + "\n");
+  }
+  console.log(summary);
+}
+
+main();
