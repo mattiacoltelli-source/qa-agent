@@ -339,3 +339,77 @@ test.describe("CineFighi — Statistiche — Classifica, tasto Mostra tutti/meno
     await expect(label).toHaveText("Mostra meno");
   });
 });
+
+// ─── CLASSIFICA: torna al film aperto dopo il dettaglio ──────────────────
+// Riusa la stessa fixture EXPAND_TITLES/EXPAND_VOTES di sopra (7 titoli:
+// podio 3 + 2 righe di default + 2 "dietro" al tasto Mostra tutti) per
+// coprire sia il caso "il film era già visibile" sia "il film era nella
+// parte da espandere" con un solo fixture.
+
+test.describe("CineFighi — Statistiche — Classifica, torna al film dopo il dettaglio", () => {
+  test("un film già visibile resta in vista dopo il dettaglio", async ({ page }) => {
+    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
+    await mockJson(page, /rest\/v1\/titles/, EXPAND_TITLES);
+    await mockJson(page, /rest\/v1\/votes/, EXPAND_VOTES);
+    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+    await page.goto(".");
+    await clearBrowserStorage(page);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    const picked = await selectExistingUser(page, QA_USER);
+    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+    await page.locator('.nav__btn[data-screen="stats"]').click();
+    await page.locator("#rankingPodium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+
+    // Film C QA (2° in classifica, media 8) è nel podio — sempre visibile,
+    // nessuna espansione necessaria.
+    const podiumCard = page.locator('#rankingPodium .podium-card[data-id]').first();
+    const id = await podiumCard.getAttribute("data-id");
+    await podiumCard.click();
+    await page.locator("#screen-detail:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+
+    await page.goBack();
+    await page.locator("#screen-stats:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+    await expect(page.locator(`#screen-stats [data-id="${id}"].open-detail`)).toBeInViewport();
+  });
+
+  test("un film oltre le prime 5 righe: la lista si riespande da sola e ci si torna sopra", async ({ page }) => {
+    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
+    await mockJson(page, /rest\/v1\/titles/, EXPAND_TITLES);
+    await mockJson(page, /rest\/v1\/votes/, EXPAND_VOTES);
+    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+    await page.goto(".");
+    await clearBrowserStorage(page);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    const picked = await selectExistingUser(page, QA_USER);
+    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+    await page.locator('.nav__btn[data-screen="stats"]').click();
+    await page.locator("#rankingPodium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+
+    // Espande, apre l'ultimo film (7°, dietro al tasto "Mostra tutti" nel
+    // render iniziale) e torna indietro.
+    await page.locator("#rankingExpandBtn").click();
+    const deepCard = page.locator("#rankingList .rank-row").last();
+    const deepId = await deepCard.getAttribute("data-id");
+    await deepCard.click();
+    await page.locator("#screen-detail:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+
+    await page.goBack();
+    await page.locator("#screen-stats:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+
+    // La Classifica riparte SEMPRE collassata dopo un render (vedi test
+    // sopra) — qui deve essersi riespansa da sola per far riapparire la
+    // card, altrimenti non esisterebbe nemmeno nel DOM. Il tasto resta
+    // visibile (non sparisce mai con questa fixture, restano 2 righe
+    // dietro anche da espanso) ma deve riflettere lo stato espanso.
+    const expandBtn = page.locator("#rankingExpandBtn");
+    await expect(expandBtn).toBeVisible();
+    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra meno");
+    await expect(expandBtn).toHaveClass(/is-up/);
+    await expect(page.locator("#rankingList .rank-row")).toHaveCount(4);
+    await expect(page.locator(`#screen-stats [data-id="${deepId}"].open-detail`)).toBeInViewport();
+  });
+});
