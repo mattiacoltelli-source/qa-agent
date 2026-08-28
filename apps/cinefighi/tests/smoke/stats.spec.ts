@@ -231,8 +231,8 @@ test.describe("CineFighi — Statistiche — Curiosità", () => {
     // verificato qui esplicitamente, non un bug.
     const pairCallouts = page.locator("#curiositaPair .affinity-callout");
     await expect(pairCallouts).toHaveCount(2);
-    await expect(page.locator("#curiositaPair .pair-group__label").nth(0)).toHaveText("Più affini");
-    await expect(page.locator("#curiositaPair .pair-group__label").nth(1)).toHaveText("Più litigiose");
+    await expect(page.locator("#curiositaPair .curiosita-stack__label").nth(0)).toHaveText("Più affini");
+    await expect(page.locator("#curiositaPair .curiosita-stack__label").nth(1)).toHaveText("Più litigiose");
     for (const callout of await pairCallouts.all()) {
       await expect(callout.locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico1`);
       await expect(callout.locator(".affinity-callout__detail")).toContainText("0,58 punti");
@@ -240,16 +240,19 @@ test.describe("CineFighi — Statistiche — Curiosità", () => {
     }
 
     // Gli estremi del gruppo: T6 è l'unico titolo con almeno 3 voti (9, 8,
-    // 2), quindi l'unica card sia tra i "Più divisivi" (default) sia tra i
-    // "Più unanimi" dopo il toggle — stesso motivo di sopra, un solo
-    // candidato possibile.
-    const extremesToggle = page.locator("#curiositaExtremesToggle");
+    // 2), quindi l'unica card sia tra i "Più divisivi" sia tra i "Più
+    // unanimi" — stesso motivo di sopra, un solo candidato possibile.
+    // Entrambi i podi sono impilati e SEMPRE visibili insieme, nessun
+    // toggle da azionare.
     const divisivePodium = page.locator("#curiositaDivisive .podium-card");
+    const unanimousPodium = page.locator("#curiositaUnanimous .podium-card");
     await expect(page.locator("#curiositaDivisive")).toBeVisible();
-    await expect(page.locator("#curiositaUnanimous")).toBeHidden();
+    await expect(page.locator("#curiositaUnanimous")).toBeVisible();
     await expect(divisivePodium).toHaveCount(1);
     await expect(divisivePodium.nth(0).locator(".podium-card__title")).toHaveText("Curio T6 Divisivo");
     await expect(divisivePodium.nth(0)).toHaveClass(/podium-card--first/);
+    await expect(unanimousPodium).toHaveCount(1);
+    await expect(unanimousPodium.nth(0).locator(".podium-card__title")).toHaveText("Curio T6 Divisivo");
 
     // Tap sull'unica card divisiva -> apre il dettaglio del titolo giusto
     // (stesso meccanismo open-detail della Classifica).
@@ -258,16 +261,6 @@ test.describe("CineFighi — Statistiche — Curiosità", () => {
     await expect(page.locator("#detailTitle")).toHaveText("Curio T6 Divisivo");
     await page.locator("#detailBackBtn").click();
     await page.locator('.nav__btn[data-screen="stats"]').click();
-
-    // Toggle -> stesso titolo, ora tra gli "Unanimi" (stesso identico
-    // candidato, coerente col commento sopra).
-    await extremesToggle.locator('.stats-toggle-btn[data-panel="unanimous"]').click();
-    await expect(page.locator("#curiositaDivisive")).toBeHidden();
-    const unanimousPodium = page.locator("#curiositaUnanimous .podium-card");
-    await expect(unanimousPodium).toHaveCount(1);
-    await expect(unanimousPodium.nth(0).locator(".podium-card__title")).toHaveText("Curio T6 Divisivo");
-    await extremesToggle.locator('.stats-toggle-btn[data-panel="divisive"]').click();
-    await expect(page.locator("#curiositaDivisive")).toBeVisible();
 
     // In modalità "Io", Curiosità non ha senso individuale e sparisce.
     await setStatsMode(page, "me");
