@@ -220,21 +220,33 @@ test.describe("CineFighi — Statistiche — Curiosità", () => {
     await expect(votingPodium.nth(2).locator(".podium-card__title")).toHaveText("Amico2");
     await expect(votingPodium.nth(2).locator(".podium-card__vote")).toHaveText("1 voti");
 
-    // Coppia più affine: QA_USER e Amico1 votano ENTRAMBI anche T6 (serve
+    // Le coppie di gusto: QA_USER e Amico1 votano ENTRAMBI anche T6 (serve
     // per renderlo "divisivo" più sotto), quindi condividono 6 titoli, non
     // solo i 5 pensati apposta per l'affinità — scarto 0.5 su T1-T5 e 1.0
     // su T6: media (0.5×5 + 1.0) / 6 = 0,58. Amico2 non arriva a 5 titoli
-    // in comune con nessuno (1 solo, T6), quindi resta l'unica coppia
-    // possibile comunque.
-    const pair = page.locator("#curiositaPair .affinity-callout");
-    await expect(pair).toBeVisible();
-    await expect(pair.locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico1`);
-    await expect(pair.locator(".affinity-callout__detail")).toContainText("0,58 punti");
-    await expect(pair.locator(".affinity-callout__detail")).toContainText("6 titoli");
+    // in comune con nessuno (1 solo, T6), quindi QA_USER & Amico1 è l'UNICA
+    // coppia che raggiunge la soglia minShared — per forza il risultato sia
+    // di mostAffinePair (minimo) sia di mostDivergentPair (massimo): con un
+    // solo candidato i due estremi coincidono, comportamento corretto e
+    // verificato qui esplicitamente, non un bug.
+    const pairCallouts = page.locator("#curiositaPair .affinity-callout");
+    await expect(pairCallouts).toHaveCount(2);
+    await expect(page.locator("#curiositaPair .pair-group__label").nth(0)).toHaveText("Più affini");
+    await expect(page.locator("#curiositaPair .pair-group__label").nth(1)).toHaveText("Più litigiose");
+    for (const callout of await pairCallouts.all()) {
+      await expect(callout.locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico1`);
+      await expect(callout.locator(".affinity-callout__detail")).toContainText("0,58 punti");
+      await expect(callout.locator(".affinity-callout__detail")).toContainText("6 titoli");
+    }
 
-    // Film più divisivi: T6 è l'unico titolo con almeno 3 voti (9, 8, 2),
-    // quindi l'unica card mostrata — nessun 2°/3° posto disponibile.
+    // Gli estremi del gruppo: T6 è l'unico titolo con almeno 3 voti (9, 8,
+    // 2), quindi l'unica card sia tra i "Più divisivi" (default) sia tra i
+    // "Più unanimi" dopo il toggle — stesso motivo di sopra, un solo
+    // candidato possibile.
+    const extremesToggle = page.locator("#curiositaExtremesToggle");
     const divisivePodium = page.locator("#curiositaDivisive .podium-card");
+    await expect(page.locator("#curiositaDivisive")).toBeVisible();
+    await expect(page.locator("#curiositaUnanimous")).toBeHidden();
     await expect(divisivePodium).toHaveCount(1);
     await expect(divisivePodium.nth(0).locator(".podium-card__title")).toHaveText("Curio T6 Divisivo");
     await expect(divisivePodium.nth(0)).toHaveClass(/podium-card--first/);
@@ -247,6 +259,16 @@ test.describe("CineFighi — Statistiche — Curiosità", () => {
     await page.locator("#detailBackBtn").click();
     await page.locator('.nav__btn[data-screen="stats"]').click();
 
+    // Toggle -> stesso titolo, ora tra gli "Unanimi" (stesso identico
+    // candidato, coerente col commento sopra).
+    await extremesToggle.locator('.stats-toggle-btn[data-panel="unanimous"]').click();
+    await expect(page.locator("#curiositaDivisive")).toBeHidden();
+    const unanimousPodium = page.locator("#curiositaUnanimous .podium-card");
+    await expect(unanimousPodium).toHaveCount(1);
+    await expect(unanimousPodium.nth(0).locator(".podium-card__title")).toHaveText("Curio T6 Divisivo");
+    await extremesToggle.locator('.stats-toggle-btn[data-panel="divisive"]').click();
+    await expect(page.locator("#curiositaDivisive")).toBeVisible();
+
     // In modalità "Io", Curiosità non ha senso individuale e sparisce.
     await setStatsMode(page, "me");
     await expect(page.locator("#curiositaSection")).toBeHidden();
@@ -255,6 +277,43 @@ test.describe("CineFighi — Statistiche — Curiosità", () => {
     await setStatsMode(page, "group");
     await expect(page.locator("#curiositaSection")).toBeVisible();
     await expect(page.locator("#curiositaVoting .podium-card")).toHaveCount(3);
+  });
+
+  // Fixture dedicata: sopra, un solo candidato-coppia rende "più affine" e
+  // "più litigiosa" per forza uguali (caso limite già coperto). Qui invece
+  // 3 utenti votano GLI STESSI 5 titoli con scarti diversi per coppia, così
+  // mostAffinePair (minimo) e mostDivergentPair (massimo) devono restituire
+  // DUE coppie DIVERSE — la verifica vera che il "rovescio" funzioni.
+  const PAIR_TITLES = Array.from({ length: 5 }, (_, i) => fakeTitle(934000 + i + 1, `Coppia T${i + 1}`, "Thriller"));
+  const PAIR_VOTES = PAIR_TITLES.flatMap((t, i) => [
+    { title_id: t.id, user_name: QA_USER, vote: 5 },
+    // scarto costante di 0,5 da QA_USER -> coppia più affine
+    { title_id: t.id, user_name: "Amico1", vote: i % 2 === 0 ? 5.5 : 4.5 },
+    // scarto costante di 3 da QA_USER (e ~2,9 da Amico1) -> coppia più litigiosa
+    { title_id: t.id, user_name: "Amico2", vote: 8 },
+  ]);
+
+  test("coppia più affine e più litigiosa sono due coppie diverse quando ce n'è più di una", async ({ page }) => {
+    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }, { name: "Amico1" }, { name: "Amico2" }]);
+    await mockJson(page, /rest\/v1\/titles/, PAIR_TITLES);
+    await mockJson(page, /rest\/v1\/votes/, PAIR_VOTES);
+    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+    await page.goto(".");
+    await clearBrowserStorage(page);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    const picked = await selectExistingUser(page, QA_USER);
+    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+    await page.locator('.nav__btn[data-screen="stats"]').click();
+    await page.locator("#curiositaPair .affinity-callout").first().waitFor({ state: "visible", timeout: 10_000 });
+
+    const pairCallouts = page.locator("#curiositaPair .affinity-callout");
+    await expect(pairCallouts).toHaveCount(2);
+    await expect(pairCallouts.nth(0).locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico1`);
+    await expect(pairCallouts.nth(0).locator(".affinity-callout__detail")).toContainText("0,50 punti");
+    await expect(pairCallouts.nth(1).locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico2`);
+    await expect(pairCallouts.nth(1).locator(".affinity-callout__detail")).toContainText("3,00 punti");
   });
 });
 
