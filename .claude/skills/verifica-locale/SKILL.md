@@ -89,16 +89,31 @@ identico a quello che vedrebbe un utente vero, con dati veri.
 
 ## 4. Bump della versione cache-busting
 
-Ogni file dell'app importa gli altri con `?v=NN` (es.
-`./ui.js?v=23"`), e `index.html` referenzia `styles.css?v=NN` e
-`app.js?v=NN` allo stesso modo — è così che il service worker capisce che
-c'è una versione nuova. Trova il numero attuale e incrementalo di 1
-OVUNQUE compaia nel repo, in un solo colpo:
+**CineFighi e Cos90/CineTracker: salta questo passo, è automatico.**
+Un workflow (`bump-version.yml` in CineFighi, `bump-asset-version.yml`
+in Cos90) ad ogni push vero su `main` sostituisce da solo ogni `?v=...`
+nei file `.html`/`.js` con l'hash breve del commit, e in CineFighi
+aggiorna anche `SW_VERSION` in `sw.js` nello stesso colpo — non serve
+più incrementare nulla a mano, qualunque numero/placeholder lasci nei
+file va bene tanto verrà riscritto al push. Verifica solo che il valore
+esista (`?v=` presente su ogni import locale), non che sia "il prossimo
+numero giusto".
+
+Per Spot o altre app senza questa automazione, resta il passo manuale:
+ogni file dell'app importa gli altri con `?v=NN` (es. `./ui.js?v=23"`),
+e `index.html` referenzia `styles.css?v=NN` e `app.js?v=NN` allo stesso
+modo — è così che il service worker capisce che c'è una versione nuova.
+Trova il numero attuale e incrementalo di 1 OVUNQUE compaia nel repo, in
+un solo colpo:
 
 ```bash
 grep -rn "v=[0-9]*\"" --include="*.js" --include="*.html" . | grep -v node_modules
 sed -i 's/v=NN/v=NN+1/g' app.js ui.js index.html tmdb.js   # adatta l'elenco file al repo specifico
 ```
+
+Se un giorno anche quell'app cresce abbastanza da valerne la pena,
+`bump-version.yml`/`bump-asset-version.yml` sono il pattern pronto da
+copiare — non reinventarlo da zero.
 
 ## 5. Screenshot di conferma
 
