@@ -1,33 +1,20 @@
 import { test, expect } from "@playwright/test";
 import { clearBrowserStorage } from "../../../../core/storage.ts";
 import { mockJson } from "../../../../core/network.ts";
-import { QA_USER, selectExistingUser, setStatsMode } from "../../fixtures/cinefighi-page.ts";
+import { QA_USER, fakeTitle, selectExistingUser, setStatsMode } from "../../fixtures/cinefighi-page.ts";
 
 // Verifica lo schermo Statistiche: card numeriche, media voto per genere
-// (★, aggiunta di recente) e podio/classifica, sia in modalità "Gruppo"
-// (default) che "Io" — le due usano formule diverse (average() su tutti i
-// voti vs. il solo voto dell'utente corrente, vedi app.js::renderStats).
+// (★, aggiunta di recente) e podio/classifica, sia in modalità "Io"
+// (default — invertito da "Gruppo": prima era l'opposto) che "Gruppo" — le
+// due usano formule diverse (average() su tutti i voti vs. il solo voto
+// dell'utente corrente, vedi app.js::renderStats).
 // Sola lettura: libreria interamente mockata (nessuna scrittura reale su
 // Supabase), unico modo di conoscere con certezza medie e ordine attesi —
 // impossibile da garantire sulla libreria condivisa vera.
-
-function fakeTitle(id: number, title: string, genre: string) {
-  return {
-    id,
-    tmdb_id: id,
-    media_type: "movie",
-    title,
-    year: "2024",
-    poster_path: "",
-    backdrop_path: "",
-    overview: "",
-    genre_names: [genre],
-    director: "",
-    status: "seen",
-    added_by: "Un Amico",
-    created_at: new Date().toISOString()
-  };
-}
+//
+// "Curiosità" (chi ha votato di più, coppie di gusto, estremi del gruppo)
+// non vive più qui: si è spostata nel tab Gruppo dello schermo Report — vedi
+// report.spec.ts.
 
 // Film A: votato da entrambi (media gruppo 7.0, voto mio 8.0).
 // Film B: votato solo da me (media gruppo e mia coincidono, 6.0).
@@ -65,8 +52,27 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
 }
 
 test.describe("CineFighi — Statistiche", () => {
-  test("modalità Gruppo (default): card, media voto per genere e classifica su tutti i voti", async ({ page }) => {
+  test('modalità "Io" (default): card, media voto per genere e classifica sui soli voti dell\'utente', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
+
+    // myVoted = Film A (voto mio 8) + Film B (voto mio 6): Film C esclusa,
+    // io non l'ho mai votata — stessi numeri già verificati sotto per il
+    // click esplicito su "Io", ma qui SENZA toccare il toggle: è il default.
+    await expect(page.locator("#statSeen")).toHaveText("2");
+    await expect(page.locator("#statMovies")).toHaveText("2");
+
+    const bars = page.locator("#genreBars .bar-row");
+    await expect(bars).toHaveCount(1);
+    await expect(bars.nth(0).locator(".bar-row__name")).toHaveText("Thriller");
+    await expect(bars.nth(0).locator(".bar-row__vote")).toHaveText("★ 7,0");
+
+    await expect(page.locator("#statsIoGruppoToggle .stats-toggle-btn[data-mode=\"me\"]")).toHaveClass(/active/);
+    await expect(page.locator("#statsIoGruppoToggle .stats-toggle-btn[data-mode=\"group\"]")).not.toHaveClass(/active/);
+  });
+
+  test("modalità Gruppo (esplicita): card, media voto per genere e classifica su tutti i voti", async ({ page }) => {
+    await gotoFreshWithMockedLibrary(page);
+    await setStatsMode(page, "group");
 
     await expect(page.locator("#statSeen")).toHaveText("3");
     await expect(page.locator("#statMovies")).toHaveText("3");
@@ -103,19 +109,24 @@ test.describe("CineFighi — Statistiche", () => {
     await expect(page.locator("#rankingList .rank-row")).toHaveCount(0);
   });
 
-  test('modalità "Io": generi e classifica solo sui titoli che ho votato io', async ({ page }) => {
+  test('modalità "Io" dopo un giro andata-ritorno da Gruppo: generi e classifica solo sui titoli che ho votato io', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
     // init() (app.js) fa più giri di reloadLibrary() ravvicinati (uno al
-    // boot, uno dopo la selezione utente): ognuno richiama renderStats() in
-    // modalità "group", letta dal vivo al momento della chiamata — se uno di
-    // questi arriva DOPO il click su "Io" invece che prima, è l'ultimo a
-    // scrivere sui contatori animati e lascia a video il valore di gruppo
-    // (osservato in CI, non un'ipotesi: gli stessi contatori restavano a "3"
-    // anche con animateValue corretto, mentre generi/classifica — non
-    // animati — mostravano già "Io" giusto). Aspettiamo che la rete si
-    // calmi PRIMA di cambiare modalità, così il click è garantito essere
-    // l'ultimo a ridisegnare.
+    // boot, uno dopo la selezione utente): ognuno richiama renderStats()
+    // nella modalità corrente al momento della chiamata — se uno di questi
+    // arriva DOPO un click sul toggle invece che prima, è l'ultimo a
+    // scrivere sui contatori animati e lascia a video il valore sbagliato
+    // (osservato in CI, non un'ipotesi: gli stessi contatori restavano
+    // fermi al valore precedente anche con animateValue corretto, mentre
+    // generi/classifica — non animati — mostravano già il valore giusto).
+    // Aspettiamo che la rete si calmi PRIMA di toccare il toggle, così il
+    // click è garantito essere l'ultimo a ridisegnare. "Io" è ormai il
+    // default (vedi test sopra): per esercitare davvero il render-race del
+    // toggle passiamo prima da "Gruppo" e poi torniamo — la stessa
+    // transizione, solo in direzione opposta rispetto a quando questo test
+    // fu scritto.
     await page.waitForLoadState("networkidle");
+    await setStatsMode(page, "group");
     await setStatsMode(page, "me");
 
     // myVoted = Film A (voto mio 8) + Film B (voto mio 6): Film C esclusa,
@@ -142,171 +153,6 @@ test.describe("CineFighi — Statistiche", () => {
     await expect(podium.nth(1).locator(".podium-card__title")).toHaveText("Film A QA");
     await expect(podium.nth(1).locator(".podium-card__vote")).toHaveText("★ 8.0");
     await expect(podium.nth(1)).toHaveClass(/podium-card--first/);
-  });
-});
-
-// ─── CURIOSITÀ ────────────────────────────────────────────────────────────
-// Fixture separata: le tre metriche (cine-core.js::votingLeaderboard/
-// mostAffinePair/mostDivisive) hanno soglie minime (5 titoli in comune per
-// la coppia, 3 voti per un titolo "divisivo") che la fixture di sopra non
-// raggiunge apposta — qui invece sono costruite per superarle di poco, in
-// modo deterministico.
-//
-// QA_USER e Amico1 votano gli stessi 5 titoli (T1-T5) con un distacco
-// costante di 0.5 punti, PIÙ entrambi T6 (scarto 1.0, serve a renderlo
-// "divisivo" — vedi sotto): 6 titoli in comune in totale, scarto medio
-// 0,58. È l'unica coppia che arriva a 5+ titoli in comune, quindi è per
-// forza quella "più affine". Amico2 vota solo T6: T6 è l'UNICO titolo con
-// 3+ voti (QA_USER, Amico1, Amico2), quindi l'unico che può finire tra i
-// "più divisivi". Un settimo titolo (T7), votato solo da QA_USER, serve
-// solo a rompere il pareggio 6-6 in classifica voti tra QA_USER e Amico1
-// (7 vs 6 vs 1 — nessuna parità, nessun ordine ambiguo).
-
-const CURIOSITA_TITLES = [
-  fakeTitle(931001, "Curio T1", "Thriller"),
-  fakeTitle(931002, "Curio T2", "Thriller"),
-  fakeTitle(931003, "Curio T3", "Thriller"),
-  fakeTitle(931004, "Curio T4", "Thriller"),
-  fakeTitle(931005, "Curio T5", "Thriller"),
-  fakeTitle(931006, "Curio T6 Divisivo", "Thriller"),
-  fakeTitle(931007, "Curio T7", "Thriller")
-];
-
-const CURIOSITA_VOTES = [
-  { title_id: 931001, user_name: QA_USER, vote: 7 },
-  { title_id: 931001, user_name: "Amico1", vote: 7.5 },
-  { title_id: 931002, user_name: QA_USER, vote: 7.5 },
-  { title_id: 931002, user_name: "Amico1", vote: 7 },
-  { title_id: 931003, user_name: QA_USER, vote: 8 },
-  { title_id: 931003, user_name: "Amico1", vote: 8.5 },
-  { title_id: 931004, user_name: QA_USER, vote: 6.5 },
-  { title_id: 931004, user_name: "Amico1", vote: 7 },
-  { title_id: 931005, user_name: QA_USER, vote: 7 },
-  { title_id: 931005, user_name: "Amico1", vote: 6.5 },
-  { title_id: 931006, user_name: QA_USER, vote: 9 },
-  { title_id: 931006, user_name: "Amico1", vote: 8 },
-  { title_id: 931006, user_name: "Amico2", vote: 2 },
-  { title_id: 931007, user_name: QA_USER, vote: 6 }
-];
-
-test.describe("CineFighi — Statistiche — Curiosità", () => {
-  test("podio voti, coppia affine e film divisivo, solo in modalità Gruppo", async ({ page }) => {
-    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }, { name: "Amico1" }, { name: "Amico2" }]);
-    await mockJson(page, /rest\/v1\/titles/, CURIOSITA_TITLES);
-    await mockJson(page, /rest\/v1\/votes/, CURIOSITA_VOTES);
-    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
-
-    await page.goto(".");
-    await clearBrowserStorage(page);
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
-    const picked = await selectExistingUser(page, QA_USER);
-    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-    await page.locator('.nav__btn[data-screen="stats"]').click();
-    await page.locator("#curiositaVoting .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
-
-    await expect(page.locator("#curiositaSection")).toBeVisible();
-
-    // Chi ha votato di più: QA_USER 7, Amico1 6, Amico2 1 — nessun pareggio.
-    // Ordine di disegno 2°-1°-3° (vedi ui.js::podiumOrder): Amico1, QA_USER
-    // (al centro, evidenziato), Amico2.
-    const votingPodium = page.locator("#curiositaVoting .podium-card");
-    await expect(votingPodium).toHaveCount(3);
-    await expect(votingPodium.nth(0).locator(".podium-card__title")).toHaveText("Amico1");
-    await expect(votingPodium.nth(0).locator(".podium-card__vote")).toHaveText("6 voti");
-    await expect(votingPodium.nth(1).locator(".podium-card__title")).toHaveText(QA_USER);
-    await expect(votingPodium.nth(1).locator(".podium-card__vote")).toHaveText("7 voti");
-    await expect(votingPodium.nth(1)).toHaveClass(/podium-card--first/);
-    await expect(votingPodium.nth(2).locator(".podium-card__title")).toHaveText("Amico2");
-    await expect(votingPodium.nth(2).locator(".podium-card__vote")).toHaveText("1 voti");
-
-    // Le coppie di gusto: QA_USER e Amico1 votano ENTRAMBI anche T6 (serve
-    // per renderlo "divisivo" più sotto), quindi condividono 6 titoli, non
-    // solo i 5 pensati apposta per l'affinità — scarto 0.5 su T1-T5 e 1.0
-    // su T6: media (0.5×5 + 1.0) / 6 = 0,58. Amico2 non arriva a 5 titoli
-    // in comune con nessuno (1 solo, T6), quindi QA_USER & Amico1 è l'UNICA
-    // coppia che raggiunge la soglia minShared — per forza il risultato sia
-    // di mostAffinePair (minimo) sia di mostDivergentPair (massimo): con un
-    // solo candidato i due estremi coincidono, comportamento corretto e
-    // verificato qui esplicitamente, non un bug.
-    const pairCallouts = page.locator("#curiositaPair .affinity-callout");
-    await expect(pairCallouts).toHaveCount(2);
-    await expect(page.locator("#curiositaPair .curiosita-stack__label").nth(0)).toHaveText("Più affini");
-    await expect(page.locator("#curiositaPair .curiosita-stack__label").nth(1)).toHaveText("Più litigiose");
-    for (const callout of await pairCallouts.all()) {
-      await expect(callout.locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico1`);
-      await expect(callout.locator(".affinity-callout__detail")).toContainText("0,58 punti");
-      await expect(callout.locator(".affinity-callout__detail")).toContainText("6 titoli");
-    }
-
-    // Gli estremi del gruppo: T6 è l'unico titolo con almeno 3 voti (9, 8,
-    // 2), quindi l'unica card sia tra i "Più divisivi" sia tra i "Più
-    // unanimi" — stesso motivo di sopra, un solo candidato possibile.
-    // Entrambi i podi sono impilati e SEMPRE visibili insieme, nessun
-    // toggle da azionare.
-    const divisivePodium = page.locator("#curiositaDivisive .podium-card");
-    const unanimousPodium = page.locator("#curiositaUnanimous .podium-card");
-    await expect(page.locator("#curiositaDivisive")).toBeVisible();
-    await expect(page.locator("#curiositaUnanimous")).toBeVisible();
-    await expect(divisivePodium).toHaveCount(1);
-    await expect(divisivePodium.nth(0).locator(".podium-card__title")).toHaveText("Curio T6 Divisivo");
-    await expect(divisivePodium.nth(0)).toHaveClass(/podium-card--first/);
-    await expect(unanimousPodium).toHaveCount(1);
-    await expect(unanimousPodium.nth(0).locator(".podium-card__title")).toHaveText("Curio T6 Divisivo");
-
-    // Tap sull'unica card divisiva -> apre il dettaglio del titolo giusto
-    // (stesso meccanismo open-detail della Classifica).
-    await divisivePodium.first().click();
-    await page.locator("#screen-detail:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
-    await expect(page.locator("#detailTitle")).toHaveText("Curio T6 Divisivo");
-    await page.locator("#detailBackBtn").click();
-    await page.locator('.nav__btn[data-screen="stats"]').click();
-
-    // In modalità "Io", Curiosità non ha senso individuale e sparisce.
-    await setStatsMode(page, "me");
-    await expect(page.locator("#curiositaSection")).toBeHidden();
-
-    // Tornando a "Gruppo" riappare, correttamente ripopolata.
-    await setStatsMode(page, "group");
-    await expect(page.locator("#curiositaSection")).toBeVisible();
-    await expect(page.locator("#curiositaVoting .podium-card")).toHaveCount(3);
-  });
-
-  // Fixture dedicata: sopra, un solo candidato-coppia rende "più affine" e
-  // "più litigiosa" per forza uguali (caso limite già coperto). Qui invece
-  // 3 utenti votano GLI STESSI 5 titoli con scarti diversi per coppia, così
-  // mostAffinePair (minimo) e mostDivergentPair (massimo) devono restituire
-  // DUE coppie DIVERSE — la verifica vera che il "rovescio" funzioni.
-  const PAIR_TITLES = Array.from({ length: 5 }, (_, i) => fakeTitle(934000 + i + 1, `Coppia T${i + 1}`, "Thriller"));
-  const PAIR_VOTES = PAIR_TITLES.flatMap((t, i) => [
-    { title_id: t.id, user_name: QA_USER, vote: 5 },
-    // scarto costante di 0,5 da QA_USER -> coppia più affine
-    { title_id: t.id, user_name: "Amico1", vote: i % 2 === 0 ? 5.5 : 4.5 },
-    // scarto costante di 3 da QA_USER (e ~2,9 da Amico1) -> coppia più litigiosa
-    { title_id: t.id, user_name: "Amico2", vote: 8 },
-  ]);
-
-  test("coppia più affine e più litigiosa sono due coppie diverse quando ce n'è più di una", async ({ page }) => {
-    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }, { name: "Amico1" }, { name: "Amico2" }]);
-    await mockJson(page, /rest\/v1\/titles/, PAIR_TITLES);
-    await mockJson(page, /rest\/v1\/votes/, PAIR_VOTES);
-    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
-
-    await page.goto(".");
-    await clearBrowserStorage(page);
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
-    const picked = await selectExistingUser(page, QA_USER);
-    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-    await page.locator('.nav__btn[data-screen="stats"]').click();
-    await page.locator("#curiositaPair .affinity-callout").first().waitFor({ state: "visible", timeout: 10_000 });
-
-    const pairCallouts = page.locator("#curiositaPair .affinity-callout");
-    await expect(pairCallouts).toHaveCount(2);
-    await expect(pairCallouts.nth(0).locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico1`);
-    await expect(pairCallouts.nth(0).locator(".affinity-callout__detail")).toContainText("0,50 punti");
-    await expect(pairCallouts.nth(1).locator(".affinity-callout__names")).toHaveText(`${QA_USER} & Amico2`);
-    await expect(pairCallouts.nth(1).locator(".affinity-callout__detail")).toContainText("3,00 punti");
   });
 });
 

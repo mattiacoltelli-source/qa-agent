@@ -10,6 +10,28 @@ import { clearBrowserStorage } from "../../../core/storage.ts";
  * duplica — lo riusa), quindi è sicuro richiamarlo ad ogni run. */
 export const QA_USER = "_QA_Agent_";
 
+/** Fabbrica di titoli finti per le fixture mockate di Statistiche/Report —
+ * condivisa tra i due file di test (prima duplicata solo in stats.spec.ts,
+ * quando "Curiosità" viveva lì; ora che quel contenuto si è spostato nel tab
+ * Gruppo di Report, entrambi i file ne hanno bisogno). */
+export function fakeTitle(id: number, title: string, genre: string) {
+  return {
+    id,
+    tmdb_id: id,
+    media_type: "movie",
+    title,
+    year: "2024",
+    poster_path: "",
+    backdrop_path: "",
+    overview: "",
+    genre_names: [genre],
+    director: "",
+    status: "seen",
+    added_by: "Un Amico",
+    created_at: new Date().toISOString()
+  };
+}
+
 /** Naviga sull'app partendo da uno stato di dispositivo pulito. Il reload
  * dopo il clear serve perché app.js legge currentUser/cache da localStorage
  * solo al boot: senza reload vedrebbe ancora lo stato letto al primo load. */
@@ -93,10 +115,37 @@ export async function setWatchlistMode(page: Page, mode: "me" | "group"): Promis
   await page.locator(`#watchlistModeToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
 }
 
-/** Cambia il filtro Io/Gruppo delle Statistiche — di default "group": card
- * numeriche, generi e classifica calcolati sull'intero gruppo invece che sui
- * soli voti dell'utente corrente. Toggle indipendente da quello della
- * watchlist in Home (stessa classe CSS .stats-toggle-btn, id diverso). */
+/** Cambia il filtro Io/Gruppo delle Statistiche — di default "me" ("Io"):
+ * card numeriche, generi e classifica calcolati sui soli voti dell'utente
+ * corrente (invertito da "group": prima il default era l'opposto). Toggle
+ * indipendente da quello della watchlist in Home (stessa classe CSS
+ * .stats-toggle-btn, id diverso). */
 export async function setStatsMode(page: Page, mode: "me" | "group"): Promise<void> {
   await page.locator(`#statsIoGruppoToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
+}
+
+/** Cambia il filtro Io/Gruppo del tab Report — di default "io": il report
+ * personale scritto da Claude (#reportBody, gate/tasto Aggiorna). "gruppo"
+ * mostra invece #groupReportBody (profilo del gruppo, chi siete uno per
+ * uno, chi ha votato di più, coppie di gusto, estremi) — calcolato lato
+ * client da cine-core.js, con testo opzionale scritto da Claude sopra se
+ * è mai stato generato un group_report (altrimenti resta il fallback
+ * templato, sempre disponibile). Nessun tasto "Aggiorna" per "gruppo": si
+ * aggiorna da solo una volta all'anno, o con 7 tap rapidi su #reportTitleTap
+ * (vedi tapReportTitleSevenTimes sotto). */
+export async function setReportMode(page: Page, mode: "io" | "gruppo"): Promise<void> {
+  await page.locator(`#reportIoGruppoToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
+}
+
+/** Simula il gesto nascosto dei 7 tap rapidi su #reportTitleTap che apre la
+ * conferma per forzare una rigenerazione del report (Io o Gruppo, a seconda
+ * del tab aperto al momento) — vedi app.js::bindGlobalEvents. Il conteggio
+ * si azzera da solo dopo 2,5s di inattività: i click qui sono deliberatamente
+ * ravvicinati (nessun delay tra l'uno e l'altro) per restare dentro quella
+ * finestra anche su una macchina CI lenta. */
+export async function tapReportTitleSevenTimes(page: Page): Promise<void> {
+  const title = page.locator("#reportTitleTap");
+  for (let i = 0; i < 7; i++) {
+    await title.click();
+  }
 }
