@@ -339,6 +339,45 @@ test.describe('CineFighi — tab Report — Gruppo — soglia 50 voti per "Chi s
   });
 });
 
+// ─── GRUPPO: mini-grafico "Generi preferiti" dentro ogni user-card ───────
+// cine-core.js::groupMemberProfiles ora calcola anche topGenres (fino a 3,
+// min. 3 voti per genere — stessa soglia di topGenre), e ui.js::userCardHtml
+// lo disegna con genreChartHtml SENZA toccare il testo sopra (templato o
+// scritto da Claude, invariato): puramente additivo.
+const GENRE_TITLES = [
+  ...Array.from({ length: 20 }, (_, i) => fakeTitle(939001 + i, `Fanta T${i + 1}`, "Fantascienza")),
+  ...Array.from({ length: 20 }, (_, i) => fakeTitle(939101 + i, `Horror T${i + 1}`, "Horror")),
+  ...Array.from({ length: 10 }, (_, i) => fakeTitle(939201 + i, `Commedia T${i + 1}`, "Commedia")),
+];
+const GENRE_VOTES = [
+  ...GENRE_TITLES.slice(0, 20).map((t) => ({ title_id: t.id, user_name: QA_USER, vote: 9 })),
+  ...GENRE_TITLES.slice(20, 40).map((t) => ({ title_id: t.id, user_name: QA_USER, vote: 7 })),
+  ...GENRE_TITLES.slice(40, 50).map((t) => ({ title_id: t.id, user_name: QA_USER, vote: 5 })),
+];
+
+test.describe("CineFighi — tab Report — Gruppo — mini-grafico Generi preferiti", () => {
+  test("mostra fino a 3 generi per card, ordinati per media voto decrescente", async ({ page }) => {
+    test.setTimeout(45_000);
+    await gotoFreshWithMockedLibrary(page, [QA_USER], GENRE_TITLES, GENRE_VOTES);
+
+    const card = page.locator("#groupReportMembers .user-card").first();
+    await expect(card.locator(".genre-block__label")).toHaveText("Generi preferiti");
+
+    const rows = card.locator(".mini-row");
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0).locator(".mini-row__name")).toHaveText("Fantascienza");
+    await expect(rows.nth(0).locator(".mini-row__vote")).toHaveText("9,00");
+    await expect(rows.nth(1).locator(".mini-row__name")).toHaveText("Horror");
+    await expect(rows.nth(1).locator(".mini-row__vote")).toHaveText("7,00");
+    await expect(rows.nth(2).locator(".mini-row__name")).toHaveText("Commedia");
+    await expect(rows.nth(2).locator(".mini-row__vote")).toHaveText("5,00");
+
+    // Il testo sopra (fallback templato, nessun group_report qui) resta
+    // quello di sempre — il grafico è un'aggiunta, non una sostituzione.
+    await expect(card.locator(".user-card__fact")).toContainText("Il genere che ama di più è");
+  });
+});
+
 // ─── Gesto nascosto: 7 tap su #reportTitleTap forzano una rigenerazione ──
 // Sola lettura anche qui: verifichiamo solo che il gesto apra la conferma
 // col testo giusto per il tab attivo, e che "Annulla" la chiuda SENZA
