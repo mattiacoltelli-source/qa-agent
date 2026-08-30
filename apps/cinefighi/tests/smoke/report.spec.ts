@@ -223,8 +223,11 @@ test.describe("CineFighi — tab Report — Gruppo", () => {
 // badge visibile, blurb lunga con clamp a 4 righe + "Leggi tutto"/"Mostra
 // meno" (ui.js::userCardHtml, needsClamp oltre 200 caratteri).
 
-const CLAMP_TITLES = [fakeTitle(935001, "Clamp T1", "Thriller")];
-const CLAMP_VOTES = [{ title_id: 935001, user_name: QA_USER, vote: 8 }];
+// 50 voti, non 1: da 6b4e1f2 "Chi siete" mostra una card solo per chi
+// raggiunge MIN_VOTED_FOR_REPORT (50) — con un solo voto QA_USER non
+// entrerebbe più nella griglia e la card da testare non renderizzerebbe.
+const CLAMP_TITLES = Array.from({ length: 50 }, (_, i) => fakeTitle(935001 + i, `Clamp T${i + 1}`, "Thriller"));
+const CLAMP_VOTES = CLAMP_TITLES.map((t) => ({ title_id: t.id, user_name: QA_USER, vote: 8 }));
 const LONG_BLURB =
   "Con 8 voti di media molto alta, " + QA_USER +
   " si conferma un osservatore attento del genere Thriller, capace di premiare con costanza i titoli " +
@@ -279,6 +282,60 @@ test.describe("CineFighi — tab Report — Gruppo — testo scritto da Claude",
     await expandBtn.click();
     await expect(wrap).toHaveClass(/is-clamped/);
     await expect(expandBtn.locator(".user-card__expand-label")).toHaveText("Leggi tutto");
+  });
+});
+
+// ─── GRUPPO: soglia minima di 50 voti per "Chi siete, uno per uno" ───────
+// cine-core.js::groupMemberProfiles(db, users, { minVotes }) filtra alla
+// fine, dopo l'assegnazione delle etichette "costante"/"polarizzato": chi
+// non raggiunge MIN_VOTED_FOR_REPORT (50, stessa soglia del report
+// personale) sparisce sia dalla griglia di card sia dal grafico a barre
+// sopra (ui.js::renderGroupReport — leggono lo stesso array), non solo
+// dalla card. Niente placeholder "vota ancora N titoli": chi è sotto
+// soglia non compare affatto.
+
+const THRESHOLD_TITLES = Array.from({ length: 50 }, (_, i) => fakeTitle(937001 + i, `Soglia T${i + 1}`, "Thriller"));
+// QA_USER vota tutti e 50 (supera la soglia), Amico1 solo i primi 3 degli
+// stessi titoli (sotto soglia), Amico2 nessuno.
+const THRESHOLD_VOTES_QA = THRESHOLD_TITLES.map((t) => ({ title_id: t.id, user_name: QA_USER, vote: 7 }));
+const THRESHOLD_VOTES_AMICO1 = THRESHOLD_TITLES.slice(0, 3).map((t) => ({ title_id: t.id, user_name: "Amico1", vote: 6 }));
+
+test.describe('CineFighi — tab Report — Gruppo — soglia 50 voti per "Chi siete"', () => {
+  test('solo chi ha almeno 50 voti entra nella griglia "Chi siete" e nel grafico a barre', async ({ page }) => {
+    test.setTimeout(45_000);
+    await gotoFreshWithMockedLibrary(
+      page,
+      [QA_USER, "Amico1", "Amico2"],
+      THRESHOLD_TITLES,
+      [...THRESHOLD_VOTES_QA, ...THRESHOLD_VOTES_AMICO1]
+    );
+
+    // Grafico a barre (dentro #groupReportProfile, sopra le card): una sola
+    // riga, quella di QA_USER — Amico1 (3 voti) e Amico2 (0 voti) non ci sono.
+    const bars = page.locator("#groupReportProfile .bar-row");
+    await expect(bars).toHaveCount(1);
+    await expect(bars.first().locator(".bar-row__name")).toContainText(QA_USER);
+
+    // Card "Chi siete": una sola, quella di QA_USER — niente card striminzita
+    // per Amico1 né "Ancora nessun voto" per Amico2.
+    const cards = page.locator("#groupReportMembers .user-card");
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first().locator(".user-card__name")).toContainText(QA_USER);
+  });
+
+  test("se nessuno supera i 50 voti, compare il messaggio di fallback invece della griglia", async ({ page }) => {
+    test.setTimeout(45_000);
+    await gotoFreshWithMockedLibrary(
+      page,
+      [QA_USER, "Amico1"],
+      THRESHOLD_TITLES.slice(0, 5),
+      THRESHOLD_VOTES_AMICO1
+    );
+
+    await expect(page.locator("#groupReportMembers .user-card")).toHaveCount(0);
+    await expect(page.locator("#groupReportMembers .empty-hint")).toHaveText(
+      "Nessuno ha ancora votato abbastanza titoli per un profilo personale."
+    );
   });
 });
 
