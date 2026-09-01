@@ -1,0 +1,65 @@
+import { test, expect } from "@playwright/test";
+import {
+  gotoFresh,
+  assetCard,
+  predictionRows,
+  predictionDetailRow,
+  outcomeRows,
+  outcomeDetailRow,
+  ASSETS,
+} from "../../fixtures/prova-page.ts";
+
+// I dati sono reali e cambiano ogni giorno (nuove previsioni/valutazioni
+// generate dalla pipeline Python): questi test verificano il COMPORTAMENTO
+// (apertura/chiusura del dettaglio, contenuto minimo atteso), mai valori
+// fissi come la classe predetta o la confidence di una previsione specifica
+// — quelli cambiano da un giorno all'altro e non sono ciò che questa suite
+// deve garantire.
+test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => {
+  for (const asset of ASSETS) {
+    test(`${asset}: aprire una riga di "Ultimi Segnali Generati" mostra la motivazione, richiuderla la nasconde`, async ({
+      page,
+    }) => {
+      await gotoFresh(page);
+      const card = assetCard(page, asset);
+      const rows = predictionRows(page, asset);
+      const count = await rows.count();
+
+      if (count === 0) {
+        await expect(card).toContainText("Nessuna predizione registrata.");
+        test.skip(true, `${asset}: nessuna previsione ancora generata, nulla da espandere`);
+      }
+
+      const detail = predictionDetailRow(page, asset, 0);
+      await expect(detail).toBeHidden();
+
+      await rows.nth(0).click();
+      await expect(detail).toBeVisible();
+      await expect(detail).toContainText("Motivazione del modello");
+      await expect(detail).toContainText("Soglia di volatilità");
+
+      await rows.nth(0).click();
+      await expect(detail).toBeHidden();
+    });
+
+    test(`${asset}: aprire una riga di "Ultimi Risultati Valutati" mostra anche il confronto di prezzo`, async ({
+      page,
+    }) => {
+      await gotoFresh(page);
+      const card = assetCard(page, asset);
+      const rows = outcomeRows(page, asset);
+      const count = await rows.count();
+
+      if (count === 0) {
+        await expect(card).toContainText("Nessuna valutazione ancora.");
+        test.skip(true, `${asset}: nessun esito ancora valutato`);
+      }
+
+      const detail = outcomeDetailRow(page, asset, 0);
+      await rows.nth(0).click();
+      await expect(detail).toBeVisible();
+      await expect(detail).toContainText("prezzo reale");
+      await expect(detail).toContainText("Motivazione del modello");
+    });
+  }
+});

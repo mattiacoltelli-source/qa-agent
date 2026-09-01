@@ -9,7 +9,7 @@ Su GitHub: repo `qa-agent` → tab **Actions** → workflow **"QA Agent — smok
 tests"** → bottone **"Run workflow"** in alto a destra. Si apre un piccolo
 modulo con due scelte:
 
-- **Quale app testare**: tutte / CineFighi / CineTracker / Spot.
+- **Quale app testare**: tutte / CineFighi / CineTracker / Spot / Prova.
 - **Esegui anche i test @write**: casella da lasciare **deselezionata** per
   un giro normale (vedi sotto per cosa fa quando è attiva).
 

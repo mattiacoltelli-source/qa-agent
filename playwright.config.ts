@@ -9,6 +9,8 @@ const CINETRACKER_URL =
   process.env.CINETRACKER_BASE_URL ?? "https://mattiacoltelli-source.github.io/Cos90/";
 const VACANZA_URL =
   process.env.VACANZA_BASE_URL ?? "https://mattiacoltelli-source.github.io/Spot/";
+const PROVA_URL =
+  process.env.PROVA_BASE_URL ?? "https://mattiacoltelli-source.github.io/Prova/";
 
 // Per aggiungere una quarta app: creare apps/<nome>/tests, poi aggiungere
 // qui due project (mobile + desktop) che puntano al suo baseURL. Non serve
@@ -63,6 +65,16 @@ export default defineConfig({
       name: "vacanza-desktop",
       testDir: "./apps/vacanza/tests",
       use: { ...DESKTOP_CONTEXT, baseURL: VACANZA_URL },
+    },
+    {
+      name: "prova-mobile",
+      testDir: "./apps/prova/tests",
+      use: { ...MOBILE_CONTEXT, baseURL: PROVA_URL },
+    },
+    {
+      name: "prova-desktop",
+      testDir: "./apps/prova/tests",
+      use: { ...DESKTOP_CONTEXT, baseURL: PROVA_URL },
     },
   ],
 });

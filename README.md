@@ -1,8 +1,9 @@
 # QA Agent
 
-Suite di test Playwright per tre app personali: **CineFighi** (cinema
-multiutente), **CineTracker** (repo `Cos90`, cinema single-user) e **Spot**
-(guida di viaggio Ionio in barca a vela). Repository separato, dedicato solo
+Suite di test Playwright per quattro app personali: **CineFighi** (cinema
+multiutente), **CineTracker** (repo `Cos90`, cinema single-user), **Spot**
+(guida di viaggio Ionio in barca a vela) e **Prova** (AI Predictor,
+esperimento predittivo sui mercati). Repository separato, dedicato solo
 al testing — non entra in nessuna delle app in produzione.
 
 **Uso quotidiano**: si lancia da GitHub Actions (tab **Actions** → "Run
@@ -57,10 +58,11 @@ apps/
     README.md            modello di sicurezza dati, env var, backlog
   cinetracker/            (stessa struttura, per il repo Cos90)
   vacanza/                (stessa struttura, per il repo Spot)
+  prova/                  (stessa struttura, per il repo Prova/AI Predictor)
 playwright.config.ts      un project mobile + uno desktop per app, baseURL da env var
 ```
 
-Per aggiungere una quarta app: creare `apps/<nome>/tests`, aggiungere due
+Per aggiungere un'altra app: creare `apps/<nome>/tests`, aggiungere due
 `projects` (mobile + desktop) in `playwright.config.ts` con il suo
 `baseURL`. Non serve toccare `/core` né le altre app.
 
@@ -74,13 +76,15 @@ npm test                  # tutta la suite, sola lettura (default)
 npm run test:cinefighi    # solo CineFighi (mobile + desktop)
 npm run test:cinetracker  # solo CineTracker
 npm run test:vacanza      # solo Spot
+npm run test:prova        # solo Prova (AI Predictor)
 
 npm run test:write        # ANCHE i test che scrivono su dati reali — leggi prima i README di ogni app
 npm run report             # apre l'ultimo report HTML
 ```
 
-I test girano contro gli URL live GitHub Pages delle tre app (override con
-`CINEFIGHI_BASE_URL` / `CINETRACKER_BASE_URL` / `VACANZA_BASE_URL`), sia in
+I test girano contro gli URL live GitHub Pages delle app (override con
+`CINEFIGHI_BASE_URL` / `CINETRACKER_BASE_URL` / `VACANZA_BASE_URL` /
+`PROVA_BASE_URL`), sia in
 viewport mobile che desktop (le app sono PWA usate principalmente da
 telefono). Pensati per girare in GitHub Actions
 (`.github/workflows/tests.yml`): report salvati come JSON (`reports/results.json`)
@@ -100,6 +104,11 @@ da una dashboard statica in un secondo momento, non per un DB dedicato.
   test è taggato `@write`, girano tutti sempre. Il meteo live è sempre
   mockato (mai chiamato davvero) per restare deterministico. Dettagli:
   `apps/vacanza/README.md`.
+- **Prova**: nessun backend, nessun `localStorage` — solo file statici
+  letti dal repo. Nessun test è taggato `@write`. A differenza delle altre
+  app, qui i dati (previsioni/esiti) sono reali e cambiano ogni giorno: i
+  test verificano comportamento e forma, non contenuti specifici. Dettagli:
+  `apps/prova/README.md`.
 
 ## Determinismo
 
