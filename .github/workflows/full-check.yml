@@ -21,7 +21,7 @@ name: Controllo Completo
 # `!cancelled()` mantiene l'ordine sequenziale ma li fa girare comunque,
 # fermandosi solo se il run viene annullato a mano.
 #
-# `schedule` fa partire il controllo una volta a settimana da solo, senza
+# `schedule` fa partire il controllo due volte a settimana da solo, senza
 # bisogno di ricordarsi di lanciarlo: il trigger cron non popola `inputs.app`
 # (non esiste un menu a tendina per un run automatico), quindi ogni `with:`
 # usa `inputs.app || 'tutte'` per ricadere sempre su "tutte" in quel caso.
@@ -63,7 +63,7 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: "0 6 * * 1" # ogni lunedì alle 06:00 UTC, tutte e tre le app
+    - cron: "0 6 * * 1,4" # lunedì e giovedì alle 06:00 UTC, tutte e quattro le app
 
 # I permessi di un workflow chiamante sono un tetto massimo per quelli
 # richiamati con `uses:` — senza questo, lo step "Salva lo storico" di

@@ -132,9 +132,9 @@ così hai sempre il controllo di quando i test girano, specialmente quelli
 Due eccezioni, entrambe schedulate:
 - Data Health Agent gira anche da solo ogni 6 giorni, di notte — vedi la
   domanda sotto per il perché.
-- "Controllo Completo" (i sei agenti insieme) gira anche da solo una
-  volta a settimana, il lunedì alle 6 UTC — vedi la domanda su "Controllo
-  Completo" più sotto.
+- "Controllo Completo" (i sei agenti insieme) gira anche da solo due
+  volte a settimana, lunedì e giovedì alle 6 UTC — vedi la domanda su
+  "Controllo Completo" più sotto.
 
 Entrambi, se trovano un problema vero (FAIL, non un semplice WARN), mandano
 un avviso su Telegram — vedi "Come funziona la notifica Telegram?".
@@ -209,9 +209,9 @@ Security Agent girano comunque, non dipendono dalla scelta), con un solo
 di run — niente da unire a mano. I workflow restano comunque lanciabili
 anche singolarmente come prima, questo è solo una scorciatoia.
 
-Gira anche **da solo una volta a settimana** (lunedì alle 6 UTC, tutte e
-tre le app): non serve ricordarsi di lanciarlo a mano. Se, in un run
-schedulato, almeno uno dei sei agenti trova un FAIL vero, arriva un
+Gira anche **da solo due volte a settimana** (lunedì e giovedì alle 6
+UTC, tutte le app): non serve ricordarsi di lanciarlo a mano. Se, in un
+run schedulato, almeno uno dei sei agenti trova un FAIL vero, arriva un
 avviso su Telegram — vedi la domanda successiva.
 
 ## Come funziona la notifica Telegram?
