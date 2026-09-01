@@ -7,3 +7,4 @@
 {"runAt":"2026-08-29T12:23:12.154Z","result":"PASS","realCount":501,"extraTitles":1000,"targetCount":1501,"homeReadyMs":1117,"libraryFirstPageMs":58,"statsReadyMs":58}
 {"runAt":"2026-08-29T20:50:09.458Z","result":"PASS","realCount":508,"extraTitles":1000,"targetCount":1508,"homeReadyMs":1125,"libraryFirstPageMs":43,"statsReadyMs":47}
 {"runAt":"2026-08-31T12:39:00.854Z","result":"PASS","realCount":516,"extraTitles":1000,"targetCount":1516,"homeReadyMs":1133,"libraryFirstPageMs":40,"statsReadyMs":52}
+{"runAt":"2026-09-01T10:34:41.631Z","result":"PASS","realCount":517,"extraTitles":1000,"targetCount":1517,"homeReadyMs":1158,"libraryFirstPageMs":60,"statsReadyMs":57}
