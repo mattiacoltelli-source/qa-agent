@@ -45,6 +45,9 @@ async function mockLibrary(page: import("@playwright/test").Page): Promise<void>
   await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
   await mockJson(page, /rest\/v1\/titles/, TITLES);
   await mockJson(page, /rest\/v1\/votes/, []);
+  // Questo file testa solo la vista "Gruppo" (setWatchlistMode "group"),
+  // che non filtra su watchlist_by (d235f7a): basta un mock vuoto.
+  await mockJson(page, /rest\/v1\/watchlist_adds/, []);
   // La richiesta reale a Google Fonts (@import in cima a styles.css) fallisce
   // sempre in questa sandbox (nessun accesso a internet reale) — ma il
   // fallimento diventa via via più lento sui reload ripetuti nella stessa

@@ -101,6 +101,9 @@ async function gotoFreshWithMockedLibrary(
   await mockJson(page, /rest\/v1\/users/, users.map((name) => ({ name })));
   await mockJson(page, /rest\/v1\/titles/, titles);
   await mockJson(page, /rest\/v1\/votes/, votes);
+  // Il Report non dipende dallo scoping Io/Gruppo della watchlist
+  // (d235f7a): basta un mock vuoto perché fetchLibrary() non fallisca.
+  await mockJson(page, /rest\/v1\/watchlist_adds/, []);
   // Nessun group_report mai generato: 404/array vuoto, così renderGroupReport
   // usa il fallback templato client-side, mai il testo scritto da Claude.
   await mockJson(page, /rest\/v1\/group_report/, []);
@@ -239,6 +242,7 @@ test.describe("CineFighi — tab Report — Gruppo — testo scritto da Claude",
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
     await mockJson(page, /rest\/v1\/titles/, CLAMP_TITLES);
     await mockJson(page, /rest\/v1\/votes/, CLAMP_VOTES);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
     // Vedi commento in gotoFreshWithMockedLibrary sopra: senza questo mock
     // renderReport() resta appeso sulla vera rete per il report personale.
     await mockJson(page, /rest\/v1\/user_report/, []);
@@ -393,6 +397,7 @@ test.describe("CineFighi — tab Report — gesto nascosto 7 tap", () => {
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
     await mockJson(page, /rest\/v1\/titles/, CLAMP_TITLES);
     await mockJson(page, /rest\/v1\/votes/, CLAMP_VOTES);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
     await mockJson(page, /rest\/v1\/user_report/, []);
     await mockJson(page, /rest\/v1\/group_report/, []);
     await page.route(/fonts\.googleapis\.com/, (route) => route.abort());

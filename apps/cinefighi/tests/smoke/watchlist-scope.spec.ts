@@ -31,10 +31,19 @@ const TITLES = [
   fakeTitle(920002, "Titolo Di Un Amico QA", "Un Amico")
 ];
 
+// Chi ha ogni titolo nella PROPRIA watchlist (tabella watchlist_adds,
+// d235f7a): added_by su titles resta solo "chi lo ha catalogato per primo",
+// lo scoping Io/Gruppo che questo file testa si basa su questi dati.
+const WATCHLIST_ADDS = [
+  { title_id: 920001, user_name: QA_USER },
+  { title_id: 920002, user_name: "Un Amico" }
+];
+
 async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page): Promise<void> {
   await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
   await mockJson(page, /rest\/v1\/titles/, TITLES);
   await mockJson(page, /rest\/v1\/votes/, []);
+  await mockJson(page, /rest\/v1\/watchlist_adds/, WATCHLIST_ADDS);
   // Vedi commento gemello in new-title-dot.spec.ts: la richiesta a Google
   // Fonts fallisce sempre in sandbox e rallenta i reload ripetuti.
   await page.route(/fonts\.googleapis\.com/, (route) => route.abort());

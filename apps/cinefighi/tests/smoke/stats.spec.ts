@@ -37,6 +37,9 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }, { name: "Un Amico" }]);
   await mockJson(page, /rest\/v1\/titles/, TITLES);
   await mockJson(page, /rest\/v1\/votes/, VOTES);
+  // Le Statistiche non dipendono dallo scoping Io/Gruppo della watchlist
+  // (d235f7a): basta un mock vuoto perché fetchLibrary() non fallisca.
+  await mockJson(page, /rest\/v1\/watchlist_adds/, []);
   // Vedi commento gemello in new-title-dot.spec.ts: la richiesta a Google
   // Fonts fallisce sempre in sandbox e rallenta i reload ripetuti.
   await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
@@ -178,6 +181,7 @@ test.describe("CineFighi — Statistiche — Classifica, tasto Mostra tutti/meno
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
     await mockJson(page, /rest\/v1\/titles/, EXPAND_TITLES);
     await mockJson(page, /rest\/v1\/votes/, EXPAND_VOTES);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
     await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
 
     await page.goto(".");
@@ -249,6 +253,7 @@ test.describe("CineFighi — Statistiche — Classifica, torna al film dopo il d
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
     await mockJson(page, /rest\/v1\/titles/, EXPAND_TITLES);
     await mockJson(page, /rest\/v1\/votes/, EXPAND_VOTES);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
     await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
 
     await page.goto(".");
@@ -276,6 +281,7 @@ test.describe("CineFighi — Statistiche — Classifica, torna al film dopo il d
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
     await mockJson(page, /rest\/v1\/titles/, EXPAND_TITLES);
     await mockJson(page, /rest\/v1\/votes/, EXPAND_VOTES);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
     await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
 
     await page.goto(".");

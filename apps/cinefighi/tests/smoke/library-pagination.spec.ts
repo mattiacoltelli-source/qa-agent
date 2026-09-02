@@ -30,6 +30,9 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
   await mockJson(page, /rest\/v1\/titles/, TITLES);
   await mockJson(page, /rest\/v1\/votes/, []);
+  // Tutti i titoli qui sono "seen": nessuno passa dalla watchlist per
+  // persona (d235f7a), quindi basta un mock vuoto.
+  await mockJson(page, /rest\/v1\/watchlist_adds/, []);
   await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
 
   await page.goto(".");
