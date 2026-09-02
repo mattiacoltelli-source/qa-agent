@@ -51,6 +51,9 @@ test.describe("CineFighi — gestione offline per azione (nessun banner globale)
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
     await mockJson(page, /rest\/v1\/titles/, TITLES);
     await mockJson(page, /rest\/v1\/votes/, VOTES);
+    // Tutti i titoli qui sono "seen": nessuno passa dalla watchlist per
+    // persona (d235f7a), quindi basta un mock vuoto.
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
     // Vedi commento gemello in new-title-dot.spec.ts: la richiesta a Google
     // Fonts fallisce sempre in sandbox e rallenta i reload ripetuti.
     await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
