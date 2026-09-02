@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // API Doctor — engine: per ogni app, interroga le API esterne reali che usa
 // davvero (TMDB per CineFighi/CineTracker, meteo/mare/alba-tramonto per
-// Spot — verificate sul sorgente reale, non dedotte) e verifica che
-// rispondano nella forma attesa. In più, propaga gli header di rate-limit
-// quando l'API li invia (vedi lib/http.mjs) — nessuna chiamata aggiuntiva,
-// nessuna nuova credenziale: se un'API non li invia, resta null, non è un
-// FAIL. Deterministico: nessuna chiamata AI qui (vedi api-doctor/analyze.mjs).
-// Scrive SEMPRE reports/api-doctor-results.json.
+// Spot, Yahoo Finance/SEC EDGAR/GDELT per Prova — verificate sul sorgente
+// reale, non dedotte) e verifica che rispondano nella forma attesa. In più,
+// propaga gli header di rate-limit quando l'API li invia (vedi
+// lib/http.mjs) — nessuna chiamata aggiuntiva, nessuna nuova credenziale:
+// se un'API non li invia, resta null, non è un FAIL. Deterministico:
+// nessuna chiamata AI qui (vedi api-doctor/analyze.mjs). Scrive SEMPRE
+// reports/api-doctor-results.json.
 //
 // Ogni check distingue un FAIL vero (l'API ha risposto, ma male: status
 // sbagliato, corpo malformato) da un INFRA_ERROR (la richiesta non è
@@ -21,9 +22,10 @@ import fs from "node:fs";
 import * as cinefighi from "./endpoints/cinefighi.mjs";
 import * as cinetracker from "./endpoints/cinetracker.mjs";
 import * as spot from "./endpoints/spot.mjs";
+import * as prova from "./endpoints/prova.mjs";
 import { classify, rollupApp } from "./lib/classify.mjs";
 
-const PROJECTS = { cinefighi, cinetracker, spot };
+const PROJECTS = { cinefighi, cinetracker, spot, prova };
 
 const OUTPUT_PATH = "reports/api-doctor-results.json";
 

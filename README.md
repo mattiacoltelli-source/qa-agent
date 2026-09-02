@@ -23,8 +23,8 @@ Nello stesso repository ci sono anche cinque moduli indipendenti in più:
   **[perf/README.md](perf/README.md)**.
 - **API Doctor Agent**: controlla che le API esterne da cui le app
   dipendono (TMDB per CineFighi/CineTracker, meteo/mare/alba-tramonto per
-  Spot) rispondano, e nella forma attesa. Vedi
-  **[api-doctor/README.md](api-doctor/README.md)**.
+  Spot, Yahoo Finance/SEC EDGAR/GDELT per Prova) rispondano, e nella forma
+  attesa. Vedi **[api-doctor/README.md](api-doctor/README.md)**.
 - **Scale Agent**: testa la Home/Libreria/Statistiche di CineFighi con
   molti più titoli di quelli reali (mockati, mai scritti su Supabase), per
   scoprire prima chi lo dice il gruppo se qualcosa rallenta troppo. Vedi

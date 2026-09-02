@@ -3,6 +3,10 @@
 // la richiesta non è nemmeno arrivata a destinazione. Nessuna valutazione
 // qui — decide se è PASS/FAIL chi chiama, in base alla forma attesa della
 // risposta di QUELLA specifica API.
+//
+// `headers` opzionale: nessuna delle API di CineFighi/CineTracker/Spot ne
+// ha mai avuto bisogno, ma SEC EDGAR (Prova) richiede uno User-Agent con
+// un contatto reale per policy — vedi api-doctor/endpoints/prova.mjs.
 
 const TIMEOUT_MS = 15_000;
 const BODY_SNIPPET_MAX = 500;
@@ -44,13 +48,13 @@ export function redact(url) {
   return url.replace(/([?&](?:api_key|key|token)=)[^&]+/gi, "$1***");
 }
 
-async function fetchJsonOnce(url, method) {
+async function fetchJsonOnce(url, method, headers) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   const startedAt = Date.now();
 
   try {
-    const res = await fetch(url, { method, signal: controller.signal });
+    const res = await fetch(url, { method, headers, signal: controller.signal });
     const durationMs = Date.now() - startedAt;
     const text = await res.text();
 
@@ -92,10 +96,10 @@ async function fetchJsonOnce(url, method) {
   }
 }
 
-export async function fetchJson(url, { method = "GET" } = {}) {
-  let result = await fetchJsonOnce(url, method);
+export async function fetchJson(url, { method = "GET", headers = {} } = {}) {
+  let result = await fetchJsonOnce(url, method, headers);
   for (let attempt = 0; attempt < NETWORK_ERROR_MAX_RETRIES && result.networkError; attempt++) {
-    result = await fetchJsonOnce(url, method);
+    result = await fetchJsonOnce(url, method, headers);
   }
   return result;
 }

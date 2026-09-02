@@ -12,6 +12,7 @@ on:
           - cinefighi
           - cinetracker
           - spot
+          - prova
   # Permette a Controllo Completo (full-check.yml) di richiamare questo
   # workflow come step di una catena sequenziale — vedi la stessa nota in
   # tests.yml / data-health.yml.

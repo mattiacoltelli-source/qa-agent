@@ -19,6 +19,13 @@ generale al repository.
 - **Spot**: 3 API keyless (Open-Meteo forecast, Open-Meteo marine,
   sunrise-sunset.org), verificate sul sorgente reale `app.js`, su un punto
   reale (Corfù, Città Vecchia) già presente in `spots.js`.
+- **Prova (AI Predictor)**: 3 API keyless (Yahoo Finance, SEC EDGAR, GDELT
+  — le tre fonti *primarie* di prezzo/fondamentali/news di riserva),
+  verificate sul sorgente reale del repo Prova
+  (`src/data_sources/{prices,fundamentals,news}.py`). Le fonti a chiave
+  (Twelve Data, Finnhub, Alpha Vantage, FRED) restano fuori: sono secret
+  server-side del repo Prova, non chiavi pubbliche riusabili come per
+  TMDB — richiederebbero copiarle anche qui.
 
 Per ogni endpoint: raggiungibile? Status HTTP 2xx? Il corpo ha la forma
 attesa (es. TMDB può rispondere 200 con un errore incapsulato nel corpo)?
@@ -26,10 +33,10 @@ attesa (es. TMDB può rispondere 200 con un errore incapsulato nel corpo)?
 In più, se la risposta include header di rate-limit/quota (`X-RateLimit-*`,
 `RateLimit-*`, `Retry-After`), vengono riportati nel riepilogo — a costo
 zero, nessuna chiamata in più, nessuna nuova credenziale. **Nessuna delle
-API controllate oggi (TMDB, Open-Meteo, sunrise-sunset.org) garantisce di
-inviarli**: se assenti, il campo resta vuoto, non è un errore né un FAIL —
-è solo pronto per il giorno in cui una di queste API (o una nuova aggiunta
-in futuro) inizia a mandarli.
+API controllate oggi (TMDB, Open-Meteo, sunrise-sunset.org, Yahoo Finance,
+SEC EDGAR, GDELT) garantisce di inviarli**: se assenti, il campo resta
+vuoto, non è un errore né un FAIL — è solo pronto per il giorno in cui una
+di queste API (o una nuova aggiunta in futuro) inizia a mandarli.
 
 ## Struttura
 
@@ -40,12 +47,13 @@ api-doctor/
     cinefighi.mjs             3 check TMDB, chiave di CineFighi
     cinetracker.mjs            3 check TMDB, chiave di CineTracker (diversa)
     spot.mjs                    3 check meteo/mare/alba-tramonto, nessuna chiave
+    prova.mjs                   3 check Yahoo Finance/SEC EDGAR/GDELT, nessuna chiave
   engine.mjs                  orchestratore: gira i controlli, scrive reports/api-doctor-results.json
   analyze.mjs                  analisi Claude, SOLO sugli endpoint in FAIL
   write-summary.mjs            riepilogo leggibile su GITHUB_STEP_SUMMARY
 ```
 
-Per aggiungere una quarta app: creare `api-doctor/endpoints/<nome>.mjs` che
+Per aggiungere un'altra app: creare `api-doctor/endpoints/<nome>.mjs` che
 esporta `{ label, checks() }`, poi aggiungere una riga in `PROJECTS` in
 `api-doctor/engine.mjs`.
 

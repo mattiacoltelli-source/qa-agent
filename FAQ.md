@@ -169,10 +169,14 @@ punteggi reali). Dettagli: **[perf/README.md](perf/README.md)**.
 
 ## E un "API Doctor Agent"?
 
-Quarto workflow: controlla, per ognuna delle tre app, che le API esterne da
-cui dipende davvero (TMDB per CineFighi/CineTracker — chiavi diverse tra le
-due app —, meteo/mare/alba-tramonto per Spot) rispondano, e nella forma
-attesa. Non c'è stato WARN: un endpoint o risponde correttamente, o è un
+Quarto workflow: controlla, per ognuna delle quattro app, che le API
+esterne da cui dipende davvero (TMDB per CineFighi/CineTracker — chiavi
+diverse tra le due app —, meteo/mare/alba-tramonto per Spot, Yahoo
+Finance/SEC EDGAR/GDELT per Prova) rispondano, e nella forma attesa. Le
+fonti a chiave di Prova (Twelve Data, Finnhub, Alpha Vantage, FRED) non
+sono controllate qui: sono secret server-side del suo repo, non chiavi
+pubbliche riusabili come per TMDB. Non c'è stato WARN: un endpoint o
+risponde correttamente, o è un
 FAIL vero, o — se la richiesta non è nemmeno arrivata a destinazione,
 tipo un blip di rete del runner — un 🌐 **INFRA_ERROR**, che non fa
 fallire il job né notifica su Telegram (non è un problema dell'API).
