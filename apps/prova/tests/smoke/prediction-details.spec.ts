@@ -36,7 +36,11 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
       await rows.nth(0).click();
       await expect(detail).toBeVisible();
       await expect(detail).toContainText("Motivazione del modello");
-      await expect(detail).toContainText("Soglia di volatilità");
+      // La riga "Soglia di volatilità: ±X%" è diventata il range di prezzo
+      // effettivo ("Resta FLAT se il prezzo è tra $X e $Y..."): "FLAT"
+      // resta la sottostringa stabile in entrambe le forme (con o senza
+      // prezzo disponibile), vedi flatRangeLine() in Prova/index.html.
+      await expect(detail).toContainText("FLAT");
 
       await rows.nth(0).click();
       await expect(detail).toBeHidden();
