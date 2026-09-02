@@ -39,8 +39,12 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
       // La riga "Soglia di volatilità: ±X%" è diventata il range di prezzo
       // effettivo ("Resta FLAT se il prezzo è tra $X e $Y..."): "FLAT"
       // resta la sottostringa stabile in entrambe le forme (con o senza
-      // prezzo disponibile), vedi flatRangeLine() in Prova/index.html.
+      // prezzo disponibile), vedi flatRangeLine() in Prova/index.html. Ogni
+      // previsione reale salvata ha sempre price_at_generation (campo
+      // obbligatorio in predict_run.py), quindi il formato con i due
+      // prezzi in $ è quello davvero atteso qui, non solo il fallback.
       await expect(detail).toContainText("FLAT");
+      await expect(detail).toContainText(/Resta FLAT se il prezzo è tra \$[\d.,]+ e \$[\d.,]+/);
 
       await rows.nth(0).click();
       await expect(detail).toBeHidden();

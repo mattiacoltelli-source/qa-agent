@@ -63,19 +63,27 @@ canvas direttamente.
   collassata di default e apribile; i tre mini-grafici per orizzonte
 - Dettaglio on-tap di previsioni ed esiti (motivazione del modello, dati
   usati, confronto di prezzo per gli esiti), apertura/chiusura al click
+- Filtro per orizzonte (Tutti/1g/7g/1m): "Tutti" attivo di default con un
+  solo bottone attivo alla volta, il click sposta lo stato attivo e
+  aggiorna il suffisso `(1g)`/`(7g)`/`(1m)` sull'etichetta accuratezza, il
+  filtro sta su una riga sola senza andare a capo (viewport mobile)
+- Range di prezzo FLAT nel dettaglio previsione: il messaggio "Resta FLAT
+  se il prezzo è tra $X e $Y..." compare con entrambi i valori nel formato
+  atteso
+- Nota "dati mancanti" sotto il nome asset: se visibile contiene "⚠️" e
+  "mancavano", altrimenti resta nascosta
+- Orario della previsione in ora italiana nel pannello info: formato
+  `HH:MM` (calcolato dinamicamente lato client, non un valore fisso)
 
 ## Backlog (non ancora coperto)
 
 - Verifica che il pulsante "🔄 Aggiorna" nell'header ricarichi la pagina
 - Contenuto del manifest.json (nome, icone, `display: standalone`)
 - Un secondo browser tab/reload non duplica i chart instance (memory leak)
-- Filtro per orizzonte (Tutti/1g/7g/1m, aggiunto il 2026-09-02): che
-  ricalcoli davvero accuratezza/grafici/tabelle quando cambiato, non solo
-  che i bottoni esistano
-- Range di prezzo FLAT nel dettaglio previsione ("Resta FLAT se il
-  prezzo è tra $X e $Y..."): valore coerente con price_at_generation e
-  volatility_threshold_pct del record
-- Nota "dati mancanti" sotto il nome asset quando l'ultimo segnale aveva
-  una fonte opzionale non disponibile
-- Orario della previsione in ora italiana nel pannello info (calcolato
-  dinamicamente, non un valore fisso da confrontare)
+- Filtro per orizzonte: che cambiandolo ricalcoli davvero i grafici e le
+  tabelle sottostanti (oggi si verifica solo lo stato attivo dei bottoni e
+  il suffisso sull'etichetta accuratezza, non il contenuto di grafici/righe)
+- Range di prezzo FLAT: che i due valori $X/$Y nel messaggio siano
+  numericamente coerenti con `price_at_generation` e
+  `volatility_threshold_pct` del record (oggi si verifica solo il formato
+  del messaggio, non i valori)

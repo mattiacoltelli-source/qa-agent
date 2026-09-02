@@ -14,6 +14,15 @@ name: Controllo Completo
 # qa-agent stesso (vedi security/README.md), quindi i loro job non usano
 # l'input `app`.
 #
+# Prova (statico, nessun backend/database) è registrata solo in QA Agent
+# (Playwright, apps/prova/tests) e API Doctor (le sue 4 fonti dati
+# keyless): quando `app` è "prova" o "tutte", Data Health e Performance
+# la vedono comunque passare ma non hanno un progetto "prova" nel proprio
+# elenco e la saltano con un warning ("Progetto sconosciuto"), invece di
+# fallire — coerente col fatto che non ha nulla da controllare per quei
+# due agenti (nessun dato scritto da verificare, e le pagine statiche non
+# sono nello scope attuale del Performance Agent).
+#
 # `if: !cancelled()` su health/performance/api-doctor/scale/security: `needs:`
 # da solo richiederebbe il successo del job precedente, quindi un singolo
 # test smoke fallito bloccherebbe l'intera catena e gli altri agenti non
@@ -50,7 +59,7 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: "Quale app controllare (tutti e tre gli agenti)"
+        description: "Quale app controllare (tutti e sei gli agenti)"
         type: choice
         default: "tutte"
         options:
@@ -58,6 +67,7 @@ on:
           - cinefighi
           - cinetracker
           - spot
+          - prova
       test_notify:
         description: "Manda comunque un messaggio Telegram di prova (anche se tutto passa)"
         type: boolean

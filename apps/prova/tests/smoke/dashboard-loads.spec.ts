@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { gotoFresh, assetCard, ASSETS } from "../../fixtures/prova-page.ts";
+import { gotoFresh, assetCard, dataStatusNote, ASSETS } from "../../fixtures/prova-page.ts";
 
 // Nessun mock qui: la dashboard legge dati reali generati dalla pipeline
 // Python (GitHub Actions), non un backend che possiamo controllare da questi
@@ -35,5 +35,20 @@ test.describe("AI Predictor — caricamento dashboard", () => {
   }) => {
     await gotoFresh(page);
     await expect(page.locator("#assets-grid")).not.toContainText("SPY");
+  });
+
+  test("nota \"dati mancanti\": se visibile segnala cosa mancava nell'ultimo segnale, altrimenti resta nascosta", async ({
+    page,
+  }) => {
+    await gotoFresh(page);
+    for (const asset of ASSETS) {
+      const note = dataStatusNote(page, asset);
+      if (await note.isVisible()) {
+        await expect(note).toContainText("⚠️");
+        await expect(note).toContainText("mancavano");
+      } else {
+        await expect(note).toBeHidden();
+      }
+    }
   });
 });

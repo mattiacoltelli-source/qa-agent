@@ -70,3 +70,28 @@ export function predictionDetailRow(page: Page, asset: ProvaAsset, index: number
 export function outcomeDetailRow(page: Page, asset: ProvaAsset, index: number): Locator {
   return page.locator(`#detail-outcome-${asset}-${index}`);
 }
+
+export type ProvaHorizonFilter = "all" | "1d" | "7d" | "1m";
+
+/** Bottone del filtro orizzonte (Tutti/1g/7g/1m) in cima alla pagina,
+ * sopra le card asset — un filtro solo, condiviso da tutte e tre. */
+export function horizonFilterButton(page: Page, horizon: ProvaHorizonFilter): Locator {
+  return page.locator(`.horizon-filter-btn[data-horizon="${horizon}"]`);
+}
+
+export function accuracyBadge(page: Page, asset: ProvaAsset): Locator {
+  return assetCard(page, asset).locator(".badge-accuracy");
+}
+
+/** Nota "dati mancanti" sotto il nome dell'asset: vuota/nascosta se
+ * l'ultimo segnale aveva tutte le fonti opzionali disponibili (dato
+ * reale, cambia ogni giorno — vedi missingDataNote() in index.html). */
+export function dataStatusNote(page: Page, asset: ProvaAsset): Locator {
+  return assetCard(page, asset).locator(".data-status");
+}
+
+/** Orario della previsione giornaliera in ora italiana, dentro il
+ * pannello info — calcolato lato client ad ogni caricamento. */
+export function predictionTimeItalian(page: Page): Locator {
+  return infoPanel(page).locator("#prediction-times-it");
+}
