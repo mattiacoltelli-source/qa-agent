@@ -19,11 +19,15 @@ generale al repository.
 - **Spot**: 3 API keyless (Open-Meteo forecast, Open-Meteo marine,
   sunrise-sunset.org), verificate sul sorgente reale `app.js`, su un punto
   reale (Corfù, Città Vecchia) già presente in `spots.js`.
-- **Prova (AI Predictor)**: 3 API keyless (Yahoo Finance, SEC EDGAR, GDELT
-  — le tre fonti *primarie* di prezzo/fondamentali/news di riserva),
-  verificate sul sorgente reale del repo Prova
-  (`src/data_sources/{prices,fundamentals,news}.py`). Le fonti a chiave
-  (Twelve Data, Finnhub, Alpha Vantage, FRED) restano fuori: sono secret
+- **Prova (AI Predictor)**: 4 API keyless (Yahoo Finance, SEC EDGAR elenco
+  ticker, SEC EDGAR submissions, GDELT — le fonti *primarie* di
+  prezzo/fondamentali/transazioni insider più la fonte di riserva per le
+  news), verificate sul sorgente reale del repo Prova
+  (`src/data_sources/{prices,fundamentals,news,insider}.py`). Il controllo
+  SEC EDGAR submissions (`data.sec.gov`) è separato da quello sull'elenco
+  ticker (`www.sec.gov`) perché sono sottodomini/gateway diversi con
+  disponibilità potenzialmente indipendente. Le fonti a chiave (Twelve
+  Data, Finnhub, Alpha Vantage, FRED) restano fuori: sono secret
   server-side del repo Prova, non chiavi pubbliche riusabili come per
   TMDB — richiederebbero copiarle anche qui.
 
@@ -47,7 +51,7 @@ api-doctor/
     cinefighi.mjs             3 check TMDB, chiave di CineFighi
     cinetracker.mjs            3 check TMDB, chiave di CineTracker (diversa)
     spot.mjs                    3 check meteo/mare/alba-tramonto, nessuna chiave
-    prova.mjs                   3 check Yahoo Finance/SEC EDGAR/GDELT, nessuna chiave
+    prova.mjs                   4 check Yahoo Finance/SEC EDGAR (x2)/GDELT, nessuna chiave
   engine.mjs                  orchestratore: gira i controlli, scrive reports/api-doctor-results.json
   analyze.mjs                  analisi Claude, SOLO sugli endpoint in FAIL
   write-summary.mjs            riepilogo leggibile su GITHUB_STEP_SUMMARY

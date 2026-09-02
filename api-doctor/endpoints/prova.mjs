@@ -1,8 +1,9 @@
 // Controlli sulle API esterne di Prova (AI Predictor) che NON richiedono
-// una chiave: Yahoo Finance (prezzo, fonte primaria), SEC EDGAR
-// (fondamentali, fonte primaria) e GDELT (news, fonte di riserva) — URL
-// verificati sul sorgente reale, src/data_sources/{prices,fundamentals,
-// news}.py nel repo Prova.
+// una chiave: Yahoo Finance (prezzo, fonte primaria), SEC EDGAR — sia
+// l'elenco ticker (fondamentali, fonte primaria) sia le submissions
+// (transazioni insider via Form 4, aggiunte il 2026-09-02) — e GDELT
+// (news, fonte di riserva). URL verificati sul sorgente reale,
+// src/data_sources/{prices,fundamentals,news,insider}.py nel repo Prova.
 //
 // Le fonti di riserva a chiave (Twelve Data, Finnhub, Alpha Vantage, FRED)
 // restano fuori: sono secret server-side del repo Prova, non chiavi
@@ -16,6 +17,12 @@ export const label = "Prova (AI Predictor)";
 // NVDA, uno dei tre asset attivi del paniere reale (config.py) — non
 // inventato.
 const TICKER = "NVDA";
+
+// CIK SEC di NVDA (numerico, zero-padded a 10 cifre): stesso valore che
+// src/data_sources/fundamentals.py:sec_cik_for_ticker() risolverebbe per
+// NVDA — qui hardcoded per non dipendere da un secondo fetch a
+// company_tickers.json solo per ottenerlo.
+const NVDA_CIK = "0001045810";
 
 // SEC richiede un contatto reale nello User-Agent (fair access policy),
 // stesso contatto già usato lato Prova (src/config.py,
@@ -56,6 +63,30 @@ export async function checks() {
         ? `HTTP ${secEdgar.status}`
         : Object.keys(secEdgar.body || {}).length === 0
           ? "Risposta 200 ma corpo vuoto (atteso un elenco di ticker)"
+          : null,
+  });
+
+  // data.sec.gov è un sottodominio/gateway diverso da www.sec.gov (sopra):
+  // può avere disponibilità indipendente, da qui il controllo separato
+  // invece di fidarsi del solo check "Fondamentali" per coprire anche
+  // questo endpoint.
+  const secSubmissions = await fetchJson(
+    `https://data.sec.gov/submissions/CIK${NVDA_CIK}.json`,
+    { headers: SEC_HEADERS }
+  );
+  results.push({
+    name: `Transazioni insider (SEC EDGAR submissions, ${TICKER})`,
+    ...secSubmissions,
+    ok:
+      !secSubmissions.networkError &&
+      secSubmissions.ok &&
+      Array.isArray(secSubmissions.body?.filings?.recent?.form),
+    reason: secSubmissions.networkError
+      ? `Errore di rete: ${secSubmissions.networkError}`
+      : !secSubmissions.ok
+        ? `HTTP ${secSubmissions.status}`
+        : !Array.isArray(secSubmissions.body?.filings?.recent?.form)
+          ? 'Risposta 200 ma manca il campo atteso "filings.recent.form" (array)'
           : null,
   });
 

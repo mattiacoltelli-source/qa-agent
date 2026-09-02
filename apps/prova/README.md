@@ -69,3 +69,13 @@ canvas direttamente.
 - Verifica che il pulsante "🔄 Aggiorna" nell'header ricarichi la pagina
 - Contenuto del manifest.json (nome, icone, `display: standalone`)
 - Un secondo browser tab/reload non duplica i chart instance (memory leak)
+- Filtro per orizzonte (Tutti/1g/7g/1m, aggiunto il 2026-09-02): che
+  ricalcoli davvero accuratezza/grafici/tabelle quando cambiato, non solo
+  che i bottoni esistano
+- Range di prezzo FLAT nel dettaglio previsione ("Resta FLAT se il
+  prezzo è tra $X e $Y..."): valore coerente con price_at_generation e
+  volatility_threshold_pct del record
+- Nota "dati mancanti" sotto il nome asset quando l'ultimo segnale aveva
+  una fonte opzionale non disponibile
+- Orario della previsione in ora italiana nel pannello info (calcolato
+  dinamicamente, non un valore fisso da confrontare)
