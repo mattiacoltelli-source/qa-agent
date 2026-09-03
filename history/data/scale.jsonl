@@ -10,3 +10,4 @@
 {"runAt":"2026-09-01T10:34:41.631Z","result":"PASS","realCount":517,"extraTitles":1000,"targetCount":1517,"homeReadyMs":1158,"libraryFirstPageMs":60,"statsReadyMs":57}
 {"runAt":"2026-09-02T07:24:24.672Z","result":"PASS","realCount":525,"extraTitles":1000,"targetCount":1525,"homeReadyMs":1626,"libraryFirstPageMs":41,"statsReadyMs":48}
 {"runAt":"2026-09-02T08:00:56.061Z","result":"PASS","realCount":525,"extraTitles":1000,"targetCount":1525,"homeReadyMs":1668,"libraryFirstPageMs":46,"statsReadyMs":51}
+{"runAt":"2026-09-03T10:56:55.543Z","result":"PASS","realCount":529,"extraTitles":1000,"targetCount":1529,"homeReadyMs":1656,"libraryFirstPageMs":60,"statsReadyMs":55}
