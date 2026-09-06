@@ -66,12 +66,20 @@ jobs:
         if: always()
         run: node perf/write-summary.mjs
 
+      # reports/perf-trend.json (scritto sopra da perf/history.mjs) va nello
+      # stesso artifact dei risultati: lo legge anche l'incident analyzer di
+      # full-check.yml (vedi incident/analyze.mjs), non solo il riepilogo del
+      # run — un run con un solo calo isolato è un segnale diverso da un
+      # peggioramento già in corso da più run, e oggi solo il secondo dato
+      # renderebbe quella distinzione visibile alla diagnosi correlata.
       - name: Carica i risultati JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: perf-results-json
-          path: reports/perf-results.json
+          path: |
+            reports/perf-results.json
+            reports/perf-trend.json
           retention-days: 30
 
       # Salva le voci di storico appena scritte da perf/history.mjs

@@ -6,7 +6,12 @@
 // e cerca una correlazione tra loro: es. QA e API Doctor falliscono ma
 // Data Health è pulito → il problema è probabilmente nell'API esterna, non
 // nel database. Nessuno dei sei agenti, da solo, può vedere questo tipo di
-// segnale incrociato.
+// segnale incrociato. Legge anche i trend già calcolati da
+// performance/scale/security (confronto col LORO run precedente, vedi
+// TREND_PATHS sotto) per distinguere un problema isolato di oggi da un
+// peggioramento già in corso da più run — un'altra correlazione che nessun
+// singolo agente vede, perché ognuno confronta solo col proprio passato,
+// mai con gli altri cinque segnali dello stesso momento.
 //
 // Chiamato solo dal job `notify` di full-check.yml, solo quando almeno un
 // agente è fallito (vedi la condizione `if` del job). Zero chiamate se,
@@ -34,6 +39,17 @@ const PATHS = {
   apiDoctor: "reports/api-doctor-results.json",
   scale: "reports/scale-results.json",
   security: "reports/security-results.json",
+};
+
+// Scritti da perf/history.mjs, scale/history.mjs, security/history.mjs
+// (confronto col run precedente PER quell'agente), caricati nello stesso
+// artifact dei rispettivi *-results.json — vedi il commento gemello in
+// performance.yml/scale.yml/security.yml. health/api-doctor/qa non hanno
+// un equivalente: non tracciano uno storico proprio oggi.
+const TREND_PATHS = {
+  performance: "reports/perf-trend.json",
+  scale: "reports/scale-trend.json",
+  security: "reports/security-trend.json",
 };
 const ANALYSIS_OUTPUT_PATH = "reports/incident-analysis.json";
 const SUMMARY_OUTPUT_PATH = "reports/incident-summary.txt";
@@ -101,6 +117,17 @@ HTTP 500 su un'azione, "apiDoctor" segnala un tasso di errore alto sulla
 stessa API esterna, ma "health" è PASS su quell'app — la causa probabile è
 l'API esterna, non il database, anche se il sintomo iniziale (il test QA)
 sembrava un problema dell'app stessa.
+
+Potresti ricevere anche un campo "trends" (assente se non c'è nulla di
+notabile): performance/scale/security confrontati col LORO run precedente,
+non con questo run stesso. Usalo per distinguere un problema isolato di
+oggi da un peggioramento già in corso da più run — es. un calo Lighthouse
+isolato di 6 punti è un conto, lo stesso calo se "trends.performance"
+mostra già un delta negativo sul run prima è un peggioramento continuo,
+severity più alta a parità di sintomo. Nessun trend per un agente non
+significa "tutto stabile": significa solo che quell'agente non ha avuto un
+calo/peggioramento sopra la sua soglia rispetto al run precedente — non
+c'è dato per dire se PRIMA di quello fosse già instabile.
 
 Rispondi in italiano, breve (il risultato finisce in un messaggio Telegram):
 una frase di riepilogo, una severity, una causa probabile basata SOLO sui
@@ -196,7 +223,40 @@ function buildPayload() {
     a.error ? { error: a.error } : { counts: a.counts, vulnerabilities: a.vulnerabilities ?? [] }
   );
 
-  return { qa, health, performance, apiDoctor, scale, security };
+  const trends = buildTrends();
+
+  return { qa, health, performance, apiDoctor, scale, security, trends };
+}
+
+// Trend = confronto col run precedente PER QUELL'AGENTE (non con questo
+// run stesso): un calo/peggioramento qui distingue "prima volta che
+// succede oggi" da "sta peggiorando da più run" — un segnale che nessuno
+// dei sei report da solo può dare, perché ognuno vede solo l'istante
+// attuale. Solo per gli agenti che hanno uno storico (performance, scale,
+// security): health/api-doctor/qa non ne tengono uno oggi. omit* tiene il
+// payload compatto quando non c'è nulla di notabile da segnalare, invece
+// di forzare Claude a leggere "nessun calo" per ogni singola app.
+function buildTrends() {
+  const perfTrend = readJson(TREND_PATHS.performance);
+  const scaleTrend = readJson(TREND_PATHS.scale);
+  const securityTrend = readJson(TREND_PATHS.security);
+
+  const out = {};
+
+  if (perfTrend) {
+    const withDrops = Object.entries(perfTrend).filter(([, t]) => t.drops?.length > 0);
+    if (withDrops.length > 0) out.performance = Object.fromEntries(withDrops);
+  }
+
+  if (scaleTrend?.deltas?.length > 0) {
+    out.scale = scaleTrend;
+  }
+
+  if (securityTrend?.worsened) {
+    out.security = { previous: securityTrend.previous, current: securityTrend.current };
+  }
+
+  return Object.keys(out).length > 0 ? out : null;
 }
 
 function escapeHtml(text) {

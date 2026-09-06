@@ -59,12 +59,19 @@ jobs:
         if: always()
         run: node security/write-summary.mjs
 
+      # reports/security-trend.json (scritto sopra da security/history.mjs)
+      # va nello stesso artifact dei risultati: lo legge anche l'incident
+      # analyzer di full-check.yml (vedi incident/analyze.mjs), non solo il
+      # riepilogo del run — stesso motivo del commento gemello in
+      # performance.yml.
       - name: Carica i risultati JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: security-results-json
-          path: reports/security-results.json
+          path: |
+            reports/security-results.json
+            reports/security-trend.json
           retention-days: 30
 
       # Salva la voce di storico appena scritta da security/history.mjs

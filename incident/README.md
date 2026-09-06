@@ -37,6 +37,20 @@ di Data Health, punteggi di Performance, check falliti di API Doctor,
 check di scala falliti, vulnerabilità npm) — mai il JSON grezzo per
 intero.
 
+Riceve anche, quando presente, un campo `trends`: i confronti col run
+PRECEDENTE già calcolati da `perf/history.mjs`, `scale/history.mjs` e
+`security/history.mjs` (stessi file `reports/*-trend.json` letti da
+`write-summary.mjs` per il riepilogo leggibile del singolo agente — qui
+arrivano nello stesso artifact dei risultati, vedi il commento nei
+rispettivi workflow). Solo le voci con qualcosa di notabile (un calo
+Lighthouse, un peggioramento dei tempi di scala, vulnerabilità
+critical/high aumentate) — se `trends` manca del tutto, non vuol dire
+"tutto stabile da sempre", solo che nessuno dei tre non ha avuto un
+calo/peggioramento sopra soglia rispetto all'ultima volta. Serve a
+distinguere un problema isolato di oggi da un peggioramento già in corso
+da più run — QA Agent, Data Health e API Doctor non hanno un equivalente
+oggi (nessuno storico proprio).
+
 ## Cosa produce
 
 - `reports/incident-analysis.json`: l'analisi strutturata completa
