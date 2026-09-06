@@ -40,4 +40,29 @@ test.describe("CineTracker — ricerca titoli (TMDB live, sola lettura)", () => 
     await page.locator("#searchBtn").click();
     await expect(page.locator("#resultsSection")).toBeHidden();
   });
+
+  // Da 1019421/2c79418: la "X" (#searchClearBtn) appare solo quando il campo
+  // ha del testo, e uno svuotamento con quel tasto riporta campo e risultati
+  // allo stato vuoto senza bisogno di ripremere Cerca.
+  test('la "X" di svuotamento ricerca appare solo con testo e ripulisce campo e risultati in un tap', async ({
+    page,
+  }) => {
+    const input = page.locator("#searchInput");
+    const clearBtn = page.locator("#searchClearBtn");
+    const wrap = page.locator(".search-input-wrap");
+
+    await expect(clearBtn).toBeHidden();
+    await expect(wrap).not.toHaveClass(/has-value/);
+
+    await search(page, "Inception");
+    await expect(page.locator("#resultsSection")).toBeVisible({ timeout: 10_000 });
+    await expect(clearBtn).toBeVisible();
+    await expect(wrap).toHaveClass(/has-value/);
+
+    await clearBtn.click();
+    await expect(input).toHaveValue("");
+    await expect(clearBtn).toBeHidden();
+    await expect(wrap).not.toHaveClass(/has-value/);
+    await expect(page.locator("#resultsSection")).toBeHidden();
+  });
 });

@@ -70,10 +70,14 @@ canvas direttamente.
 - Range di prezzo FLAT nel dettaglio previsione: il messaggio "Resta FLAT
   se il prezzo è tra $X e $Y..." compare con entrambi i valori nel formato
   atteso
-- Nota "dati mancanti" sotto il nome asset: se visibile contiene "⚠️" e
-  "mancavano", altrimenti resta nascosta
+- Nota "dati mancanti" sotto il nome asset: se visibile mostra l'icona di
+  warning (SVG) e contiene "mancavano", altrimenti resta nascosta
 - Orario della previsione in ora italiana nel pannello info: formato
   `HH:MM` (calcolato dinamicamente lato client, non un valore fisso)
+- Prezzo di riferimento accanto al ticker: formato `$X.XX` quando presente
+- Istantanea prezzo (3x/giorno): se visibile mostra orario e prezzo, ed
+  eventualmente il confronto con la previsione 1g — dato reale, non un
+  valore fisso
 
 ## Backlog (non ancora coperto)
 

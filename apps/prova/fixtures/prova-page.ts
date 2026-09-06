@@ -95,3 +95,18 @@ export function dataStatusNote(page: Page, asset: ProvaAsset): Locator {
 export function predictionTimeItalian(page: Page): Locator {
   return infoPanel(page).locator("#prediction-times-it");
 }
+
+/** Prezzo di riferimento accanto al nome asset (price_at_generation
+ * dell'ultima previsione, da 096dd0f) — vuoto se non c'è ancora nessuna
+ * previsione salvata per quell'asset. */
+export function assetPriceLabel(page: Page, asset: ProvaAsset): Locator {
+  return assetCard(page, asset).locator(".asset-price");
+}
+
+/** Riga "istantanea prezzo" sotto il nome asset (da 40e3184): nascosta se
+ * data/<asset>/snapshot.json non è ancora stato pubblicato o non c'è una
+ * previsione 1g con cui confrontarlo — dato reale, cambia più volte al
+ * giorno, come dataStatusNote() sopra. */
+export function snapshotStatus(page: Page, asset: ProvaAsset): Locator {
+  return assetCard(page, asset).locator(".snapshot-status");
+}

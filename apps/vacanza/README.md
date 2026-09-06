@@ -49,6 +49,8 @@ disponibile" (comportamento PREVISTO, non un bug).
 - "Cosa vedo ora": con GPS, senza GPS (fallback), cambio finestra temporale
 - "Pianifica itinerario": 5 slot senza duplicati, persistenza, svuotamento
 - Preferiti (filtro "Solo preferiti", persistenza) e visitati (badge in lista)
+- Banner "nuova versione disponibile" del service worker: compare solo a un
+  update reale (non al primo install), "Aggiorna" applica e ricarica
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 

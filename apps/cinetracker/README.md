@@ -46,6 +46,9 @@ hardcoded nel bundle JS, come in CineFighi.
   la logica più a rischio bug dell'app, verificata end-to-end
 - Backup: export produce JSON valido, import round-trip ripristina la libreria
 - Banner offline/online, ricerca rifiutata subito se offline
+- "X" di svuotamento ricerca in un tap: comparsa/scomparsa col contenuto del campo
+- Demote "Segna come non visto": sposta un titolo dai visti alla watchlist
+  senza rimuoverlo (`@write`)
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 
