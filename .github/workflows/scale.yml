@@ -73,12 +73,19 @@ jobs:
         if: always()
         run: node scale/write-summary.mjs
 
+      # reports/scale-trend.json (scritto sopra da scale/history.mjs) va
+      # nello stesso artifact dei risultati: lo legge anche l'incident
+      # analyzer di full-check.yml (vedi incident/analyze.mjs), non solo il
+      # riepilogo del run — stesso motivo del commento gemello in
+      # performance.yml.
       - name: Carica i risultati JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: scale-results-json
-          path: reports/scale-results.json
+          path: |
+            reports/scale-results.json
+            reports/scale-trend.json
           retention-days: 30
 
       # Salva la voce di storico appena scritta da scale/history.mjs
