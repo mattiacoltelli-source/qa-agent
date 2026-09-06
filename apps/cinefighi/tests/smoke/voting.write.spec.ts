@@ -66,6 +66,62 @@ test.describe("CineFighi — voto e libreria @write", () => {
     }
   });
 
+  test('demote da "Segna come non visto" sposta il titolo dai visti alla watchlist senza rimuoverlo', async ({
+    page,
+  }) => {
+    // Da 3c8eb22/b5dae80: su un titolo "seen" #detailStatusBtn diventa un
+    // link discreto con testo "Segna come non visto" (stesso id, click sullo
+    // stesso handleToggleStatus di prima) e #detailRemoveBtn cambia testo in
+    // "Rimuovi dalla mia watchlist". Nessun test lo esercitava ancora.
+    await search(page, "Inception");
+    const firstCard = firstAddableSearchCard(page);
+    await expect(firstCard).toBeVisible({ timeout: 10_000 });
+    await firstCard.locator('button[data-status="seen"]').click();
+
+    try {
+      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+      const statusBtn = page.locator("#detailStatusBtn");
+      const removeBtn = page.locator("#detailRemoveBtn");
+      await expect(statusBtn).toHaveText("Segna come non visto");
+      await expect(removeBtn).toHaveText("Rimuovi");
+
+      await statusBtn.click();
+
+      await expect(statusBtn).toHaveText("✓ Segna come visto");
+      await expect(removeBtn).toHaveText("Rimuovi dalla mia watchlist");
+      // Il titolo resta in libreria, solo lo status cambia (niente ritorno a home).
+      await expect(page.locator("#screen-detail")).toBeVisible();
+    } finally {
+      await page.locator("#detailRemoveBtn").click();
+      await page.locator("#confirmYesBtn").click();
+      await expect(page.locator("#screen-home")).toBeVisible();
+    }
+  });
+
+  test('aggiungere un titolo dai risultati di ricerca nasconde di nuovo la "X" di svuotamento (regressione 6633c54)', async ({
+    page,
+  }) => {
+    // handleAddFromSearch svuota #searchInput scrivendo .value direttamente,
+    // che non genera un evento "input": prima di 6633c54 la X restava
+    // visibile e non funzionante dopo ogni aggiunta dai risultati.
+    await search(page, "Inception");
+    const firstCard = firstAddableSearchCard(page);
+    await expect(firstCard).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("#searchClearBtn")).toBeVisible();
+    await firstCard.locator('button[data-status="seen"]').click();
+
+    try {
+      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator("#searchInput")).toHaveValue("");
+      await expect(page.locator("#searchClearBtn")).toBeHidden();
+      await expect(page.locator(".search-input-wrap")).not.toHaveClass(/has-value/);
+    } finally {
+      await page.locator("#detailRemoveBtn").click();
+      await page.locator("#confirmYesBtn").click();
+      await expect(page.locator("#screen-home")).toBeVisible();
+    }
+  });
+
   test("rimuovere il proprio voto lo toglie dalla lista voti senza rimuovere il titolo", async ({ page }) => {
     // Da fix 45a67f8: niente più ricerca live, serve un click su Cerca/Invio.
     await search(page, "Inception");

@@ -53,6 +53,10 @@ backend di test diverso da qui** — è un vincolo dell'app, non della suite.
 - Ricerca TMDB (risultati, stato vuoto, filtro per tipo)
 - "Stasera cosa guardo" (sola lettura, robusto sia a profilo vuoto che popolato)
 - Aggiunta titolo + voto + rimozione voto + rimozione titolo (`@write`)
+- "X" di svuotamento ricerca in un tap: comparsa/scomparsa col contenuto del
+  campo, e non orfana dopo un'aggiunta dai risultati (`@write`)
+- Demote "Segna come non visto": sposta un titolo dai visti alla watchlist
+  senza rimuoverlo (`@write`)
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 

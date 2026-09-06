@@ -44,4 +44,30 @@ test.describe("CineFighi — ricerca titoli (TMDB live, sola lettura)", () => {
     await page.locator("#searchBtn").click();
     await expect(page.locator("#resultsSection")).toBeHidden();
   });
+
+  // Da 9d70664/6633c54: la "X" (#searchClearBtn) appare solo quando il campo
+  // ha del testo, e uno svuotamento con quel tasto deve riportare il campo
+  // (e i risultati) allo stato vuoto senza bisogno di premere Cerca — a
+  // differenza del test sopra, che verifica il flusso "manuale" pre-esistente.
+  test('la "X" di svuotamento ricerca appare solo con testo e ripulisce campo e risultati in un tap', async ({
+    page,
+  }) => {
+    const input = page.locator("#searchInput");
+    const clearBtn = page.locator("#searchClearBtn");
+    const wrap = page.locator(".search-input-wrap");
+
+    await expect(clearBtn).toBeHidden();
+    await expect(wrap).not.toHaveClass(/has-value/);
+
+    await search(page, "Inception");
+    await expect(page.locator("#resultsSection")).toBeVisible({ timeout: 10_000 });
+    await expect(clearBtn).toBeVisible();
+    await expect(wrap).toHaveClass(/has-value/);
+
+    await clearBtn.click();
+    await expect(input).toHaveValue("");
+    await expect(clearBtn).toBeHidden();
+    await expect(wrap).not.toHaveClass(/has-value/);
+    await expect(page.locator("#resultsSection")).toBeHidden();
+  });
 });
