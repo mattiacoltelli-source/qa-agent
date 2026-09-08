@@ -17,6 +17,20 @@ import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mj
 // già visto, #detailSeenBtn sparisce e #detailWatchBtn diventa un link
 // discreto con testo "Segna come non visto" che sposta il titolo da "visti"
 // a "watchlist" invece di aggiungerne uno nuovo — nessun test lo esercitava.
+//
+// Copre anche #detailSaveNoteBtn ("Salva voto/commento"): finché il titolo
+// non è ancora visto, era un secondo pulsante pieno quasi identico a "Segna
+// come visto" (la sola differenza — restare in watchlist invece di
+// spostarsi ai visti — non si vedeva dall'interfaccia); ora resta visibile
+// solo quando il titolo è già visto. Le due asserzioni su questo pulsante
+// qui sotto sono anche un test di regressione indiretto per un bug trovato
+// verificando questa modifica in locale: prima, `classList.toggle(classe,
+// inSeen(src))` passava il risultato di un Array.find() (un oggetto o
+// `undefined`) invece di un booleano vero — con `undefined` il browser
+// tratta l'argomento come omesso e INVERTE lo stato invece di impostarlo,
+// rendendo la visibilità di #detailSeenBtn/#detailWatchBtn dipendente
+// dall'ordine di navigazione tra schede invece che dallo stato reale del
+// titolo (risalente a e0eaab4, corretto insieme a questa modifica).
 test.describe("CineTracker — toggle stato visto/watchlist @write", () => {
   test.skip(
     process.env.RUN_WRITE_TESTS !== "true",
@@ -45,6 +59,8 @@ test.describe("CineTracker — toggle stato visto/watchlist @write", () => {
       await expect(seenBtn).toBeHidden();
       await expect(watchBtn).toHaveText("Segna come non visto");
       await expect(removeBtn).toHaveText("Rimuovi");
+      // Già visto: "Salva voto/commento" resta l'unico modo di aggiornare voto/commento.
+      await expect(page.locator("#detailSaveNoteBtn")).toBeVisible();
 
       // Marcatore nel commento PRIMA del click che scrive: il demote crea la
       // riga "watchlist" leggendo il commento corrente (vedi app.js), quindi
@@ -58,6 +74,9 @@ test.describe("CineTracker — toggle stato visto/watchlist @write", () => {
       await expect(seenBtn).toHaveText("Segna come visto");
       await expect(watchBtn).toBeHidden();
       await expect(removeBtn).toHaveText("Rimuovi dalla mia watchlist");
+      // Non ancora visto (di nuovo): "Salva voto/commento" sparisce, "Segna
+      // come visto" da solo copre anche il salvataggio di voto/commento.
+      await expect(page.locator("#detailSaveNoteBtn")).toBeHidden();
       // Il titolo resta in libreria, solo lo stato cambia (niente ritorno a home).
       await expect(page.locator("#screen-detail")).toBeVisible();
     } finally {
