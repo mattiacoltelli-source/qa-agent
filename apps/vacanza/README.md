@@ -49,8 +49,6 @@ disponibile" (comportamento PREVISTO, non un bug).
 - "Cosa vedo ora": con GPS, senza GPS (fallback), cambio finestra temporale
 - "Pianifica itinerario": 5 slot senza duplicati, persistenza, svuotamento
 - Preferiti (filtro "Solo preferiti", persistenza) e visitati (badge in lista)
-- Banner "nuova versione disponibile" del service worker: compare solo a un
-  update reale (non al primo install), "Aggiorna" applica e ricarica
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 
@@ -59,3 +57,16 @@ disponibile" (comportamento PREVISTO, non un bug).
 - Marker mappa colorati per stato/livello e apertura dettaglio da mappa
 - Punteggio Sail Mode (`sail.js::scoreSpot`) con vento/onde/direzione mockati nel dettaglio
 - Countdown tramonto e logica "periodo del giorno" (richiede mockare anche `Date`, non solo le API)
+- Banner "nuova versione disponibile" del service worker (compare solo a un
+  update reale, non al primo install — comportamento corretto lato app,
+  verificato a mano il 2026-09-07/08 dopo un bug reale che lo faceva
+  scattare anche al primo avvio, vedi commit `581b985` su Spot). **Non
+  testabile in modo affidabile con Playwright**: `registration.update()`
+  non innesca mai una nuova richiesta di rete per `sw.js` in questo
+  ambiente — verificato sia in locale sia in CI reale (run #30,
+  `service-worker-update.spec.ts` falliva sempre su
+  `#updateBanner` mai comparso, nonostante l'app funzioni correttamente).
+  Prima di riprovare, servirebbe una tecnica diversa dal semplice
+  `context.route()` + `reg.update()` (es. driver CDP diretto sul target
+  del service worker) — rimandato, non vale lo sforzo per una UI di tre
+  righe di codice.
