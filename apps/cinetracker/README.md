@@ -49,6 +49,9 @@ hardcoded nel bundle JS, come in CineFighi.
 - "X" di svuotamento ricerca in un tap: comparsa/scomparsa col contenuto del campo
 - Demote "Segna come non visto": sposta un titolo dai visti alla watchlist
   senza rimuoverlo (`@write`)
+- "Salva voto/commento" visibile solo a titolo già visto (prima restava
+  visibile sempre, quasi duplicando "Segna come visto" finché non lo era)
+  (`@write`)
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 
