@@ -52,11 +52,19 @@ hardcoded nel bundle JS, come in CineFighi.
 - "Salva voto/commento" visibile solo a titolo già visto (prima restava
   visibile sempre, quasi duplicando "Segna come visto" finché non lo era)
   (`@write`)
+- Statistiche: card numeriche, media voto per genere in entrambe le viste
+  Barre/Bolle (16896c1/d048d72, di default "Bolle" — `#genreViewToggle`),
+  podio/classifica Film e Serie TV separati, espansione "Mostra tutti/meno"
+  oltre i primi 4 sotto il podio (`eb56964`)
+- "Stasera cosa guardo": consigli personalizzati (`#recommendBtn`), "Scopri
+  qualcosa di nuovo" con filtro genere (`#genreSelect`, `#discoverBtn`) e
+  "Rivedi un classico" tra i titoli votati ≥7 (`#classicBtn`) — nessuno dei
+  tre mocka la libreria: stessa scelta di leggere lo storico voti REALE
+  (single-user, vedi sopra), verificando che l'app gestisca bene entrambi
+  gli stati possibili invece di assumerne uno
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 
 - Collisione `tmdb_id` film/serie nella stessa lista (dedup lato client prima dell'upsert)
 - Retry con backoff esponenziale sul push Supabase (richiede intercettare e far fallire 2 tentativi su 3)
 - Sync realtime multi-dispositivo (`queueRealtimeSync` / `mergeRemoteIntoLocal`) — richiede due contesti Playwright in parallelo
-- "Stasera cosa guardo" e "Scopri qualcosa di nuovo" (stessa logica di CineFighi, da adattare alla UI qui: `#genreSelect`, `#recommendBtn`, `#discoverBtn`, `#classicBtn`)
-- Statistiche e classifica (podio, toggle Film/Serie)

@@ -62,6 +62,24 @@ export function firstAddableSearchCard(page: Page) {
     .first();
 }
 
+/** Come firstAddableSearchCard, ma più stretta: garantisce un titolo NON
+ * ancora in libreria in nessuna forma (né mio, né in watchlist di
+ * qualcun altro). Serve dove firstAddableSearchCard non basta — il bottone
+ * ".open-preview" ("Scheda →") compare solo quando `!lib` in
+ * renderSearchResults (CineFighi/ui.js), cioè MAI per una card
+ * "canJoinWatchlist" (già in watchlist di un altro membro, niente tag ma
+ * niente Scheda neanche: solo "♡ Anche a me"/"✓ Visto" — vedi ui.js). Una
+ * card così passerebbe comunque il filtro hasNot(.poster-card__tag) di
+ * firstAddableSearchCard, quindi affidarsi solo a quella per aprire la
+ * scheda di consultazione rischierebbe un timeout su ".open-preview" mai
+ * apparso, su un titolo reale già in watchlist di un amico. */
+export function firstPreviewableSearchCard(page: Page) {
+  return page
+    .locator("#results .poster-card")
+    .filter({ has: page.locator(".open-preview") })
+    .first();
+}
+
 export async function selectExistingUser(page: Page, name: string): Promise<boolean> {
   const btn = page.locator(`.user-pick-btn[data-user="${name}"]`);
   if ((await btn.count()) === 0) return false;
@@ -131,8 +149,11 @@ export async function setStatsMode(page: Page, mode: "me" | "group"): Promise<vo
  * client da cine-core.js, con testo opzionale scritto da Claude sopra se
  * è mai stato generato un group_report (altrimenti resta il fallback
  * templato, sempre disponibile). Nessun tasto "Aggiorna" per "gruppo": si
- * aggiorna da solo una volta all'anno, o con 7 tap rapidi su #reportTitleTap
- * (vedi tapReportTitleSevenTimes sotto). */
+ * aggiorna da solo — ma non con la stessa cadenza del personale ("io" è
+ * annuale, vedi nextReportDate in ui.js). Il gruppo si aggiorna ogni lunedì
+ * alle 8:00 via cron reale su Supabase (nextMondayDate in ui.js, testo in
+ * #groupReportMetaLine) — o con 7 tap rapidi su #reportTitleTap
+ * (vedi tapReportTitleSevenTimes sotto) per forzarlo prima. */
 export async function setReportMode(page: Page, mode: "io" | "gruppo"): Promise<void> {
   await page.locator(`#reportIoGruppoToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
 }

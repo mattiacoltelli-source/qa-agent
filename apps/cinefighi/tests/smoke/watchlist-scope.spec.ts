@@ -28,7 +28,10 @@ function fakeTitle(id: number, title: string, addedBy: string) {
 
 const TITLES = [
   fakeTitle(920001, "Titolo Mio QA", QA_USER),
-  fakeTitle(920002, "Titolo Di Un Amico QA", "Un Amico")
+  fakeTitle(920002, "Titolo Di Un Amico QA", "Un Amico"),
+  // Aggiunto da due persone: esercita il badge "+N" di firstOfNames
+  // (cine-core.js) — un solo nome mostrato più un contatore per gli altri.
+  fakeTitle(920003, "Titolo Doppio QA", "Un Amico")
 ];
 
 // Chi ha ogni titolo nella PROPRIA watchlist (tabella watchlist_adds,
@@ -36,7 +39,9 @@ const TITLES = [
 // lo scoping Io/Gruppo che questo file testa si basa su questi dati.
 const WATCHLIST_ADDS = [
   { title_id: 920001, user_name: QA_USER },
-  { title_id: 920002, user_name: "Un Amico" }
+  { title_id: 920002, user_name: "Un Amico" },
+  { title_id: 920003, user_name: "Un Amico" },
+  { title_id: 920003, user_name: "Un Altro Amico" }
 ];
 
 async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page): Promise<void> {
@@ -78,5 +83,25 @@ test.describe("CineFighi — watchlist Home Mia/Gruppo", () => {
 
     await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Di Un Amico QA" })).toBeVisible();
     await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Mio QA" })).toBeVisible();
+  });
+
+  // renderShelf (ui.js) passa showAdder=true solo alla shelf Watchlist in
+  // vista Gruppo (vedi commento lì): il badge "chi l'ha aggiunto" — assente
+  // finora da qualunque test, nonostante sia l'unica informazione mostrata
+  // per un titolo in watchlist senza ancora voti.
+  test('vista "Gruppo": ogni card mostra chi ha aggiunto il titolo, con "+N" se più di uno', async ({ page }) => {
+    await gotoFreshWithMockedLibrary(page);
+    await setWatchlistMode(page, "group");
+    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+
+    const friendCard = page.locator("#watchShelf .shelf-card", { hasText: "Titolo Di Un Amico QA" });
+    await expect(friendCard.locator(".shelf-card__voter-name")).toHaveText("Un Amico");
+    await expect(friendCard.locator(".shelf-card__voter-count")).toHaveCount(0);
+
+    // Ordine alfabetico ("it"): "Un Altro Amico" prima di "Un Amico" —
+    // vedi firstOfNames in cine-core.js.
+    const doubleCard = page.locator("#watchShelf .shelf-card", { hasText: "Titolo Doppio QA" });
+    await expect(doubleCard.locator(".shelf-card__voter-name")).toHaveText("Un Altro Amico");
+    await expect(doubleCard.locator(".shelf-card__voter-count")).toHaveText("+1");
   });
 });

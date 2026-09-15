@@ -57,6 +57,17 @@ backend di test diverso da qui** — è un vincolo dell'app, non della suite.
   campo, e non orfana dopo un'aggiunta dai risultati (`@write`)
 - Demote "Segna come non visto": sposta un titolo dai visti alla watchlist
   senza rimuoverlo (`@write`)
+- Scheda di consultazione ("Scheda →" su un risultato di ricerca non ancora
+  in libreria, `previewItem` in app.js): bottoni dedicati, promozione a
+  "visto" salvando un voto e a "watchlist" col bottone di stato (`@write`)
+- Watchlist Home vista "Gruppo": badge "chi l'ha aggiunto" su ogni card
+  (`.shelf-card__voter-name`/`__voter-count`, con "+N" se più di una persona)
+- Toast di conferma su salvataggio/rimozione voto ("Voto salvato"/"Voto
+  rimosso", `@write`)
+- Riga meta del Report ("Aggiornato il... / prossimo aggiornamento..."):
+  cicli diversi per Io (annuale, dipende da quando è stato generato
+  l'ultimo) e Gruppo (ogni lunedì alle 8, cron reale — indipendente da
+  quando è stato generato l'ultimo)
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 

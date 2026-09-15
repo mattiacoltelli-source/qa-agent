@@ -392,6 +392,103 @@ test.describe("CineFighi — tab Report — Gruppo — mini-grafico Generi prefe
 // dipende dal contenuto del report) — vedi il commento sul mock di
 // user_report in gotoFreshWithMockedLibrary più sopra, stesso motivo.
 
+// ─── Riga meta "Aggiornato il... / prossimo aggiornamento..." ───────────
+// Zero copertura precedente per #reportMetaLine/#groupReportMetaLine,
+// nonostante siano calcolate lato client con due cicli DIVERSI (vedi
+// ui.js): il personale si rigenera un anno dopo l'ultimo report, il Gruppo
+// ogni lunedì alle 8 via cron reale su Supabase, indipendentemente da
+// quando è stato generato l'ultimo. generated_at fissato ben nel passato,
+// non "oggi": rende deterministico il testo del personale (formatReportDate/
+// nextReportDate leggono solo generated_at) a prescindere da quando gira
+// il test; il "prossimo lunedì" del Gruppo dipende invece dalla data vera
+// (nextMondayDate() legge Date.now()), quindi lì verifichiamo solo la
+// struttura del testo, non la data esatta.
+const META_GENERATED_AT = "2024-03-15T10:00:00.000Z";
+
+test.describe("CineFighi — tab Report — riga meta (data ultimo/prossimo aggiornamento)", () => {
+  test('Io: con un report esistente mostra "Aggiornato il... prossimo aggiornamento automatico l\'..." (ciclo annuale)', async ({
+    page,
+  }) => {
+    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
+    await mockJson(page, /rest\/v1\/titles/, []);
+    await mockJson(page, /rest\/v1\/votes/, []);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
+    await mockJson(page, /rest\/v1\/group_report/, []);
+    await mockJson(page, /rest\/v1\/user_report/, [
+      { generated_at: META_GENERATED_AT, payload: { profile: ["Report di prova."] } },
+    ]);
+    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+    await page.goto(".");
+    await clearBrowserStorage(page);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    const picked = await selectExistingUser(page, QA_USER);
+    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+    await openScreen(page, "report");
+
+    // formatReportDate/nextReportDate (ui.js) su questo generated_at fisso:
+    // stesso giorno/mese, anno successivo — nessuna dipendenza da "oggi".
+    await expect(page.locator("#reportMetaLine")).toHaveText(
+      "Aggiornato il 15 marzo 2024 · prossimo aggiornamento automatico l'15 marzo 2025"
+    );
+  });
+
+  test('Io: senza nessun report mostra solo "Nessun report ancora generato." (niente ciclo, non c\'è una data da cui contare)', async ({
+    page,
+  }) => {
+    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
+    await mockJson(page, /rest\/v1\/titles/, []);
+    await mockJson(page, /rest\/v1\/votes/, []);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
+    await mockJson(page, /rest\/v1\/group_report/, []);
+    await mockJson(page, /rest\/v1\/user_report/, []);
+    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+    await page.goto(".");
+    await clearBrowserStorage(page);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    const picked = await selectExistingUser(page, QA_USER);
+    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+    await openScreen(page, "report");
+
+    await expect(page.locator("#reportMetaLine")).toHaveText("Nessun report ancora generato.");
+  });
+
+  test('Gruppo: mostra sempre "prossimo aggiornamento automatico lunedì... alle 8:00", anche senza un report esistente (cron settimanale, non annuale)', async ({
+    page,
+  }) => {
+    await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
+    await mockJson(page, /rest\/v1\/titles/, []);
+    await mockJson(page, /rest\/v1\/votes/, []);
+    await mockJson(page, /rest\/v1\/watchlist_adds/, []);
+    await mockJson(page, /rest\/v1\/user_report/, []);
+    await mockJson(page, /rest\/v1\/group_report/, [
+      { generated_at: META_GENERATED_AT, payload: { group_profile: [], members: [] } },
+    ]);
+    await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+    await page.goto(".");
+    await clearBrowserStorage(page);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    const picked = await selectExistingUser(page, QA_USER);
+    if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
+    await openScreen(page, "report");
+    await setReportMode(page, "gruppo");
+
+    // A differenza del personale: qui la parte "Aggiornato il" riflette
+    // generated_at, ma il ciclo del "prossimo aggiornamento" NON dipende da
+    // quella data (sempre il prossimo lunedì reale) — l'opposto del
+    // personale sopra, dove invece il ciclo dipende proprio da generated_at.
+    await expect(page.locator("#groupReportMetaLine")).toContainText("Aggiornato il 15 marzo 2024");
+    await expect(page.locator("#groupReportMetaLine")).toContainText(
+      /prossimo aggiornamento automatico lunedì .+ alle 8:00/
+    );
+  });
+});
+
 test.describe("CineFighi — tab Report — gesto nascosto 7 tap", () => {
   test.beforeEach(async ({ page }) => {
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);

@@ -12,7 +12,12 @@ test.describe("CineTracker — avvio", () => {
     }
   );
 
-  test("la bottom nav espone le 4 sezioni Home/Statistiche/Stasera/Backup", async ({ page }) => {
+  // Da 52c529c: "Backup" non ha più un tasto in nav (spostato dietro il
+  // gesto nascosto dei 7 tap, vedi openBackupViaSecretGesture) — il 4°
+  // tab è "Report". L'assert stesso (conteggio 4 bottoni data-screen)
+  // restava comunque vero, era solo il titolo del test a essere rimasto
+  // indietro.
+  test("la bottom nav espone le 4 sezioni Home/Statistiche/Stasera/Report", async ({ page }) => {
     await gotoFresh(page);
     await expect(page.locator(".nav__btn[data-screen]")).toHaveCount(4);
   });
