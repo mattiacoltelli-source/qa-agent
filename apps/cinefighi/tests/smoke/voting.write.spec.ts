@@ -54,6 +54,9 @@ test.describe("CineFighi — voto e libreria @write", () => {
       await page.locator("#detailCommentInput").fill("Voto di test automatico (QA)");
       await page.locator("#detailSaveVoteBtn").click();
 
+      // Da c115604: niente più animazione "gettone che vola", solo un toast
+      // semplice — mai verificato finora.
+      await expect(page.locator("#toastWrap .toast .toast__text")).toHaveText("Voto salvato");
       await expect(page.locator("#detailVoteValue")).toHaveText(expectedVote);
 
       const myVoteRow = page.locator(".vote-row", { hasText: "(tu)" });
@@ -92,9 +95,25 @@ test.describe("CineFighi — voto e libreria @write", () => {
       // Il titolo resta in libreria, solo lo status cambia (niente ritorno a home).
       await expect(page.locator("#screen-detail")).toBeVisible();
     } finally {
+      // A differenza degli altri test qui sopra, il demote riuscito ha
+      // portato item.status a "watchlist": da fc82451, handleRemove() in
+      // quel caso chiama removeFromWatchlist() e va dritto a "home" senza
+      // mai mostrare #confirmOverlay (la conferma pesante resta solo per un
+      // titolo "seen" — vedi app.js::handleRemove). Cliccare comunque
+      // #confirmYesBtn qui andrebbe in timeout aspettando un elemento che
+      // non compare mai. Se invece il demote non fosse arrivato in fondo
+      // (un assert sopra fallito a metà try, titolo ancora "seen"), la
+      // conferma pesante torna a comparire — gestiamo entrambi i casi.
       await page.locator("#detailRemoveBtn").click();
-      await page.locator("#confirmYesBtn").click();
-      await expect(page.locator("#screen-home")).toBeVisible();
+      const confirmShown = await page
+        .locator("#confirmOverlay")
+        .waitFor({ state: "visible", timeout: 2_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (confirmShown) {
+        await page.locator("#confirmYesBtn").click();
+      }
+      await expect(page.locator("#screen-home")).toBeVisible({ timeout: 10_000 });
     }
   });
 
@@ -138,6 +157,7 @@ test.describe("CineFighi — voto e libreria @write", () => {
       await expect(page.locator(".vote-row", { hasText: "(tu)" })).toBeVisible();
 
       await page.locator("#detailClearVoteBtn").click();
+      await expect(page.locator("#toastWrap .toast .toast__text")).toHaveText("Voto rimosso");
       await expect(page.locator(".vote-row", { hasText: "(tu)" })).toHaveCount(0);
       // Il titolo resta in libreria (non torna alla schermata home).
       await expect(page.locator("#screen-detail")).toBeVisible();
