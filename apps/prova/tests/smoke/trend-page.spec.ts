@@ -117,6 +117,39 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
     }
   });
 
+  test("se Chart.js non si carica, le card restano leggibili: nessuna resta su \"Caricamento…\"", async ({
+    page,
+  }) => {
+    // Regressione reale: loadRoboticsData() disegna le card in un ciclo
+    // sequenziale, e finché non ha avuto un try/catch bastava un errore su
+    // una sola card (Chart.js assente = renderRoboticsCycleChart lancia) per
+    // interrompere il for e lasciare TUTTI gli asset successivi su
+    // "Caricamento…", per sempre e senza messaggio. Bloccare il CDN qui
+    // riproduce esattamente quel caso — che in produzione capita quando
+    // jsdelivr è irraggiungibile, non solo in un sandbox.
+    await page.route(/cdn\.jsdelivr\.net/, (route) => route.abort());
+    await gotoFresh(page);
+    await openRoboticsPage(page);
+
+    for (const { key, label } of ROBOTICS_ASSETS) {
+      await selectRoboticsAsset(page, key);
+      const body = roboticsBody(page, key);
+      await expect(body, `${label}: card ferma sullo scheletro di caricamento`).not.toHaveText(
+        "Caricamento…",
+        { timeout: 15_000 }
+      );
+
+      const text = (await body.textContent()) ?? "";
+      if (text.includes("Nessuna analisi trend ancora disponibile")) continue;
+
+      // Il contenuto che NON dipende da Chart.js resta tutto al suo posto…
+      await expect(body.locator(".cycle-badge").first()).toContainText("Fase ciclo:");
+      await expect(body.locator(".cagr-grid .cagr-cell")).toHaveCount(4);
+      // …e al posto del grafico c'è un messaggio, non un riquadro vuoto.
+      await expect(body.locator(".chart-empty")).toBeVisible();
+    }
+  });
+
   test("il pannello \"Come funziona questa pagina?\" spiega paniere, fasi cicliche e cadenze", async ({
     page,
   }) => {
