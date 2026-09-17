@@ -62,18 +62,26 @@ test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () =>
     await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
 
     const initialCount = await page.locator("#libraryList .list-item").count();
+    expect(initialCount).toBeLessThan(200); // il primo blocco, non tutto
 
-    let count = initialCount;
-    for (let i = 0; i < 10; i++) {
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-      await page.waitForTimeout(300);
-      const next = await page.locator("#libraryList .list-item").count();
-      if (next === count) break;
-      count = next;
-    }
-
-    expect(count).toBeGreaterThan(initialCount); // ha caricato altro scorrendo
-    expect(count).toBe(200); // e alla fine tutti i film sono arrivati
+    // Ogni blocco richiede DUE cose in sequenza: uno scroll fino in fondo e
+    // il giro successivo dell'IntersectionObserver (rootMargin 600px), che
+    // è asincrono. Il ciclo di prima si fermava al primo giro in cui il
+    // conteggio non era ancora cambiato ("if (next === count) break") e
+    // concludeva che la paginazione non caricava più nulla — bastava un
+    // observer un filo più lento del waitForTimeout(300) per farlo uscire a
+    // 40 su 200, come è iniziato a succedere. expect.poll riprova lo scroll
+    // finché i titoli non sono arrivati tutti, senza arrendersi al primo
+    // giro a vuoto.
+    await expect
+      .poll(
+        async () => {
+          await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+          return page.locator("#libraryList .list-item").count();
+        },
+        { timeout: 20_000 }
+      )
+      .toBe(200); // alla fine tutti i film sono arrivati
   });
 
   test("cambiare filtro azzera la paginazione invece di sommarsi ai risultati precedenti", async ({ page }) => {

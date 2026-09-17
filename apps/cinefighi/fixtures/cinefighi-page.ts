@@ -127,19 +127,30 @@ export async function search(page: Page, query: string): Promise<void> {
   await page.locator("#searchBtn").click();
 }
 
+/** I tre toggle Io/Gruppo (watchlist in Home, Statistiche, Report) hanno
+ * cambiato vestito con fc3a5c2/8d70923/25e57bd: erano
+ * `.stats-toggle-btn`, ora sono `.io-gruppo-btn` dentro una pillola
+ * `.io-gruppo-toggle` con slider animato (`.io-gruppo-toggle__thumb`).
+ * Gli id dei tre contenitori e l'attributo data-mode non sono cambiati, e
+ * il bottone attivo porta ancora la classe `active` (vedi renderHome/
+ * renderStats/renderReport in app.js) — cambia solo il nome della classe
+ * del bottone, quindi un selettore sbagliato qui si manifesta come timeout
+ * su ogni test che tocca un toggle, non come un'asserzione fallita. */
+const IO_GRUPPO_BTN = ".io-gruppo-btn";
+
 /** Cambia il filtro Mia/Gruppo della watchlist in Home (d114b13). Di default
  * è "me" ("Io"): mostra solo i titoli aggiunti dall'utente corrente. */
 export async function setWatchlistMode(page: Page, mode: "me" | "group"): Promise<void> {
-  await page.locator(`#watchlistModeToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
+  await page.locator(`#watchlistModeToggle ${IO_GRUPPO_BTN}[data-mode="${mode}"]`).click();
 }
 
 /** Cambia il filtro Io/Gruppo delle Statistiche — di default "me" ("Io"):
  * card numeriche, generi e classifica calcolati sui soli voti dell'utente
  * corrente (invertito da "group": prima il default era l'opposto). Toggle
  * indipendente da quello della watchlist in Home (stessa classe CSS
- * .stats-toggle-btn, id diverso). */
+ * .io-gruppo-btn, id diverso). */
 export async function setStatsMode(page: Page, mode: "me" | "group"): Promise<void> {
-  await page.locator(`#statsIoGruppoToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
+  await page.locator(`#statsIoGruppoToggle ${IO_GRUPPO_BTN}[data-mode="${mode}"]`).click();
 }
 
 /** Cambia il filtro Io/Gruppo del tab Report — di default "io": il report
@@ -150,23 +161,74 @@ export async function setStatsMode(page: Page, mode: "me" | "group"): Promise<vo
  * è mai stato generato un group_report (altrimenti resta il fallback
  * templato, sempre disponibile). Nessun tasto "Aggiorna" per "gruppo": si
  * aggiorna da solo — ma non con la stessa cadenza del personale ("io" è
- * annuale, vedi nextReportDate in ui.js). Il gruppo si aggiorna ogni lunedì
- * alle 8:00 via cron reale su Supabase (nextMondayDate in ui.js, testo in
- * #groupReportMetaLine) — o con 7 tap rapidi su #reportTitleTap
+ * annuale, vedi nextReportDate in ui.js). Il gruppo si aggiorna a date fisse
+ * di calendario — 1° gennaio, 1° maggio, 1° settembre alle 8:00 italiane —
+ * via cron reale su Supabase (migrazione 005_group_report_cron_4_months,
+ * nextGroupReportDate in ui.js, testo in #groupReportMetaLine; prima era
+ * ogni lunedì) — o con 7 tap rapidi su #reportTitleTap
  * (vedi tapReportTitleSevenTimes sotto) per forzarlo prima. */
 export async function setReportMode(page: Page, mode: "io" | "gruppo"): Promise<void> {
-  await page.locator(`#reportIoGruppoToggle .stats-toggle-btn[data-mode="${mode}"]`).click();
+  await page.locator(`#reportIoGruppoToggle ${IO_GRUPPO_BTN}[data-mode="${mode}"]`).click();
 }
 
 /** Simula il gesto nascosto dei 7 tap rapidi su #reportTitleTap che apre la
  * conferma per forzare una rigenerazione del report (Io o Gruppo, a seconda
  * del tab aperto al momento) — vedi app.js::bindGlobalEvents. Il conteggio
- * si azzera da solo dopo 2,5s di inattività: i click qui sono deliberatamente
- * ravvicinati (nessun delay tra l'uno e l'altro) per restare dentro quella
- * finestra anche su una macchina CI lenta. */
+ * si azzera da solo dopo 4s di inattività (era 2,5s fino a 7a3e2bc): i click
+ * qui sono deliberatamente ravvicinati (nessun delay tra l'uno e l'altro)
+ * per restare dentro quella finestra anche su una macchina CI lenta. */
 export async function tapReportTitleSevenTimes(page: Page): Promise<void> {
   const title = page.locator("#reportTitleTap");
   for (let i = 0; i < 7; i++) {
     await title.click();
   }
+}
+
+/** Cambia la vista dei "Generi più votati" in Statistiche: "bars" (default
+ * su storage pulito, vedi getGenreView in storage.js — al contrario di
+ * CineTracker, che di default apre su "bubbles") o "bubbles" (bolle, dal
+ * 7a3e2bc: stessa disposizione a 6 di Cos90, colori di CineFighi). La
+ * preferenza è per-dispositivo e persiste in localStorage. */
+export async function setGenreView(page: Page, view: "bars" | "bubbles"): Promise<void> {
+  await page.locator(`#genreViewToggle .genre-view-btn[data-genre-view="${view}"]`).click();
+}
+
+/** Cambia il pannello Film/Serie TV della Classifica. Da 48a2886 questo
+ * toggle usa la stessa pillola dei generi (.genre-view-btn, non più una
+ * classe propria), ma resta un contenitore distinto (#rankingMediaToggle)
+ * con data-media al posto di data-genre-view. */
+export async function setRankingMedia(page: Page, media: "movie" | "tv"): Promise<void> {
+  await page.locator(`#rankingMediaToggle .genre-view-btn[data-media="${media}"]`).click();
+}
+
+// ─── STASERA: MODALITÀ DI GRUPPO ("chi c'è") ────────────────────────────────
+// Da ddd93e3 lo schermo Stasera non è più solo "cosa guardo io": si scelgono
+// le persone presenti (stack di avatar + pannello, proposta 1 di 2d96e5f) e
+// i consigli diventano quelli buoni per TUTTI i coinvolti (affinità = minimo
+// tra i presenti, non media). Invitare altri richiede che sia l'utente
+// corrente SIA l'invitato abbiano almeno MIN_VOTED_FOR_GROUP_TONIGHT titoli
+// votati: sotto quella soglia le righe del pannello restano disabilitate.
+
+/** Soglia di titoli votati per la modalità di gruppo — in app.js è
+ * MIN_VOTED_FOR_GROUP_TONIGHT = MIN_VOTED_FOR_REPORT (50). Un profilo con
+ * pochi voti non può invitare nessuno, ed è lo stato normale di QA_USER sui
+ * dati reali: i test sulla UI di gruppo con dati veri devono accettarlo. */
+export const MIN_VOTED_FOR_GROUP_TONIGHT = 50;
+
+/** Apre/chiude il pannello "chi c'è" col tasto matita accanto agli avatar. */
+export async function toggleTonightPeoplePanel(page: Page): Promise<void> {
+  await page.locator("#tonightPeopleEditBtn").click();
+}
+
+/** Riga di una persona nel pannello "chi c'è". La propria riga è sempre
+ * attiva e non si può togliere; le altre sono `disabled` finché la soglia
+ * di voti non è raggiunta da entrambi. */
+export function tonightPeopleRow(page: Page, name: string) {
+  return page.locator(`#tonightPeoplePanel .tonight-people-row[data-user="${name}"]`);
+}
+
+/** Aggiunge/toglie una persona dalla serata (il pannello deve essere già
+ * aperto: la riga non esiste in un pannello chiuso — è `hidden`). */
+export async function toggleTonightPerson(page: Page, name: string): Promise<void> {
+  await tonightPeopleRow(page, name).click();
 }

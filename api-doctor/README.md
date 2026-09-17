@@ -19,11 +19,18 @@ generale al repository.
 - **Spot**: 3 API keyless (Open-Meteo forecast, Open-Meteo marine,
   sunrise-sunset.org), verificate sul sorgente reale `app.js`, su un punto
   reale (Corfù, Città Vecchia) già presente in `spots.js`.
-- **Prova (AI Predictor)**: 4 API keyless (Yahoo Finance, SEC EDGAR elenco
-  ticker, SEC EDGAR submissions, GDELT — le fonti *primarie* di
-  prezzo/fondamentali/transazioni insider più la fonte di riserva per le
-  news), verificate sul sorgente reale del repo Prova
-  (`src/data_sources/{prices,fundamentals,news,insider}.py`). Il controllo
+- **Prova (AI Predictor)**: 6 controlli keyless (Yahoo Finance prezzo, SEC
+  EDGAR elenco ticker, SEC EDGAR submissions, GDELT — le fonti *primarie*
+  di prezzo/fondamentali/transazioni insider più la fonte di riserva per le
+  news — e lo storico giornaliero di Yahoo per i due ticker "non
+  standard" del secondo sistema dell'app, i Trend strutturali: `6481.T`
+  (Tokyo) e l'indice `^SOX` usato come benchmark di settore), verificate
+  sul sorgente reale del repo Prova
+  (`src/data_sources/{prices,fundamentals,news,insider}.py`,
+  `src/config.py`, `src/trend_run.py`). I due controlli trend chiedono la
+  serie storica, non il prezzo di oggi: è quella che
+  `trend_analysis.py` legge per CAGR, media a 200 settimane e distanza da
+  ATH, e un 200 senza `chart.result[0].timestamp` non basta. Il controllo
   SEC EDGAR submissions (`data.sec.gov`) è separato da quello sull'elenco
   ticker (`www.sec.gov`) perché sono sottodomini/gateway diversi con
   disponibilità potenzialmente indipendente. Le fonti a chiave (Twelve
@@ -51,7 +58,7 @@ api-doctor/
     cinefighi.mjs             3 check TMDB, chiave di CineFighi
     cinetracker.mjs            3 check TMDB, chiave di CineTracker (diversa)
     spot.mjs                    3 check meteo/mare/alba-tramonto, nessuna chiave
-    prova.mjs                   4 check Yahoo Finance/SEC EDGAR (x2)/GDELT, nessuna chiave
+    prova.mjs                   6 check Yahoo Finance (prezzo + storico Tokyo/^SOX)/SEC EDGAR (x2)/GDELT, nessuna chiave
   engine.mjs                  orchestratore: gira i controlli, scrive reports/api-doctor-results.json
   analyze.mjs                  analisi Claude, SOLO sugli endpoint in FAIL
   write-summary.mjs            riepilogo leggibile su GITHUB_STEP_SUMMARY

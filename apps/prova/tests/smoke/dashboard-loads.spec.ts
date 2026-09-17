@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import {
   gotoFresh,
   assetCard,
+  assetFilterButton,
+  selectAsset,
   dataStatusNote,
   assetPriceLabel,
   snapshotStatus,
@@ -12,8 +14,14 @@ import {
 // Python (GitHub Actions), non un backend che possiamo controllare da questi
 // test. L'obiettivo è verificare che la UI mostri correttamente QUALUNQUE
 // previsione reale sia stata generata, non un contenuto specifico.
+//
+// Da settembre 2026 la pagina Tech mostra UNA card alla volta (filtro asset
+// in cima, default ASSETS[0]): le altre due restano nel DOM con
+// display:none. Ogni test che legge qualcosa dentro una card passa quindi
+// per selectAsset() — senza, tutte le asserzioni su MSFT/AAPL girerebbero
+// su elementi invisibili (o andrebbero in timeout sui click).
 test.describe("AI Predictor — caricamento dashboard", () => {
-  test("header, statistiche riassuntive e le tre card asset sono visibili", async ({ page }) => {
+  test("header, statistiche riassuntive e una card asset alla volta", async ({ page }) => {
     await gotoFresh(page);
 
     await expect(page.locator("h1")).toContainText("AI Predictor");
@@ -21,11 +29,39 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     await expect(page.locator("#stat-outcomes")).toBeVisible();
     await expect(page.locator("#stat-pending")).toBeVisible();
 
+    // Al caricamento è selezionato il primo asset del paniere: la sua card
+    // è visibile, le altre esistono ma sono nascoste.
+    await expect(assetCard(page, ASSETS[0])).toBeVisible();
+    for (const asset of ASSETS.slice(1)) {
+      await expect(assetCard(page, asset)).toBeHidden();
+    }
+
+    // Ogni asset, selezionato a turno, popola la sua card.
     for (const asset of ASSETS) {
+      await selectAsset(page, asset);
       const card = assetCard(page, asset);
       await expect(card).toBeVisible();
       await expect(card.locator(".badge-accuracy")).toContainText("Accuratezza:");
     }
+  });
+
+  test("filtro asset: un bottone per asset, uno solo attivo, cambia la card in vista", async ({
+    page,
+  }) => {
+    await gotoFresh(page);
+
+    await expect(page.locator("#asset-filter .horizon-filter-btn")).toHaveCount(ASSETS.length);
+    await expect(assetFilterButton(page, ASSETS[0])).toHaveClass(/active/);
+    for (const asset of ASSETS.slice(1)) {
+      await expect(assetFilterButton(page, asset)).not.toHaveClass(/active/);
+    }
+
+    const other = ASSETS[1];
+    await assetFilterButton(page, other).click();
+    await expect(assetFilterButton(page, other)).toHaveClass(/active/);
+    await expect(assetFilterButton(page, ASSETS[0])).not.toHaveClass(/active/);
+    await expect(assetCard(page, other)).toBeVisible();
+    await expect(assetCard(page, ASSETS[0])).toBeHidden();
   });
 
   test("il banner di aggiornamento PWA resta nascosto quando non c'è una versione in attesa", async ({
@@ -42,6 +78,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
   }) => {
     await gotoFresh(page);
     await expect(page.locator("#assets-grid")).not.toContainText("SPY");
+    await expect(page.locator("#asset-filter")).not.toContainText("SPY");
   });
 
   test("nota \"dati mancanti\": se visibile segnala cosa mancava nell'ultimo segnale, altrimenti resta nascosta", async ({
@@ -49,6 +86,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
   }) => {
     await gotoFresh(page);
     for (const asset of ASSETS) {
+      await selectAsset(page, asset);
       const note = dataStatusNote(page, asset);
       if (await note.isVisible()) {
         await expect(note.locator(".icon svg")).toBeVisible();
@@ -64,6 +102,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     // per l'asset (caso limite, non atteso in produzione ma non un bug).
     await gotoFresh(page);
     for (const asset of ASSETS) {
+      await selectAsset(page, asset);
       const price = assetPriceLabel(page, asset);
       const text = await price.textContent();
       if (text) {
@@ -77,6 +116,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
   }) => {
     await gotoFresh(page);
     for (const asset of ASSETS) {
+      await selectAsset(page, asset);
       const status = snapshotStatus(page, asset);
       if (await status.isVisible()) {
         await expect(status).toContainText(/Ora \(\d{2}:\d{2}\)/);

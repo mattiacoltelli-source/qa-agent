@@ -5,6 +5,16 @@
 // (news, fonte di riserva). URL verificati sul sorgente reale,
 // src/data_sources/{prices,fundamentals,news,insider}.py nel repo Prova.
 //
+// Coperto anche il secondo sistema dell'app, i "Trend strutturali"
+// (ex Robotica): non usa predictions.jsonl né le stesse fonti del paniere
+// Tech, ma chiede a Yahoo lo storico a 10 anni di ticker diversi — due
+// giapponesi (Tokyo Stock Exchange) e il benchmark di settore ^SOX, vedi
+// ROBOTICS_TICKER/ROBOTICS_BENCHMARK_TICKER in src/config.py e
+// trend_run.py. Sono le fonti più fragili delle due pagine (i ticker Tokyo
+// non hanno copertura news/fondamentali sui piani gratuiti, e un indice
+// non è un titolo: può rispondere in modo diverso) e finora non erano
+// controllate da nessuna parte.
+//
 // Le fonti di riserva a chiave (Twelve Data, Finnhub, Alpha Vantage, FRED)
 // restano fuori: sono secret server-side del repo Prova, non chiavi
 // pubbliche riusabili come per TMDB — per controllarle da qui servirebbe
@@ -29,6 +39,39 @@ const NVDA_CIK = "0001045810";
 // SEC_EDGAR_CONTACT_EMAIL) — nessun nuovo dato, solo riuso.
 const SEC_HEADERS = { "User-Agent": "prova-api-doctor (mattia.coltelli@gmail.com)" };
 const YAHOO_HEADERS = { "User-Agent": "Mozilla/5.0 (prova-api-doctor)" };
+
+// Ticker del paniere "Trend strutturali" che NON sono normali azioni USA:
+// THK a Tokyo e il benchmark di settore. Teradyne/Vertiv (TER/VRT) usano
+// lo stesso formato di NVDA, già coperto dal check sopra — ripeterli
+// aggiungerebbe due chiamate senza aggiungere informazione.
+const TOKYO_TICKER = "6481.T"; // THK, ROBOTICS_TICKER in src/config.py
+const BENCHMARK_TICKER = "^SOX"; // ROBOTICS_BENCHMARK_TICKER
+
+/** Un controllo Yahoo "storico giornaliero", nella forma che usa
+ * prices._yahoo_daily_history(): non basta un 200, serve la serie di
+ * timestamp — è quella che trend_analysis.py legge per CAGR, media a 200
+ * settimane e distanza da ATH. Range 1 anno invece dei 10 usati in
+ * produzione: qui interessa che l'endpoint risponda nella forma attesa per
+ * quel ticker, non scaricare 10 anni di barre ad ogni run. */
+async function yahooHistoryCheck(name, ticker) {
+  const res = await fetchJson(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=1y&interval=1d`,
+    { headers: YAHOO_HEADERS }
+  );
+  const timestamps = res.body?.chart?.result?.[0]?.timestamp;
+  return {
+    name,
+    ...res,
+    ok: !res.networkError && res.ok && Array.isArray(timestamps) && timestamps.length > 0,
+    reason: res.networkError
+      ? `Errore di rete: ${res.networkError}`
+      : !res.ok
+        ? `HTTP ${res.status}`
+        : !Array.isArray(timestamps) || timestamps.length === 0
+          ? 'Risposta 200 ma manca la serie storica attesa ("chart.result[0].timestamp" non vuoto)'
+          : null,
+  };
+}
 
 export async function checks() {
   const results = [];
@@ -105,6 +148,19 @@ export async function checks() {
           ? 'Risposta 200 ma manca il campo atteso "articles" (array, anche vuoto)'
           : null,
   });
+
+  results.push(
+    await yahooHistoryCheck(
+      `Storico trend (Yahoo Finance, ${TOKYO_TICKER} — Tokyo)`,
+      TOKYO_TICKER
+    )
+  );
+  results.push(
+    await yahooHistoryCheck(
+      `Benchmark trend (Yahoo Finance, ${BENCHMARK_TICKER} — indice)`,
+      BENCHMARK_TICKER
+    )
+  );
 
   return results;
 }

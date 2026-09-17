@@ -66,8 +66,22 @@ backend di test diverso da qui** — è un vincolo dell'app, non della suite.
   rimosso", `@write`)
 - Riga meta del Report ("Aggiornato il... / prossimo aggiornamento..."):
   cicli diversi per Io (annuale, dipende da quando è stato generato
-  l'ultimo) e Gruppo (ogni lunedì alle 8, cron reale — indipendente da
-  quando è stato generato l'ultimo)
+  l'ultimo) e Gruppo (1° gennaio/maggio/settembre alle 8, cron reale —
+  indipendente da quando è stato generato l'ultimo; era settimanale fino
+  alla migrazione `005_group_report_cron_4_months`)
+- Statistiche: toggle Io/Gruppo (card, medie per genere, classifica) e
+  vista dei generi in **Barre** (default qui) o **Bolle**, col voto medio
+  che compare solo al tocco e la preferenza che persiste per dispositivo
+- Classifica: "Mostra tutti/meno" e ritorno alla posizione dopo il
+  dettaglio
+- **Stasera, modalità di gruppo** ("chi c'è", da `ddd93e3`): selettore
+  persone come stack di avatar + pannello, titolo che passa da "cosa
+  guardo?" a "cosa guardiamo?", nota di trasparenza con i voti di
+  ciascuno, gate a 50 titoli votati a testa, e i 6 consigli di gruppo con
+  affinità (minimo tra i presenti) e voto previsto per persona. La parte
+  deterministica gira su libreria **e TMDB mockati**: la soglia di 50 voti
+  a testa non è riproducibile sui dati reali del gruppo, e i consigli
+  dipendono da cosa restituisce TMDB in quel momento
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 
@@ -75,5 +89,10 @@ backend di test diverso da qui** — è un vincolo dell'app, non della suite.
 - Rilevamento duplicato (`reason: "duplicate"`) — richiede due contesti/sessioni
   che scrivono in corsa sullo stesso titolo, non banale da rendere deterministico
 - Filtri libreria per genere/stato nella schermata "Vedi tutto"
-- Toggle statistiche Io/Gruppo e podio classifica
 - Percorsi di errore di rete (fetch Supabase fallita → dati precedenti non svuotati)
+- Stasera in gruppo: gli slot "regista in comune" e "cast stellare" (oggi i
+  mock TMDB li azzerano per rendere verificabile il conteggio per fascia) e
+  il tetto di "già visto" che dipende dalla dimensione del gruppo
+  (`seenCapForGroupSize`)
+- "Scopri qualcosa di nuovo" e "Rivedi un classico" in modalità di gruppo
+  (oggi coperti solo da soli, sui dati reali)

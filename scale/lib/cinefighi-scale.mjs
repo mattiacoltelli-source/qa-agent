@@ -106,7 +106,17 @@ export async function measureScale(browser, count) {
 
   t0 = Date.now();
   await page.locator('.nav__btn[data-screen="stats"]').click();
-  await page.locator("#genreBars .bar-row").first().waitFor({ state: "visible", timeout: 30_000 });
+  // I "Generi più votati" hanno due viste intercambiabili (Barre/Bolle,
+  // #genreViewToggle): su storage pulito CineFighi apre in Barre, ma la
+  // preferenza vive in localStorage e l'app gemella CineTracker ha il
+  // default opposto. Aspettare una sola delle due forme legherebbe la
+  // misura di "quando le Statistiche sono pronte" a un default che può
+  // cambiare senza preavviso — e il primo sintomo sarebbe un timeout di 30s
+  // interpretato come un problema di prestazioni, non di selettore.
+  await page
+    .locator("#genreBars .bar-row, #genreBars .genre-bubble")
+    .first()
+    .waitFor({ state: "visible", timeout: 30_000 });
   const statsReadyMs = Date.now() - t0;
 
   await page.close();
