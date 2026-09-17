@@ -18,3 +18,4 @@
 {"runAt":"2026-09-14T12:11:13.150Z","result":"PASS","realCount":561,"extraTitles":1000,"targetCount":1561,"homeReadyMs":1672,"libraryFirstPageMs":66,"statsReadyMs":56}
 {"runAt":"2026-09-17T11:42:32.496Z","result":"PASS","realCount":565,"extraTitles":1000,"targetCount":1565,"homeReadyMs":1671,"libraryFirstPageMs":68,"statsReadyMs":65}
 {"runAt":"2026-09-17T21:04:59.172Z","result":"PASS","realCount":565,"extraTitles":1000,"targetCount":1565,"homeReadyMs":1662,"libraryFirstPageMs":60,"statsReadyMs":67}
+{"runAt":"2026-09-17T22:33:44.882Z","result":"PASS","realCount":565,"extraTitles":1000,"targetCount":1565,"homeReadyMs":1654,"libraryFirstPageMs":63,"statsReadyMs":63}
