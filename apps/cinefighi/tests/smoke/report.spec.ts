@@ -33,8 +33,8 @@ test.describe("CineFighi — tab Report — Io (sola lettura)", () => {
     await openScreen(page, "report");
     await expect(page.locator("#screen-report")).toBeVisible();
 
-    await expect(page.locator('#reportIoGruppoToggle .stats-toggle-btn[data-mode="io"]')).toHaveClass(/active/);
-    await expect(page.locator('#reportIoGruppoToggle .stats-toggle-btn[data-mode="gruppo"]')).not.toHaveClass(/active/);
+    await expect(page.locator('#reportIoGruppoToggle .io-gruppo-btn[data-mode="io"]')).toHaveClass(/active/);
+    await expect(page.locator('#reportIoGruppoToggle .io-gruppo-btn[data-mode="gruppo"]')).not.toHaveClass(/active/);
     await expect(page.locator("#groupReportBody")).toBeHidden();
 
     const gate = page.locator("#reportGate");
@@ -396,13 +396,17 @@ test.describe("CineFighi — tab Report — Gruppo — mini-grafico Generi prefe
 // Zero copertura precedente per #reportMetaLine/#groupReportMetaLine,
 // nonostante siano calcolate lato client con due cicli DIVERSI (vedi
 // ui.js): il personale si rigenera un anno dopo l'ultimo report, il Gruppo
-// ogni lunedì alle 8 via cron reale su Supabase, indipendentemente da
-// quando è stato generato l'ultimo. generated_at fissato ben nel passato,
-// non "oggi": rende deterministico il testo del personale (formatReportDate/
-// nextReportDate leggono solo generated_at) a prescindere da quando gira
-// il test; il "prossimo lunedì" del Gruppo dipende invece dalla data vera
-// (nextMondayDate() legge Date.now()), quindi lì verifichiamo solo la
-// struttura del testo, non la data esatta.
+// a date FISSE di calendario — 1° gennaio, 1° maggio, 1° settembre alle
+// 6 UTC (8:00 italiane) — via cron reale su Supabase, indipendentemente da
+// quando è stato generato l'ultimo. La cadenza del Gruppo era settimanale
+// (ogni lunedì) fino alla migrazione 005_group_report_cron_4_months:
+// nextGroupReportDate() in ui.js ha sostituito nextMondayDate().
+// generated_at fissato ben nel passato, non "oggi": rende deterministico il
+// testo del personale (formatReportDate/nextReportDate leggono solo
+// generated_at) a prescindere da quando gira il test; la data del Gruppo
+// dipende invece da "oggi" (nextGroupReportDate() legge Date.now()), quindi
+// lì verifichiamo la forma del testo e che sia una delle tre date possibili,
+// non un giorno esatto.
 const META_GENERATED_AT = "2024-03-15T10:00:00.000Z";
 
 test.describe("CineFighi — tab Report — riga meta (data ultimo/prossimo aggiornamento)", () => {
@@ -456,7 +460,7 @@ test.describe("CineFighi — tab Report — riga meta (data ultimo/prossimo aggi
     await expect(page.locator("#reportMetaLine")).toHaveText("Nessun report ancora generato.");
   });
 
-  test('Gruppo: mostra sempre "prossimo aggiornamento automatico lunedì... alle 8:00", anche senza un report esistente (cron settimanale, non annuale)', async ({
+  test('Gruppo: mostra sempre "prossimo aggiornamento automatico l\'1 gennaio/maggio/settembre... alle 8:00" (cron ogni 4 mesi, non annuale né settimanale)', async ({
     page,
   }) => {
     await mockJson(page, /rest\/v1\/users/, [{ name: QA_USER }]);
@@ -480,11 +484,11 @@ test.describe("CineFighi — tab Report — riga meta (data ultimo/prossimo aggi
 
     // A differenza del personale: qui la parte "Aggiornato il" riflette
     // generated_at, ma il ciclo del "prossimo aggiornamento" NON dipende da
-    // quella data (sempre il prossimo lunedì reale) — l'opposto del
-    // personale sopra, dove invece il ciclo dipende proprio da generated_at.
+    // quella data (è una data fissa di calendario) — l'opposto del personale
+    // sopra, dove invece il ciclo dipende proprio da generated_at.
     await expect(page.locator("#groupReportMetaLine")).toContainText("Aggiornato il 15 marzo 2024");
     await expect(page.locator("#groupReportMetaLine")).toContainText(
-      /prossimo aggiornamento automatico lunedì .+ alle 8:00/
+      /prossimo aggiornamento automatico l'1 (gennaio|maggio|settembre) \d{4} alle 8:00/
     );
   });
 });
@@ -510,7 +514,7 @@ test.describe("CineFighi — tab Report — gesto nascosto 7 tap", () => {
 
   test("7 tap su Io aprono la conferma per il report personale; Annulla non genera nulla", async ({ page }) => {
     await openScreen(page, "report");
-    await expect(page.locator('#reportIoGruppoToggle .stats-toggle-btn[data-mode="io"]')).toHaveClass(/active/);
+    await expect(page.locator('#reportIoGruppoToggle .io-gruppo-btn[data-mode="io"]')).toHaveClass(/active/);
 
     await tapReportTitleSevenTimes(page);
     await expect(page.locator("#confirmOverlay")).toBeVisible();
@@ -535,7 +539,7 @@ test.describe("CineFighi — tab Report — gesto nascosto 7 tap", () => {
   });
 
   test("meno di 7 tap, o troppo lenti, non aprono nulla", async ({ page }) => {
-    // Contiene una pausa reale di 2,8s (sotto) per verificare il reset del
+    // Contiene una pausa reale di 4,5s (sotto) per verificare il reset del
     // conteggio: sommata al setup mockato, sfora i 30s di default su questa
     // macchina già di per sé lenta ad avviare Chromium.
     test.setTimeout(45_000);
@@ -544,9 +548,13 @@ test.describe("CineFighi — tab Report — gesto nascosto 7 tap", () => {
     for (let i = 0; i < 6; i++) await title.click();
     await expect(page.locator("#confirmOverlay")).toBeHidden();
 
-    // Il conteggio si azzera da solo dopo 2,5s di inattività: un 7° tap
-    // arrivato dopo la pausa non deve far scattare nulla.
-    await page.waitForTimeout(2_800);
+    // Il conteggio si azzera da solo dopo 4s di inattività (era 2,5s fino a
+    // 7a3e2bc, dove la finestra è stata allargata): un 7° tap arrivato dopo
+    // la pausa non deve far scattare nulla. La pausa qui deve stare SOPRA
+    // quella soglia — con 2,8s il settimo tap rientrava nella finestra e
+    // apriva davvero la conferma, cioè il test falliva pur essendo l'app
+    // corretta.
+    await page.waitForTimeout(4_500);
     await title.click();
     await expect(page.locator("#confirmOverlay")).toBeHidden();
   });

@@ -25,22 +25,32 @@ test.describe("CineTracker — avvio", () => {
   test("le shelf vuote mostrano lo stato vuoto invece di una lista vuota silenziosa", async ({ page }) => {
     await gotoFresh(page);
     // Non assumiamo che la libreria reale sia vuota (persiste tra le run):
-    // verifichiamo solo la coerenza shelf/stato-vuoto, qualunque sia il caso.
+    // verifichiamo solo la coerenza tra card disegnate e stato-vuoto,
+    // qualunque sia il caso.
     //
     // gotoFresh() aspetta solo che #screen-home sia visibile (lo è già nel
     // markup statico, prima ancora che loadDB()/renderAll() finiscano) — un
     // controllo "a scatto" (evaluate una tantum) può quindi leggere lo stato
-    // grezzo dell'HTML, dove NÉ la shelf NÉ lo stato vuoto hanno ancora la
-    // classe "hidden" applicata. expect.poll ritenta finché il render
-    // asincrono non si stabilizza, invece di leggere un istante arbitrario.
-    const watchShelf = page.locator("#watchShelf");
+    // grezzo dell'HTML, prima che renderHomeShelves() abbia applicato la
+    // classe "hidden". expect.poll ritenta finché il render asincrono non si
+    // stabilizza, invece di leggere un istante arbitrario.
+    //
+    // Attenzione a COSA viene nascosto: renderHomeShelves() (app.js) tocca
+    // solo lo stato vuoto, il contenitore .shelf resta sempre nel DOM e
+    // senza "hidden" — semplicemente vuoto. Il vecchio assert
+    // (shelfHidden === !emptyHidden) sembrava coprire entrambi i casi ma
+    // era vero solo con la libreria PIENA: a libreria vuota entrambi
+    // risultavano non nascosti e il test falliva pur essendo l'app
+    // corretta.
+    const cards = page.locator("#watchShelf .shelf-card");
     const watchEmpty = page.locator("#watchShelfEmpty");
     await expect
       .poll(
         async () => {
-          const shelfHidden = await watchShelf.evaluate((el) => el.classList.contains("hidden"));
+          const cardCount = await cards.count();
           const emptyHidden = await watchEmpty.evaluate((el) => el.classList.contains("hidden"));
-          return shelfHidden === !emptyHidden;
+          // Stato vuoto visibile esattamente quando non c'è nessuna card.
+          return cardCount > 0 ? emptyHidden : !emptyHidden;
         },
         { timeout: 10_000 }
       )

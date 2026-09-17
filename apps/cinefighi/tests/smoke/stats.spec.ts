@@ -1,7 +1,14 @@
 import { test, expect } from "@playwright/test";
 import { clearBrowserStorage } from "../../../../core/storage.ts";
 import { mockJson } from "../../../../core/network.ts";
-import { QA_USER, fakeTitle, selectExistingUser, setStatsMode } from "../../fixtures/cinefighi-page.ts";
+import {
+  QA_USER,
+  fakeTitle,
+  openScreen,
+  selectExistingUser,
+  setGenreView,
+  setStatsMode,
+} from "../../fixtures/cinefighi-page.ts";
 
 // Verifica lo schermo Statistiche: card numeriche, media voto per genere
 // (★, aggiunta di recente) e podio/classifica, sia in modalità "Io"
@@ -69,8 +76,11 @@ test.describe("CineFighi — Statistiche", () => {
     await expect(bars.nth(0).locator(".bar-row__name")).toHaveText("Thriller");
     await expect(bars.nth(0).locator(".bar-row__vote")).toHaveText("★ 7,0");
 
-    await expect(page.locator("#statsIoGruppoToggle .stats-toggle-btn[data-mode=\"me\"]")).toHaveClass(/active/);
-    await expect(page.locator("#statsIoGruppoToggle .stats-toggle-btn[data-mode=\"group\"]")).not.toHaveClass(/active/);
+    // Da fc3a5c2 il toggle è la pillola con slider (.io-gruppo-btn), non
+    // più .stats-toggle-btn: id e data-mode invariati, classe "active"
+    // ancora sul bottone selezionato.
+    await expect(page.locator("#statsIoGruppoToggle .io-gruppo-btn[data-mode=\"me\"]")).toHaveClass(/active/);
+    await expect(page.locator("#statsIoGruppoToggle .io-gruppo-btn[data-mode=\"group\"]")).not.toHaveClass(/active/);
   });
 
   test("modalità Gruppo (esplicita): card, media voto per genere e classifica su tutti i voti", async ({ page }) => {
@@ -214,18 +224,26 @@ test.describe("CineFighi — Statistiche — Classifica, tasto Mostra tutti/meno
     await expect(expandBtn).toHaveClass(/is-up/);
 
     // Riduci: torna a 2 righe, testo/freccia tornano com'erano, e la vista
-    // risale (il tasto, in fondo alla lista espansa, non è più dove si è
-    // cliccato: se non fosse risalita lo scroll resterebbe fermo laggiù).
-    await page.mouse.wheel(0, 400);
-    const scrollBefore = await page.evaluate(() => window.scrollY);
+    // risale all'inizio della Classifica (il tasto, in fondo alla lista
+    // espansa, non è più dove si è cliccato).
+    //
+    // Prima questo si verificava confrontando window.scrollY prima/dopo,
+    // dopo una rotella fissa di 400px: un'asserzione che dipendeva
+    // dall'altezza della pagina (con la Classifica abbastanza in basso,
+    // 400px di scroll restano SOPRA la sezione e il "ritorno" è un
+    // movimento in giù, non in su — è quello che è iniziato a succedere
+    // crescendo l'altezza dello schermo Statistiche). Il comportamento che
+    // conta è che la Classifica sia in vista: lo chiediamo direttamente,
+    // così non dipende più da quanto è lunga la pagina.
+    await expandBtn.scrollIntoViewIfNeeded();
     await expandBtn.click();
     await expect(page.locator("#rankingList .rank-row")).toHaveCount(2);
     await expect(label).toHaveText("Mostra tutti");
     await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveText("· 2");
     await expect(expandBtn).not.toHaveClass(/is-up/);
-    await expect
-      .poll(async () => page.evaluate(() => window.scrollY), { timeout: 5_000 })
-      .toBeLessThan(scrollBefore || 1);
+    // Lo scroll è "smooth": toBeInViewport riprova finché l'animazione non
+    // è finita, invece di leggere una posizione a metà corsa.
+    await expect(page.locator("#classificaSection h3")).toBeInViewport();
 
     // In "Io" lo stesso comportamento: un nuovo render riparte collassato
     // (non resta espanso da prima), stesso tasto, stesso conteggio — unico
@@ -315,5 +333,90 @@ test.describe("CineFighi — Statistiche — Classifica, torna al film dopo il d
     await expect(expandBtn).toHaveClass(/is-up/);
     await expect(page.locator("#rankingList .rank-row")).toHaveCount(4);
     await expect(page.locator(`#screen-stats [data-id="${deepId}"].open-detail`)).toBeInViewport();
+  });
+});
+
+// ─── GENERI: vista Barre / Bolle ─────────────────────────────────────────
+// Le bolle "Cinema DNA" sono arrivate anche qui (7a3e2bc: stessa
+// disposizione a 6 di Cos90, colori di CineFighi invariati) ma, a
+// differenza di CineTracker, su storage pulito CineFighi apre in "Barre"
+// (getGenreView in storage.js ritorna "bars" per default in questa app e
+// "bubbles" nell'altra — due app separate, nessun codice condiviso). Se le
+// due app divergessero di nuovo su questo punto, il waitFor su .bar-row
+// della fixture qui sopra andrebbe in timeout: è il primo sintomo da
+// leggere prima di cercare altrove.
+//
+// Riusa la fixture mockata a 2 generi di sopra (Thriller 2 titoli, Commedia
+// 1): medie e ordine noti, quindi si possono asserire i numeri dentro le
+// bolle e non solo la loro esistenza.
+test.describe("CineFighi — Statistiche — vista Generi (Barre/Bolle)", () => {
+  test('"Barre" è il default, il toggle passa a "Bolle" e la scelta resta', async ({ page }) => {
+    await gotoFreshWithMockedLibrary(page);
+
+    await expect(
+      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bars"]')
+    ).toHaveClass(/active/);
+    await expect(page.locator("#genreLegend")).toHaveText("★ media voto");
+    await expect(page.locator("#genreBars .bar-row")).toHaveCount(1);
+
+    await setGenreView(page, "bubbles");
+    await expect(
+      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bubbles"]')
+    ).toHaveClass(/active/);
+    await expect(page.locator("#genreLegend")).toContainText("Riempimento");
+    await expect(page.locator("#genreBars .bar-row")).toHaveCount(0);
+
+    // In "Io" (default) c'è un solo genere: Thriller, 2 titoli, media dei
+    // miei voti (8 + 6) / 2 = 7,0 — lo stesso numero della vista Barre,
+    // stessa fonte dati, solo disegnato diversamente.
+    const bubbles = page.locator("#genreBars .genre-bubble");
+    await expect(bubbles).toHaveCount(1);
+    await expect(bubbles.first().locator(".genre-bubble-text .name")).toHaveText("THRILLER");
+    await expect(bubbles.first().locator(".genre-bubble-text .count")).toHaveText("2");
+    await expect(bubbles.first().locator(".genre-bubble-text .label")).toHaveText("titoli");
+
+    // Il voto medio compare solo al tocco (a bolla chiusa conta il colpo
+    // d'occhio): qui è l'attributo hidden, non display:none come in Cos90.
+    const vote = bubbles.first().locator(".genre-bubble-text .vote");
+    await expect(vote).toBeHidden();
+    await bubbles.first().click();
+    await expect(vote).toBeVisible();
+    await expect(vote).toHaveText("★ 7,0");
+
+    // La preferenza è per-dispositivo e persiste in localStorage: uscire e
+    // rientrare in Statistiche non la resetta a "Barre".
+    await openScreen(page, "home");
+    await openScreen(page, "stats");
+    await expect(
+      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bubbles"]')
+    ).toHaveClass(/active/);
+    await expect(page.locator("#genreBars .genre-bubble")).toHaveCount(1);
+  });
+
+  test("Bolle in modalità Gruppo: una bolla per genere, solo una aperta alla volta", async ({
+    page,
+  }) => {
+    await gotoFreshWithMockedLibrary(page);
+    await page.waitForLoadState("networkidle");
+    await setGenreView(page, "bubbles");
+    await setStatsMode(page, "group");
+
+    // Gruppo: Thriller (2 titoli, media dei punteggi di gruppo 6,5) e
+    // Commedia (1 titolo, 9,0) — gli stessi numeri già verificati in vista
+    // Barre nel primo describe di questo file.
+    const bubbles = page.locator("#genreBars .genre-bubble");
+    await expect(bubbles).toHaveCount(2);
+    const thriller = bubbles.nth(0);
+    const commedia = bubbles.nth(1);
+    await expect(thriller.locator(".genre-bubble-text .name")).toHaveText("THRILLER");
+    await expect(commedia.locator(".genre-bubble-text .name")).toHaveText("COMMEDIA");
+    await expect(commedia.locator(".genre-bubble-text .label")).toHaveText("titolo");
+
+    await thriller.click();
+    await expect(thriller.locator(".genre-bubble-text .vote")).toHaveText("★ 6,5");
+    await commedia.click();
+    await expect(commedia.locator(".genre-bubble-text .vote")).toHaveText("★ 9,0");
+    // Aprirne una chiude l'altra.
+    await expect(thriller.locator(".genre-bubble-text .vote")).toBeHidden();
   });
 });

@@ -9,6 +9,17 @@ generati da una pipeline Python schedulata con GitHub Actions — le
 previsioni vere e proprie non hanno nulla a che fare con questo repo di
 test.
 
+La stessa pagina ospita **due sistemi diversi**, su due tab alternativi
+(`switchPage()`: nessuna navigazione, solo `display:none`):
+
+- **Tech (breve termine)** — il paniere sopra, con previsioni a 1g/7g/1m e
+  la loro accuratezza misurata.
+- **Trend strutturali** (ex "Robotica", rietichettata con `1fcb9c4`) — una
+  lettura del regime di trend a 1-10 anni su THK, Harmonic Drive Systems,
+  Teradyne e Vertiv, da `data/robotics/<asset>/trend.jsonl`. Cadenza
+  mensile (trimestrale per Vertiv), nessun esito futuro da valutare: non è
+  una previsione puntuale, quindi non ha né accuratezza né `pending`.
+
 ## Modello di sicurezza dei dati
 
 Come Spot: **non esiste il rischio "dati reali condivisi"** delle altre
@@ -53,7 +64,13 @@ canvas direttamente.
 
 ## Cosa copre questa prima fase
 
-- Caricamento dashboard: header, statistiche riassuntive, le tre card asset
+- Caricamento dashboard: header, statistiche riassuntive, la card asset
+  selezionata — la pagina Tech mostra **una card alla volta** (filtro asset
+  in cima, default `ASSETS[0]`): le altre restano nel DOM con
+  `display:none`, quindi ogni verifica su un asset diverso passa per il
+  filtro (`selectAsset` nella fixture)
+- Filtro asset: un bottone per asset, uno solo attivo, il click cambia la
+  card in vista
 - SPY non compare più (rimosso dal paniere attivo il 2026-09-01)
 - Banner di aggiornamento PWA nascosto di default
 - Pannello "che dati analizza l'AI": chiuso di default, si apre al click sul
@@ -78,6 +95,30 @@ canvas direttamente.
 - Istantanea prezzo (3x/giorno): se visibile mostra orario e prezzo, ed
   eventualmente il confronto con la previsione 1g — dato reale, non un
   valore fisso
+- Tabelle richiudibili (`23dc826`): "Ultimi Risultati Valutati" e "Ultimi
+  Segnali Generati" partono **chiuse**, si aprono toccandone
+  l'intestazione, e mostrano al massimo 6 righe con "Mostra tutto (N)" /
+  "Mostra solo le recenti" (`4020d3f`); espandere una tabella non espande
+  l'altra. Nota: "chiuso" è `max-height:0` + `overflow:hidden`, non
+  `display:none` — per Playwright le righe restano "visible" (è il click a
+  mancare il bersaglio), quindi lo stato chiuso si verifica sull'altezza
+  resa, non con `toBeHidden()`
+- Tendina "Info azienda" per card (`c5dd80a`): chiusa di default, mostra
+  sede/fondazione/settore/borsa da `COMPANY_INFO`, e per gli asset del
+  paniere trend anche i fondamentali letti da
+  `data/tradingview/fundamentals.json` (`df8b040`) — o la dichiarazione
+  esplicita che sono nascosti perché lo snapshot ha più di 6 mesi
+  (`17802cb`) o non è raggiungibile
+- Pagina **"Trend strutturali"** (ex Robotica, rietichettata con
+  `1fcb9c4`): i due tab sono alternativi (Tech attiva al caricamento),
+  filtro con i quattro titoli del paniere (THK, Harmonic Drive, Teradyne,
+  Vertiv) una card alla volta, e per ogni card fase del ciclo, CAGR su
+  1/3/5/10 anni, storico correzioni dopo fasi simili, distanza da ATH e da
+  massimo 52 settimane, "Storico Letture" richiudibile — oppure la
+  dichiarazione "nessuna analisi trend ancora disponibile" per un asset
+  appena aggiunto, che è uno stato legittimo e non un errore di
+  caricamento. Coperto anche il pannello "Come funziona questa pagina?"
+  (paniere, cadenza mensile vs trimestrale per Vertiv, driver `^SOX`)
 
 ## Backlog (non ancora coperto)
 
@@ -91,3 +132,11 @@ canvas direttamente.
   numericamente coerenti con `price_at_generation` e
   `volatility_threshold_pct` del record (oggi si verifica solo il formato
   del messaggio, non i valori)
+- Grafico "Prezzo vs media mobile" delle card trend: oggi si verifica il
+  contenuto testuale della card, non il canvas (che dipende da
+  `price_series.json` e da Chart.js)
+- La baseline "classe più frequente" (`data/baseline.json`) e lo studio
+  eventi CPI (`data/event_study.json`): vivono solo lato pipeline Python,
+  con i loro test nel repo `Prova` (`tests/test_baseline.py`,
+  `tests/test_event_study.py`) — la dashboard non li mostra ancora, quindi
+  non c'è nulla da verificare da qui

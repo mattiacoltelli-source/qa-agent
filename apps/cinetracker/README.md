@@ -56,6 +56,15 @@ hardcoded nel bundle JS, come in CineFighi.
   Barre/Bolle (16896c1/d048d72, di default "Bolle" — `#genreViewToggle`),
   podio/classifica Film e Serie TV separati, espansione "Mostra tutti/meno"
   oltre i primi 4 sotto il podio (`eb56964`)
+- Statistiche, **sei generi al massimo** (`03eb233`, griglia a nido d'ape su
+  3 righe): con sette generi in libreria il meno frequente resta fuori, in
+  entrambe le viste — sono gli stessi `topGenres` disegnati in due modi
+- Statistiche, **stabilità su render ripetuti**: "Mostra tutti" continua a
+  funzionare dopo più aperture della tab. È la regressione del bug trovato
+  scrivendo la copertura di quel bottone e corretto in `Cos90` con
+  `64ee2a2` (listener riagganciato a ogni `renderStats()`: il click
+  espandeva e richiudeva nello stesso istante, quindi il bottone era inerte
+  dalla seconda apertura in poi)
 - "Stasera cosa guardo": consigli personalizzati (`#recommendBtn`), "Scopri
   qualcosa di nuovo" con filtro genere (`#genreSelect`, `#discoverBtn`) e
   "Rivedi un classico" tra i titoli votati ≥7 (`#classicBtn`) — nessuno dei

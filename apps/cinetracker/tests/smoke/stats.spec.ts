@@ -222,3 +222,106 @@ test.describe("CineTracker — Statistiche", () => {
     await expect(page.locator("#top100SeriesExpandBtn")).toHaveClass(/hidden/);
   });
 });
+
+// ─── REGRESSIONI SU RENDER RIPETUTI ─────────────────────────────────────────
+// renderStats() gira ad ogni renderAll() (12 punti diversi in app.js, più il
+// boot) e ogni apertura della tab la richiama: un listener legato lì dentro
+// invece che in bindEvents() finisce doppio-legato. È esattamente il bug
+// trovato scrivendo la copertura di "Mostra tutti" e corretto in Cos90 con
+// 64ee2a2: il bottone espandeva e richiudeva nello stesso click, sempre a
+// somma zero, quindi inerte dalla SECONDA apertura di Statistiche in poi. Il
+// test sopra apre Statistiche una volta sola e non lo avrebbe mai visto.
+
+const MANY_SEEN = Array.from({ length: 10 }, (_, i) =>
+  fakeItem(960001 + i, "movie", `Render Film ${i + 1}`, "Drama", String(9 - i * 0.4).replace(".", ","))
+);
+
+test.describe("CineTracker — Statistiche — stabilità su render ripetuti", () => {
+  test('"Mostra tutti" funziona ancora dopo aver riaperto Statistiche più volte', async ({
+    page,
+  }) => {
+    await mockJson(page, /rest\/v1\/Coltel/, MANY_SEEN.map((data) => ({ list: "seen", data })));
+    await gotoFresh(page);
+
+    // Tre aperture della tab: con il listener legato dentro renderStats()
+    // il bottone qui sarebbe legato 3+ volte (una per render) e un click
+    // applicherebbe il toggle un numero pari di volte, senza effetto
+    // visibile.
+    //
+    // La pausa tra un tap e l'altro NON è cosmetica: 7 click entro 500ms
+    // l'uno dall'altro, ovunque nella pagina, aprono #screen-backup (il
+    // gesto nascosto, vedi lo script in index.html e
+    // openBackupViaSecretGesture nella fixture). Sette navigazioni di fila
+    // senza pause lo fanno scattare e i test finiscono a guardare la
+    // schermata sbagliata: il podio resta nel DOM ma dentro uno
+    // #screen-stats nascosto.
+    for (let i = 0; i < 3; i++) {
+      await openScreen(page, "stats");
+      await page.locator("#top100Podium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+      await page.waitForTimeout(600);
+      await openScreen(page, "home");
+      await page.waitForTimeout(600);
+    }
+    await openScreen(page, "stats");
+    await page.locator("#top100Podium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+
+    const list = page.locator("#top100List .rank-row");
+    const expandBtn = page.locator("#top100ExpandBtn");
+    await expect(list).toHaveCount(4);
+
+    await expandBtn.click();
+    await expect(list).toHaveCount(7);
+    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra meno");
+
+    // E il ritorno funziona allo stesso modo (un click = un toggle, non due).
+    await expandBtn.click();
+    await expect(list).toHaveCount(4);
+    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra tutti");
+  });
+});
+
+// ─── GENERI: quanti ne entrano nelle bolle ──────────────────────────────────
+// Da 03eb233 le bolle sono SEI (griglia a nido d'ape su 3 righe), non più
+// cinque: app.js::renderStats taglia topGenres a slice(0, 6). Con più di sei
+// generi in libreria i meno frequenti restano fuori — l'unico modo di
+// accorgersi di una regressione qui è una fixture con più generi del posto
+// disponibile.
+const SEVEN_GENRES = [
+  "Drama",
+  "Thriller",
+  "Commedia",
+  "Azione",
+  "Horror",
+  "Fantascienza",
+  "Western",
+];
+// Conteggi decrescenti (7, 6, 5, 4, 3, 2, 1 titoli): nessuna parità, quindi
+// l'ordine è deterministico e il genere tagliato fuori è sempre il Western.
+const MANY_GENRE_SEEN = SEVEN_GENRES.flatMap((genre, gi) =>
+  Array.from({ length: SEVEN_GENRES.length - gi }, (_, i) =>
+    fakeItem(961000 + gi * 100 + i, "movie", `${genre} ${i + 1}`, genre, "8")
+  )
+);
+
+test.describe("CineTracker — Statistiche — sei generi al massimo", () => {
+  test("con sette generi in libreria le bolle restano sei, tagliando il meno frequente", async ({
+    page,
+  }) => {
+    await mockJson(page, /rest\/v1\/Coltel/, MANY_GENRE_SEEN.map((data) => ({ list: "seen", data })));
+    await gotoFresh(page);
+    await openScreen(page, "stats");
+    await page.locator("#genreBars .genre-bubble").first().waitFor({ state: "visible", timeout: 10_000 });
+
+    const bubbles = page.locator("#genreBars .genre-bubble");
+    await expect(bubbles).toHaveCount(6);
+    await expect(bubbles.nth(0).locator(".genre-bubble-text .name")).toHaveText("DRAMA");
+    await expect(bubbles.nth(5).locator(".genre-bubble-text .name")).toHaveText("FANTASCIENZA");
+    await expect(page.locator("#genreBars")).not.toContainText("WESTERN");
+
+    // Stesso taglio nella vista Barre: sono gli stessi topGenres disegnati
+    // in due modi (renderGenreView in app.js), non due calcoli diversi.
+    await page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bars"]').click();
+    await expect(page.locator("#genreBars .bar-row")).toHaveCount(6);
+    await expect(page.locator("#genreBars")).not.toContainText("Western");
+  });
+});

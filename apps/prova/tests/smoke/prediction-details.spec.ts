@@ -2,6 +2,8 @@ import { test, expect } from "@playwright/test";
 import {
   gotoFresh,
   assetCard,
+  openAssetTable,
+  collapsibleHeight,
   predictionRows,
   predictionDetailRow,
   outcomeRows,
@@ -15,12 +17,21 @@ import {
 // fissi come la classe predetta o la confidence di una previsione specifica
 // — quelli cambiano da un giorno all'altro e non sono ciò che questa suite
 // deve garantire.
+//
+// Da 23dc826 le due tabelle sono richiudibili e partono CHIUSE
+// (.collapsible-content.collapsed: max-height 0 + overflow hidden): le righe
+// restano nel DOM e per Playwright sono perfino "visible", ma il click su
+// una di esse va comunque in timeout perché il punto da colpire è
+// ritagliato via. openAssetTable() seleziona l'asset nel filtro (una card
+// alla volta) e apre la sezione toccandone l'intestazione, come farebbe un
+// utente.
 test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => {
   for (const asset of ASSETS) {
     test(`${asset}: aprire una riga di "Ultimi Segnali Generati" mostra la motivazione, richiuderla la nasconde`, async ({
       page,
     }) => {
       await gotoFresh(page);
+      await openAssetTable(page, asset, "predictions");
       const card = assetCard(page, asset);
       const rows = predictionRows(page, asset);
       const count = await rows.count();
@@ -54,6 +65,7 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
       page,
     }) => {
       await gotoFresh(page);
+      await openAssetTable(page, asset, "outcomes");
       const card = assetCard(page, asset);
       const rows = outcomeRows(page, asset);
       const count = await rows.count();
@@ -68,6 +80,29 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
       await expect(detail).toBeVisible();
       await expect(detail).toContainText("prezzo reale");
       await expect(detail).toContainText("Motivazione del modello");
+    });
+
+    test(`${asset}: le due tabelle partono chiuse e si aprono toccando l'intestazione`, async ({
+      page,
+    }) => {
+      // Regressione sul comportamento introdotto da 23dc826: prima le liste
+      // erano sempre aperte e mostravano tutto lo storico. Se tornassero
+      // aperte di default non sarebbe un errore visibile altrove nella
+      // suite (gli altri test le aprono con un helper idempotente), quindi
+      // serve un test che guardi proprio lo stato iniziale.
+      await gotoFresh(page);
+      const card = assetCard(page, asset);
+      await expect(card.locator(".collapsible-content.collapsed")).toHaveCount(2);
+      // "Chiuso" è max-height:0 + overflow:hidden, non display:none: le
+      // righe restano "visible" per Playwright (è il click a mancare il
+      // bersaglio, sull'hit test), quindi l'asserzione onesta è che la
+      // sezione non occupi spazio — non che la riga sia nascosta.
+      expect(await collapsibleHeight(card, "Ultimi Segnali Generati")).toBe(0);
+      expect(await collapsibleHeight(card, "Ultimi Risultati Valutati")).toBe(0);
+
+      await openAssetTable(page, asset, "predictions");
+      await expect(card.locator(".collapsible-content.collapsed")).toHaveCount(1);
+      expect(await collapsibleHeight(card, "Ultimi Segnali Generati")).toBeGreaterThan(0);
     });
   }
 });
