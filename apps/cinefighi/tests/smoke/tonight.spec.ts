@@ -85,7 +85,14 @@ test.describe("CineFighi — Stasera cosa guardo (TMDB discover live)", () => {
     // abbastanza voti la nota sparisce. Entrambi gli esiti sono corretti:
     // dipende dallo storico voti reale, non dal codice.
     const note = page.locator("#tonightPeopleNote");
-    const others = rows.filter({ hasNot: page.locator(`[data-user="${QA_USER}"]`) });
+    // Escludere la propria riga va fatto con :not() sull'ATTRIBUTO della
+    // riga stessa: `filter({ hasNot })` cerca un DISCENDENTE che matcha, e
+    // qui data-user sta sul <button> della riga, non dentro — quindi non
+    // escludeva nulla e il ciclo qui sotto finiva per pretendere disabled
+    // anche sulla riga di QA_USER, che è sempre attiva (sei sempre incluso).
+    const others = page.locator(
+      `#tonightPeoplePanel .tonight-people-row:not([data-user="${QA_USER}"])`
+    );
     if (await note.isVisible()) {
       await expect(note).toContainText(`almeno ${MIN_VOTED_FOR_GROUP_TONIGHT} titoli votati`);
       const otherCount = await others.count();
