@@ -30,7 +30,7 @@ name: Controllo Completo
 # `!cancelled()` mantiene l'ordine sequenziale ma li fa girare comunque,
 # fermandosi solo se il run viene annullato a mano.
 #
-# `schedule` fa partire il controllo due volte a settimana da solo, senza
+# `schedule` fa partire il controllo ogni notte da solo, senza
 # bisogno di ricordarsi di lanciarlo: il trigger cron non popola `inputs.app`
 # (non esiste un menu a tendina per un run automatico), quindi ogni `with:`
 # usa `inputs.app || 'tutte'` per ricadere sempre su "tutte" in quel caso.
@@ -73,7 +73,24 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: "0 6 * * 1,4" # lunedì e giovedì alle 06:00 UTC, tutte e quattro le app
+    # Ogni notte alle 02:00 UTC: le 4 del mattino in Italia con l'ora legale
+    # (CEST, da fine marzo a fine ottobre), le 3 con l'ora solare — il cron
+    # di GitHub Actions è sempre in UTC e non segue il cambio d'ora, quindi
+    # un orario solo è impossibile. Entrambi vanno bene per lo scopo: notte
+    # fonda, nessuna sovrapposizione con un test @write lanciato a mano.
+    #
+    # Prima girava due volte a settimana (lunedì e giovedì). Il passaggio a
+    # giornaliero non serve ad avere più dati: serve a rendere affidabili le
+    # soglie di scadenza della dashboard App Control Center, che con un giro
+    # ogni 3-4 giorni sarebbero state quasi sempre al limite del giallo. Con
+    # un giro al giorno un controllo vecchio di due giorni è un'anomalia
+    # vera, non il funzionamento normale.
+    #
+    # Copre anche, a maggior ragione, il motivo per cui Data Health ha un
+    # proprio giro ogni 6 giorni: tenere sveglio Supabase free tier, che
+    # sospende un progetto dopo 7 giorni senza richieste API. Quel cron
+    # separato resta come rete di sicurezza se questo venisse disattivato.
+    - cron: "0 2 * * *"
 
 # I permessi di un workflow chiamante sono un tetto massimo per quelli
 # richiamati con `uses:` — senza questo, lo step "Salva lo storico" di

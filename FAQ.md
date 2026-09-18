@@ -132,9 +132,9 @@ così hai sempre il controllo di quando i test girano, specialmente quelli
 Due eccezioni, entrambe schedulate:
 - Data Health Agent gira anche da solo ogni 6 giorni, di notte — vedi la
   domanda sotto per il perché.
-- "Controllo Completo" (i sei agenti insieme) gira anche da solo due
-  volte a settimana, lunedì e giovedì alle 6 UTC — vedi la domanda su
-  "Controllo Completo" più sotto.
+- "Controllo Completo" (i sei agenti insieme) gira anche da solo **ogni
+  notte alle 2 UTC** (le 4 del mattino ora italiana d'estate, le 3
+  d'inverno) — vedi la domanda su "Controllo Completo" più sotto.
 
 Entrambi, se trovano un problema vero (FAIL, non un semplice WARN), mandano
 un avviso su Telegram — vedi "Come funziona la notifica Telegram?".
@@ -213,10 +213,18 @@ Security Agent girano comunque, non dipendono dalla scelta), con un solo
 di run — niente da unire a mano. I workflow restano comunque lanciabili
 anche singolarmente come prima, questo è solo una scorciatoia.
 
-Gira anche **da solo due volte a settimana** (lunedì e giovedì alle 6
-UTC, tutte le app): non serve ricordarsi di lanciarlo a mano. Se, in un
-run schedulato, almeno uno dei sei agenti trova un FAIL vero, arriva un
-avviso su Telegram — vedi la domanda successiva.
+Gira anche **da solo ogni notte alle 2 UTC** (tutte le app): le 4 del
+mattino ora italiana con l'ora legale, le 3 con l'ora solare — il cron di
+GitHub Actions è in UTC e non segue il cambio d'ora, quindi un orario solo
+non è possibile. Non serve ricordarsi di lanciarlo a mano. Se, in un run
+schedulato, almeno uno dei sei agenti trova un FAIL vero, arriva un avviso
+su Telegram — vedi la domanda successiva.
+
+Prima girava due volte a settimana. È diventato giornaliero per la
+dashboard [App Control Center](https://github.com/mattiacoltelli-source/Default),
+che considera scaduto un controllo vecchio di più di 36 ore: con un giro
+ogni 3-4 giorni sarebbe stata quasi sempre gialla, e una soglia che sta
+sempre per scattare non segnala più niente.
 
 ## Come funziona la notifica Telegram?
 
