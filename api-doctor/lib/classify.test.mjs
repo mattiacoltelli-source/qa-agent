@@ -11,6 +11,19 @@ test("classify: INFRA_ERROR quando la richiesta non è arrivata a destinazione",
   assert.equal(classify({ ok: false, networkError: "fetch failed" }), "INFRA_ERROR");
 });
 
+// Un rate limit non è un'API rotta: è l'API che non ci serve in quel
+// momento, tipicamente perché l'IP del runner è condiviso. Va visto nel
+// report, ma non deve far fallire il job — non c'è nulla da correggere.
+test("classify: il 429 è INFRA_ERROR, non FAIL", () => {
+  assert.equal(classify({ ok: false, networkError: null, status: 429 }), "INFRA_ERROR");
+});
+
+test("classify: gli altri status di errore restano FAIL", () => {
+  for (const status of [400, 403, 404, 500, 503]) {
+    assert.equal(classify({ ok: false, networkError: null, status }), "FAIL");
+  }
+});
+
 test("rollupApp: PASS solo se tutti i check sono PASS", () => {
   assert.equal(rollupApp([{ kind: "PASS" }, { kind: "PASS" }]), "PASS");
 });
