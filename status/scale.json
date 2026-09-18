@@ -1,0 +1,37 @@
+{
+  "agent": "scale",
+  "label": "Scale Agent",
+  "updatedAt": "2026-09-18T23:38:59.959Z",
+  "apps": {
+    "cinefighi": {
+      "result": "PASS",
+      "summary": "1565 titoli · Home 1650ms",
+      "metrics": {
+        "targetCount": 1565,
+        "count": 1565,
+        "homeReadyMs": 1650,
+        "libraryFirstPageMs": 54,
+        "initialLibraryRows": 40,
+        "scrollMs": 2342,
+        "libraryRowsAfterScroll": 200,
+        "statsReadyMs": 62
+      },
+      "problems": [
+        {
+          "severity": "MEDIUM",
+          "message": "Sopra soglia a 1565 titoli: homeReadyMs"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Sopra soglia a 1565 titoli: libraryFirstPageMs"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "Sopra soglia a 1565 titoli: statsReadyMs"
+        }
+      ],
+      "runAt": "2026-09-18T23:38:59.959Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35405772675"
+    }
+  }
+}
