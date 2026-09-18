@@ -107,12 +107,18 @@ dove guardare — in italiano.
 Stessa chiave `sb_publishable_...` già hardcoded nei bundle JS delle due
 app (la trovi anche in `scripts/cleanup-write-residue.mjs`): nessun
 segreto nuovo, nessun permesso più ampio del client che gira in un browser
-qualsiasi. Nessuna `service_role key`, nessuna connection string Postgres.
-`health/engine.mjs` (i controlli veri e propri) fa solo `GET` via REST,
-mai scritture — il workflow, subito dopo, fa anche un `DELETE`, ma tramite
-lo stesso script già in uso da `tests.yml`, scoperto in modo inequivocabile
-solo su righe riconducibili a `_QA_Agent_` (vedi
-`scripts/cleanup-write-residue.mjs` per il dettaglio).
+qualsiasi. `health/engine.mjs` (i controlli veri e propri) fa solo `GET`
+via REST, mai scritture, e usa solo questa chiave — il workflow, subito
+dopo, fa anche un `DELETE`, ma tramite lo stesso script già in uso da
+`tests.yml`, scoperto in modo inequivocabile solo su righe riconducibili a
+`_QA_Agent_` (vedi `scripts/cleanup-write-residue.mjs` per il dettaglio).
 
-Unico secret riusato: `ANTHROPIC_API_KEY` (già configurato per il QA
-Agent, Settings → Secrets and variables → Actions).
+Dal 2026-09-18 quel `DELETE` su CineFighi `users` richiede in più la
+`service role key` (secret `CINEFIGHI_SERVICE_ROLE_KEY`): da quando la
+policy RLS `users` non ha più una regola DELETE pubblica, la chiave anon
+sopra non basta più a cancellare l'account di test a fine run (vedi
+`scripts/cleanup-write-residue.mjs`). Nessuna connection string Postgres.
+
+Secret riusati: `ANTHROPIC_API_KEY` (già configurato per il QA Agent) e
+`CINEFIGHI_SERVICE_ROLE_KEY` (Settings → Secrets and variables →
+Actions).

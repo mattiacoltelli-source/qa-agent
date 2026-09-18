@@ -86,6 +86,12 @@ jobs:
       # scripts/cleanup-write-residue.mjs.
       - name: Ripulisci eventuali residui dei test
         if: always()
+        env:
+          # Serve solo per il DELETE su CineFighi "users" (RLS non ha più
+          # una policy DELETE pubblica, vedi scripts/cleanup-write-residue.mjs).
+          # Secret di Settings → Secrets and variables → Actions, mai la
+          # chiave anon/publishable usata dal resto del file.
+          CINEFIGHI_SERVICE_ROLE_KEY: ${{ secrets.CINEFIGHI_SERVICE_ROLE_KEY }}
         run: node scripts/cleanup-write-residue.mjs
 
       # Analizza SOLO i test falliti con Claude (causa probabile, severità,

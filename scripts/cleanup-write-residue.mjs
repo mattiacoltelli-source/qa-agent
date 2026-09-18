@@ -25,6 +25,15 @@ const CINEFIGHI_URL = "https://dxzukpujouayxlomwryc.supabase.co";
 const CINEFIGHI_KEY = "sb_publishable_6kaInTs-_PDPHUszpj8N5w_Sb1zCXI9";
 const QA_USER = "_QA_Agent_";
 
+// Dal 2026-09-18 la tabella "users" non ha più una policy RLS DELETE
+// pubblica (chiusa dopo che qualcuno aveva cancellato tutti gli utenti reali
+// sfruttando il fatto che la chiave anon/publishable sopra è client-side,
+// quindi pubblica per chiunque). Un DELETE con quella chiave su "users" ora
+// non dà più errore: Postgres filtra semplicemente 0 righe, in silenzio.
+// Serve quindi la service role key (bypassa RLS) SOLO per quel DELETE — mai
+// hardcoded, mai usata altrove in questo file, letta solo da env var/secret.
+const CINEFIGHI_SERVICE_ROLE_KEY = process.env.CINEFIGHI_SERVICE_ROLE_KEY;
+
 const CINETRACKER_URL = "https://quwkqaovjxczuahjcmmh.supabase.co";
 const CINETRACKER_KEY = "sb_publishable_1FWxC_BAnvblEtpTdUXrEg_iLKZDb6d";
 export const CINETRACKER_MARKER = "QA_AGENT_TEST_MARKER";
@@ -53,6 +62,17 @@ async function restDelete(baseUrl, key, table, query) {
   return Array.isArray(rows) ? rows : [];
 }
 
+async function restGet(baseUrl, key, table, query) {
+  const res = await fetch(`${baseUrl}/rest/v1/${table}?${query}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`GET ${table} fallita (HTTP ${res.status}): ${text}`);
+  }
+  return JSON.parse(text);
+}
+
 async function cleanupCineFighi() {
   const deletedVotes = await restDelete(
     CINEFIGHI_URL,
@@ -72,14 +92,34 @@ async function cleanupCineFighi() {
   // gruppo. Va cancellato DOPO voti e titoli (nessun vincolo di integrità lo
   // richiede — l'app stessa permette di eliminare un utente lasciando i suoi
   // voti storici — ma è più pulito così).
-  const deletedUser = await restDelete(
-    CINEFIGHI_URL,
-    CINEFIGHI_KEY,
-    "users",
-    `name=eq.${encodeURIComponent(QA_USER)}`
-  );
+  //
+  // A differenza di votes/titles (DELETE pubblico ancora aperto, chiave anon
+  // invariata sopra), "users" richiede la service role key — vedi il
+  // commento su CINEFIGHI_SERVICE_ROLE_KEY in cima al file.
+  const userQuery = `name=eq.${encodeURIComponent(QA_USER)}`;
+  if (!CINEFIGHI_SERVICE_ROLE_KEY) {
+    throw new Error(
+      `CINEFIGHI_SERVICE_ROLE_KEY non impostata: senza la service role key il DELETE su "users" ` +
+        `viene bloccato in silenzio dalla policy RLS (nessuna regola DELETE pubblica da quando è ` +
+        `stata chiusa la falla del 2026-09-18) e "${QA_USER}" resterebbe residuo per sempre nel ` +
+        `gruppo reale. Impostala come variabile d'ambiente/secret (mai hardcoded, mai lato client).`
+    );
+  }
+  const deletedUser = await restDelete(CINEFIGHI_URL, CINEFIGHI_SERVICE_ROLE_KEY, "users", userQuery);
+
+  // Verifica concreta, non solo assenza di errore: con RLS un DELETE
+  // bloccato torna comunque HTTP 200 e un array vuoto in return=representation
+  // — indistinguibile da "non c'era nulla da cancellare" senza rileggere lo
+  // stato reale con una query indipendente.
+  const stillThere = await restGet(CINEFIGHI_URL, CINEFIGHI_SERVICE_ROLE_KEY, "users", `${userQuery}&select=name`);
+  if (stillThere.length > 0) {
+    throw new Error(
+      `Cancellazione di "${QA_USER}" da users non riuscita: ${stillThere.length} riga/e ancora presente/i dopo il DELETE (verificato con una GET indipendente).`
+    );
+  }
+
   console.log(
-    `CineFighi: rimossi ${deletedVotes.length} voto/i, ${deletedTitles.length} titolo/i e ${deletedUser.length} account di test residui di "${QA_USER}".`
+    `CineFighi: rimossi ${deletedVotes.length} voto/i, ${deletedTitles.length} titolo/i e ${deletedUser.length} account di test residui di "${QA_USER}" (verificato: 0 righe rimaste su users).`
   );
 }
 

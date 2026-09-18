@@ -89,6 +89,12 @@ jobs:
       # file.
       - name: Ripulisci eventuali residui @write rimasti indietro
         if: always()
+        env:
+          # Serve solo per il DELETE su CineFighi "users" (RLS non ha più
+          # una policy DELETE pubblica, vedi scripts/cleanup-write-residue.mjs).
+          # Secret di Settings → Secrets and variables → Actions, mai la
+          # chiave anon/publishable usata dal resto del file.
+          CINEFIGHI_SERVICE_ROLE_KEY: ${{ secrets.CINEFIGHI_SERVICE_ROLE_KEY }}
         run: node scripts/cleanup-write-residue.mjs
 
       # Analizza con Claude SOLO le app in WARN/FAIL — zero chiamate se il
