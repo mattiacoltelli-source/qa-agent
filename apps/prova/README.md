@@ -128,10 +128,13 @@ canvas direttamente.
   default), un blocco alla volta:
   - **Paniere**: sintesi mensile a livello di paniere (`c97a487`) che
     confronta i 5 titoli di Trend strutturali tra loro (nVent Electric
-    incluso da quando è nel paniere) — badge di
-    direzione (RIALZISTA/RIBASSISTA/LATERALE), narrativa, elenco dei
-    titoli su cui si basa — o la dichiarazione che non è ancora stata
-    generata
+    incluso da quando è nel paniere) — badge di direzione (RIALZISTA/
+    RIBASSISTA/LATERALE), narrativa **divisa per settore** dal `3c1403e`
+    (2026-09-18: `ROBOTICS_SECTOR` in `src/config.py` — "Robotica /
+    meccanica di precisione" e "Infrastruttura elettrica per data center
+    AI", due temi distinti dentro lo stesso paniere), più un'eventuale
+    nota di confronto fra i due, elenco dei titoli su cui si basa — o la
+    dichiarazione che non è ancora stata generata
   - **S&P 500 / Nasdaq**: stessa identica lettura di ciclo delle card di
     Trend strutturali (stesso motore, `renderRoboticsAssetCard()` riusata
     com'è), MA senza la tendina "Info azienda" (un indice non ha
