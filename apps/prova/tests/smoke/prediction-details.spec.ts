@@ -57,6 +57,28 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
       await expect(detail).toContainText("FLAT");
       await expect(detail).toContainText(/Resta FLAT se il prezzo è tra \$[\d.,]+ e \$[\d.,]+/);
 
+      // Da 3a962b3: predictionDetailHtml() aggiunge una riga di probabilità
+      // reali (UP/DOWN/FLAT) tra la motivazione e il range FLAT —
+      // probabilityLine() in index.html ritorna null (niente riga) per le
+      // previsioni salvate prima di quella modifica, quindi il campo può
+      // mancare su un segnale vecchio: verifichiamo il formato solo quando
+      // c'è, mai un valore fisso (le probabilità reali cambiano ogni giorno).
+      const detailText = (await detail.textContent()) ?? "";
+      const probMatch = detailText.match(/Probabilità:\s*UP\s*(\d+)%\s*·\s*DOWN\s*(\d+)%\s*·\s*FLAT\s*(\d+)%/);
+      if (probMatch) {
+        const [, up, down, flat] = probMatch.map(Number);
+        for (const p of [up, down, flat]) {
+          expect(p).toBeGreaterThanOrEqual(0);
+          expect(p).toBeLessThanOrEqual(100);
+        }
+        // Tre probabilità mutuamente esclusive: devono sommare a 100 a meno
+        // di un piccolo scarto di arrotondamento (pct() in index.html usa
+        // Math.round su ciascuna singolarmente, non su una distribuzione
+        // già normalizzata agli interi).
+        expect(up + down + flat).toBeGreaterThanOrEqual(97);
+        expect(up + down + flat).toBeLessThanOrEqual(103);
+      }
+
       await rows.nth(0).click();
       await expect(detail).toBeHidden();
     });
