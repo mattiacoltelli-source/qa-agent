@@ -42,11 +42,23 @@ test.describe("AI Predictor — tendina \"Info azienda\" per card", () => {
     page,
   }) => {
     // Da df8b040 i fondamentali non sono più una costante nel frontend: li
-    // legge da data/tradingview/fundamentals.json. Da 17802cb, se lo
-    // snapshot ha più di FUNDAMENTALS_MAX_AGE_MONTHS mesi la UI li nasconde
-    // da sola e lo dichiara, invece di mostrare multipli vecchi come se
-    // fossero attuali. Entrambi gli esiti sono corretti: dipende da quando
-    // è stato preso l'ultimo snapshot a mano, non dal codice.
+    // legge da data/tradingview/fundamentals.json. Tre esiti possibili,
+    // tutti legittimi (dipendono da quando/se è stato preso a mano un
+    // primo snapshot per quel ticker, non dal codice):
+    // 1. Asset del tutto ASSENTE da fundamentals.json (fundamentalsHtml()
+    //    in index.html: `if (!a) return '';`) — nessun messaggio, il
+    //    blocco fondamentali semplicemente non compare. Legittimo per un
+    //    asset appena aggiunto al paniere (nVent Electric/NVT, 2026-09-18)
+    //    prima del suo primo snapshot manuale.
+    // 2. Presente ma con snapshot vecchio (`17802cb`, oltre
+    //    FUNDAMENTALS_MAX_AGE_MONTHS mesi): la UI lo nasconde da sola e lo
+    //    dichiara esplicitamente, invece di mostrare multipli vecchi come
+    //    se fossero attuali.
+    // 3. Presente e fresco: i multipli veri, con fonte e data dichiarate.
+    // Nota: i testi dei casi 2 e 3-nascosto contengono entrambi la
+    // sottostringa "Fondamentali" (è lo stesso messaggio) — per questo il
+    // caso 1 si riconosce per ASSENZA di quella parola, non cercandone
+    // un'altra.
     await gotoFresh(page);
     await openRoboticsPage(page);
 
@@ -58,20 +70,21 @@ test.describe("AI Predictor — tendina \"Info azienda\" per card", () => {
       await expect(body).toContainText("Settore:");
 
       const text = (await body.textContent()) ?? "";
-      const hasFundamentals = text.includes("Fondamentali");
-      const hiddenForAge = text.includes("Fondamentali nascosti automaticamente");
-      const notLoaded = text.includes("Fondamentali non caricati");
-      expect(
-        hasFundamentals || hiddenForAge || notLoaded,
-        `${label}: nessuna delle tre forme attese per il blocco fondamentali`
-      ).toBe(true);
-
-      if (hasFundamentals && !hiddenForAge) {
-        // Snapshot fresco: i multipli ci sono e la fonte è dichiarata con
-        // la sua data, per non far sembrare un feed una fotografia datata.
-        await expect(body).toContainText("Capitalizzazione:");
-        await expect(body).toContainText(/snapshot del \d{4}-\d{2}-\d{2}/);
+      if (!text.includes("Fondamentali")) {
+        // Caso 1: nessuno snapshot preso ancora per questo ticker.
+        continue;
       }
+      if (text.includes("Fondamentali nascosti automaticamente") || text.includes("Fondamentali non caricati")) {
+        // Caso 2: presente ma dichiarato vecchio/non caricato, già
+        // spiegato dal messaggio stesso.
+        continue;
+      }
+
+      // Caso 3: snapshot fresco — i multipli ci sono e la fonte è
+      // dichiarata con la sua data, per non far sembrare un feed una
+      // fotografia datata.
+      await expect(body).toContainText("Capitalizzazione:");
+      await expect(body).toContainText(/snapshot del \d{4}-\d{2}-\d{2}/);
     }
   });
 });

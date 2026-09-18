@@ -241,6 +241,10 @@ export const ROBOTICS_ASSETS = [
   { key: "HARMONIC_DRIVE", label: "Harmonic Drive Systems" },
   { key: "TER", label: "Teradyne" },
   { key: "VRT", label: "Vertiv" },
+  // nVent Electric, aggiunto il 2026-09-18: mensile come THK/Harmonic
+  // Drive/Teradyne (solo Vertiv resta trimestrale), infrastruttura
+  // elettrica per data center AI insieme a Vertiv — vedi config.py.
+  { key: "NVT", label: "nVent Electric" },
 ] as const;
 export type ProvaRoboticsKey = (typeof ROBOTICS_ASSETS)[number]["key"];
 

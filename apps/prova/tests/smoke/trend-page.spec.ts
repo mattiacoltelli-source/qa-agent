@@ -50,7 +50,7 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
     await expect(roboticsPage(page)).toBeHidden();
   });
 
-  test("filtro asset: i quattro titoli del paniere, una card alla volta", async ({ page }) => {
+  test("filtro asset: i cinque titoli del paniere, una card alla volta", async ({ page }) => {
     await gotoFresh(page);
     await openRoboticsPage(page);
 
@@ -58,8 +58,10 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
       ROBOTICS_ASSETS.length
     );
     // Vertiv (VRT) è l'aggiunta di 1fcb9c4, Teradyne (TER) quella
-    // precedente: se il paniere in index.html tornasse ai soli due titoli
-    // giapponesi questo test lo direbbe subito.
+    // precedente, nVent Electric (NVT) la più recente (2026-09-18, quinto
+    // titolo): se il paniere in index.html tornasse a un sottoinsieme più
+    // corto questo test lo direbbe subito — il conteggio sopra confronta
+    // sempre contro ROBOTICS_ASSETS, mai un numero scritto a mano.
     for (const { key, label } of ROBOTICS_ASSETS) {
       await expect(roboticsAssetFilterButton(page, key)).toHaveText(label);
     }
@@ -165,6 +167,10 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
     await expect(body).toContainText("Harmonic Drive");
     await expect(body).toContainText("Teradyne");
     await expect(body).toContainText("Vertiv");
+    // nVent Electric, quinto titolo del paniere (aggiunto il 2026-09-18):
+    // stesso trattamento mensile di THK/Harmonic Drive/Teradyne, non di
+    // Vertiv (trimestrale) — vedi ASSET_CADENCE_MONTHS in src/config.py.
+    await expect(body).toContainText("nVent Electric");
     // Cadenza differenziata (mensile vs trimestrale per Vertiv, da 1fcb9c4)
     // e limiti dichiarati del modello: le due cose che rendono leggibile
     // una lettura mensile senza fraintenderla per una previsione.
