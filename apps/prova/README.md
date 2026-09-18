@@ -16,9 +16,10 @@ La stessa pagina ospita **due sistemi diversi**, su due tab alternativi
   la loro accuratezza misurata.
 - **Trend strutturali** (ex "Robotica", rietichettata con `1fcb9c4`) — una
   lettura del regime di trend a 1-10 anni su THK, Harmonic Drive Systems,
-  Teradyne e Vertiv, da `data/robotics/<asset>/trend.jsonl`. Cadenza
-  mensile (trimestrale per Vertiv), nessun esito futuro da valutare: non è
-  una previsione puntuale, quindi non ha né accuratezza né `pending`.
+  Teradyne, Vertiv e nVent Electric (`NVT`, aggiunto il 2026-09-18), da
+  `data/robotics/<asset>/trend.jsonl`. Cadenza mensile (trimestrale solo
+  per Vertiv), nessun esito futuro da valutare: non è una previsione
+  puntuale, quindi non ha né accuratezza né `pending`.
 
 ## Modello di sicurezza dei dati
 
@@ -114,9 +115,9 @@ canvas direttamente.
   (`17802cb`) o non è raggiungibile
 - Pagina **"Trend strutturali"** (ex Robotica, rietichettata con
   `1fcb9c4`): i due tab sono alternativi (Tech attiva al caricamento),
-  filtro con i quattro titoli del paniere (THK, Harmonic Drive, Teradyne,
-  Vertiv) una card alla volta, e per ogni card fase del ciclo, CAGR su
-  1/3/5/10 anni, storico correzioni dopo fasi simili, distanza da ATH e da
+  filtro con i cinque titoli del paniere (THK, Harmonic Drive, Teradyne,
+  Vertiv, nVent Electric) una card alla volta, e per ogni card fase del
+  ciclo, CAGR su 1/3/5/10 anni, storico correzioni dopo fasi simili, distanza da ATH e da
   massimo 52 settimane, "Storico Letture" richiudibile — oppure la
   dichiarazione "nessuna analisi trend ancora disponibile" per un asset
   appena aggiunto, che è uno stato legittimo e non un errore di
@@ -126,7 +127,8 @@ canvas direttamente.
   altri due. Toggle "Paniere"/"S&P 500"/"Nasdaq" (`Paniere` attivo di
   default), un blocco alla volta:
   - **Paniere**: sintesi mensile a livello di paniere (`c97a487`) che
-    confronta i 4 titoli di Trend strutturali tra loro — badge di
+    confronta i 5 titoli di Trend strutturali tra loro (nVent Electric
+    incluso da quando è nel paniere) — badge di
     direzione (RIALZISTA/RIBASSISTA/LATERALE), narrativa, elenco dei
     titoli su cui si basa — o la dichiarazione che non è ancora stata
     generata
