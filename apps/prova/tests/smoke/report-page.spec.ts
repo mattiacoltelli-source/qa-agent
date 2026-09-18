@@ -94,7 +94,33 @@ test.describe("AI Predictor — pagina Report", () => {
     // "UP/DOWN/FLAT", quelle sono solo il nome interno della classe CSS —
     // vedi TREND_DIRECTION_BADGE_CLASS in index.html).
     await expect(body.locator(".badge")).toHaveText(/^(RIALZISTA|RIBASSISTA|LATERALE)$/);
-    await expect(body.locator("p")).not.toBeEmpty();
+
+    // Da 3c1403e (2026-09-18): non più un unico paragrafo misto, ma un
+    // blocco per settore (ROBOTICS_SECTOR in src/config.py — mappa fissa
+    // nel codice, non testo generato dal modello, quindi sicura da
+    // controllare per nome esatto) più un'eventuale nota "cross-sector"
+    // che li confronta. Col paniere attuale (5 asset su 2 temi) entrambi i
+    // settori sono sempre rappresentati; un fallback sul vecchio formato a
+    // paragrafo singolo resta legittimo per una sintesi generata prima di
+    // quel commit (mai riscritta).
+    const paragraphs = body.locator("p");
+    const paragraphCount = await paragraphs.count();
+    expect(paragraphCount, "sintesi paniere: nessun paragrafo di narrativa").toBeGreaterThan(0);
+    for (let i = 0; i < paragraphCount; i++) {
+      await expect(paragraphs.nth(i)).not.toBeEmpty();
+    }
+
+    const hasPerSectorFormat = text.includes("Robotica / meccanica di precisione")
+      || text.includes("Infrastruttura elettrica per data center AI");
+    if (hasPerSectorFormat) {
+      await expect(body).toContainText("Robotica / meccanica di precisione");
+      await expect(body).toContainText("Infrastruttura elettrica per data center AI");
+      // Almeno due paragrafi (uno per settore); la nota cross-sector, se
+      // presente, ne aggiunge un terzo — non è garantita (il modello può
+      // ometterla), quindi non un conteggio esatto.
+      expect(paragraphCount).toBeGreaterThanOrEqual(2);
+    }
+
     await expect(body).toContainText("Basato sulle ultime letture disponibili di:");
   });
 
