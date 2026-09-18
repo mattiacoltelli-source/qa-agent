@@ -244,7 +244,7 @@ export const ROBOTICS_ASSETS = [
 ] as const;
 export type ProvaRoboticsKey = (typeof ROBOTICS_ASSETS)[number]["key"];
 
-export function pageTab(page: Page, which: "tech" | "robotics"): Locator {
+export function pageTab(page: Page, which: "tech" | "robotics" | "report"): Locator {
   return page.locator(`#tab-btn-${which}`);
 }
 
@@ -285,5 +285,87 @@ export async function selectRoboticsAsset(page: Page, key: ProvaRoboticsKey): Pr
  * lo stato "nessuna analisi ancora disponibile" (asset nuovo, cron non
  * ancora partito). */
 export function roboticsBody(page: Page, key: ProvaRoboticsKey): Locator {
+  return page.locator(`#robotics-body-${key}`);
+}
+
+// ─── PAGINA "REPORT" ────────────────────────────────────────────────────────
+// Terza pagina della stessa dashboard (a83696d, 2026-09-18): stesso
+// switchPage()/display:none delle altre due, mai una navigazione vera. Due
+// contenuti diversi dietro un toggle interno (#report-type-filter, come
+// #robotics-asset-filter ma su .report-section a livello pagina invece che
+// .asset-card per-asset):
+// - "Paniere" (default): sintesi mensile che confronta i 4 titoli di Trend
+//   strutturali tra loro — un solo blocco, non per-asset (loadSectorSummary()).
+// - "S&P 500"/"Nasdaq": la STESSA lettura di ciclo di Trend strutturali
+//   (renderRoboticsAssetCard riusata com'è, stesso schema trend.jsonl sotto
+//   data/robotics/spy|qqq/) applicata a due indici invece che a singoli
+//   titoli — stessi id "#robotics-body-SPY|QQQ" della pagina gemella, MA
+//   senza la tendina "Info azienda" (un indice non ha fondamentali/sede).
+// Tutti e tre i blocchi vengono popolati eagerly al boot (loadReportData()
+// chiamata subito insieme a loadRoboticsData(), non lazy al click sul tab).
+
+export type ProvaReportType = "PANIERE" | "SPY" | "QQQ";
+
+export const REPORT_TYPES: { key: ProvaReportType; label: string }[] = [
+  { key: "PANIERE", label: "Paniere" },
+  { key: "SPY", label: "S&P 500" },
+  { key: "QQQ", label: "Nasdaq" },
+];
+
+export function reportPage(page: Page): Locator {
+  return page.locator("#page-report");
+}
+
+/** Gemello di infoPanel()/roboticsInfoPanel() sulla pagina Report. */
+export function reportInfoPanel(page: Page): Locator {
+  return page.locator("#page-report > details.info-panel");
+}
+
+export function reportFilterButton(page: Page, key: ProvaReportType): Locator {
+  return page.locator(`#report-type-filter .horizon-filter-btn[data-report="${key}"]`);
+}
+
+/** Blocco `.report-section` per un tipo di report — id in minuscolo
+ * (`#report-paniere`/`#report-spy`/`#report-qqq`), a differenza della `key`
+ * (sempre maiuscola, come `data-report`). */
+export function reportSection(page: Page, key: ProvaReportType): Locator {
+  return page.locator(`#report-${key.toLowerCase()}`);
+}
+
+/** Passa alla pagina "Report" e aspetta che sia visibile — i dati sono già
+ * in caricamento da prima (vedi commento sopra), qui si aspetta solo lo
+ * scheletro, stesso principio di gotoFresh()/openRoboticsPage(). */
+export async function openReportPage(page: Page): Promise<void> {
+  await pageTab(page, "report").click();
+  await reportPage(page).waitFor({ state: "visible", timeout: 10_000 });
+}
+
+/** Come selectAsset()/selectRoboticsAsset(), per il toggle Paniere/S&P 500/
+ * Nasdaq della pagina Report. */
+export async function selectReport(page: Page, key: ProvaReportType): Promise<void> {
+  const section = reportSection(page, key);
+  if (!(await section.isVisible())) {
+    await reportFilterButton(page, key).click();
+  }
+  await section.waitFor({ state: "visible", timeout: 10_000 });
+}
+
+/** Corpo della sintesi mensile di paniere (loadSectorSummary()): un solo
+ * blocco condiviso da tutti e 4 i titoli di Trend strutturali, non per-asset. */
+export function sectorSummaryBody(page: Page): Locator {
+  return page.locator("#sector-summary-body");
+}
+
+/** Prezzo/direzione/corpo delle card S&P 500 o Nasdaq nella pagina Report —
+ * stessi id di roboticsBody() e affini (renderRoboticsAssetCard() è
+ * condivisa, vedi commento in index.html sopra #page-report), esposti qui
+ * con un nome e un tipo diversi solo per chiarezza semantica nei test. */
+export function reportIndexPrice(page: Page, key: "SPY" | "QQQ"): Locator {
+  return page.locator(`#robotics-price-${key}`);
+}
+export function reportIndexDirection(page: Page, key: "SPY" | "QQQ"): Locator {
+  return page.locator(`#robotics-direction-${key}`);
+}
+export function reportIndexBody(page: Page, key: "SPY" | "QQQ"): Locator {
   return page.locator(`#robotics-body-${key}`);
 }

@@ -71,7 +71,10 @@ canvas direttamente.
   filtro (`selectAsset` nella fixture)
 - Filtro asset: un bottone per asset, uno solo attivo, il click cambia la
   card in vista
-- SPY non compare più (rimosso dal paniere attivo il 2026-09-01)
+- SPY non compare più nel paniere **Tech** (rimosso il 2026-09-01) — da
+  `a83696d`/`cbbd155` (2026-09-18) SPY e Nasdaq (QQQ) sono reali di nuovo,
+  ma solo come indici di riferimento nella pagina **Report** (sotto), mai
+  nel filtro asset di Tech o nel paniere di Trend strutturali
 - Banner di aggiornamento PWA nascosto di default
 - Pannello "che dati analizza l'AI": chiuso di default, si apre al click sul
   summary (regressione mirata: un `<button>` annidato dentro `<summary>`
@@ -119,6 +122,26 @@ canvas direttamente.
   appena aggiunto, che è uno stato legittimo e non un errore di
   caricamento. Coperto anche il pannello "Come funziona questa pagina?"
   (paniere, cadenza mensile vs trimestrale per Vertiv, driver `^SOX`)
+- Pagina **"Report"** (`a83696d`, 2026-09-18): terzo tab, alternativo agli
+  altri due. Toggle "Paniere"/"S&P 500"/"Nasdaq" (`Paniere` attivo di
+  default), un blocco alla volta:
+  - **Paniere**: sintesi mensile a livello di paniere (`c97a487`) che
+    confronta i 4 titoli di Trend strutturali tra loro — badge di
+    direzione (RIALZISTA/RIBASSISTA/LATERALE), narrativa, elenco dei
+    titoli su cui si basa — o la dichiarazione che non è ancora stata
+    generata
+  - **S&P 500 / Nasdaq**: stessa identica lettura di ciclo delle card di
+    Trend strutturali (stesso motore, `renderRoboticsAssetCard()` riusata
+    com'è), MA senza la tendina "Info azienda" (un indice non ha
+    fondamentali/sede) — coperta anche la stessa regressione Chart.js-CDN-
+    bloccato di Trend strutturali (`f97653f`), perché passa dallo stesso
+    codice
+  - Pannello "Come funziona questa pagina?" proprio, distinto da quello di
+    Trend strutturali
+- Riga "Probabilità: UP/DOWN/FLAT" nel dettaglio previsione (`3a962b3`,
+  2026-09-18): quando presente (assente sulle previsioni salvate prima di
+  quella modifica), formato e plausibilità (0-100%, le tre percentuali
+  sommano a ~100) — mai un valore fisso
 
 ## Backlog (non ancora coperto)
 
