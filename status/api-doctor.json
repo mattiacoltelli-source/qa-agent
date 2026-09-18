@@ -1,0 +1,56 @@
+{
+  "agent": "api-doctor",
+  "label": "API Doctor Agent",
+  "updatedAt": "2026-09-18T23:38:11.323Z",
+  "apps": {
+    "cinefighi": {
+      "result": "PASS",
+      "summary": "3/3 endpoint ok",
+      "metrics": {
+        "total": 3,
+        "failed": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-18T23:38:11.323Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35405772675"
+    },
+    "cinetracker": {
+      "result": "PASS",
+      "summary": "3/3 endpoint ok",
+      "metrics": {
+        "total": 3,
+        "failed": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-18T23:38:11.323Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35405772675"
+    },
+    "spot": {
+      "result": "PASS",
+      "summary": "3/3 endpoint ok",
+      "metrics": {
+        "total": 3,
+        "failed": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-18T23:38:11.323Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35405772675"
+    },
+    "prova": {
+      "result": "INFRA_ERROR",
+      "summary": "5/6 endpoint ok",
+      "metrics": {
+        "total": 6,
+        "failed": 1
+      },
+      "problems": [
+        {
+          "severity": "LOW",
+          "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429"
+        }
+      ],
+      "runAt": "2026-09-18T23:38:11.323Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35405772675"
+    }
+  }
+}
