@@ -17,6 +17,33 @@ const BODY_SNIPPET_MAX = 500;
 // far scattare un FAIL (qui, a valle in engine.mjs, un INFRA_ERROR).
 const NETWORK_ERROR_MAX_RETRIES = 1;
 
+// Retry sul 429 (troppe richieste), opt-in per singolo check: un 429 è una
+// risposta arrivata, quindi di norma resta un esito definitivo come ogni
+// altro status. Serve dove il limite è tipicamente momentaneo e legato
+// all'IP condiviso del runner, non a una quota nostra — vedi il controllo
+// GDELT in endpoints/prova.mjs, rosso in due run consecutivi per questo.
+// Se il limite non si libera entro i tentativi, il 429 resta e il check
+// resta FAIL: il retry toglie i falsi allarmi, non nasconde un problema.
+const RATE_LIMIT_MAX_RETRIES = 2;
+const RATE_LIMIT_WAITS_MS = [5_000, 10_000];
+// Tetto all'attesa dichiarata dal server: un Retry-After lunghissimo non
+// deve tenere fermo il run.
+const RATE_LIMIT_MAX_WAIT_MS = 30_000;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Quanto aspettare prima del tentativo successivo: Retry-After se il
+ * server lo manda in secondi (lo sa solo lui), altrimenti l'attesa fissa
+ * crescente. Un Retry-After in formato data HTTP viene ignorato. */
+export function rateLimitWaitMs(result, attempt) {
+  const header = result.rateLimit?.["retry-after"];
+  const seconds = header === undefined ? NaN : Number(header);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.min(seconds * 1_000, RATE_LIMIT_MAX_WAIT_MS);
+  }
+  return RATE_LIMIT_WAITS_MS[Math.min(attempt, RATE_LIMIT_WAITS_MS.length - 1)];
+}
+
 // Header di rate-limit standard o comunemente usati (nomi diversi a seconda
 // del provider — mai garantiti). Raccolti "a costo zero" quando un'API li
 // invia: nessuna chiamata in più, nessuna nuova credenziale. Nessuna delle
@@ -96,10 +123,21 @@ async function fetchJsonOnce(url, method, headers) {
   }
 }
 
-export async function fetchJson(url, { method = "GET", headers = {} } = {}) {
+export async function fetchJson(
+  url,
+  { method = "GET", headers = {}, retryOnRateLimit = false } = {}
+) {
   let result = await fetchJsonOnce(url, method, headers);
   for (let attempt = 0; attempt < NETWORK_ERROR_MAX_RETRIES && result.networkError; attempt++) {
     result = await fetchJsonOnce(url, method, headers);
   }
+
+  if (retryOnRateLimit) {
+    for (let attempt = 0; attempt < RATE_LIMIT_MAX_RETRIES && result.status === 429; attempt++) {
+      await sleep(rateLimitWaitMs(result, attempt));
+      result = await fetchJsonOnce(url, method, headers);
+    }
+  }
+
   return result;
 }

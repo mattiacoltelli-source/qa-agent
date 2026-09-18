@@ -133,8 +133,15 @@ export async function checks() {
           : null,
   });
 
+  // retryOnRateLimit: GDELT limita per IP e i runner GitHub hanno IP
+  // condivisi, quindi il 429 qui è tipicamente momentaneo e non una nostra
+  // quota finita (non c'è chiave). Senza retry bastava quel picco per
+  // mandare una notifica di fallimento: è successo in due run consecutivi.
+  // Se il limite non si libera nei tentativi, il 429 resta e il check
+  // resta FAIL — un'indisponibilità vera continua a vedersi.
   const gdelt = await fetchJson(
-    `https://api.gdeltproject.org/api/v2/doc/doc?query=${TICKER}&mode=artlist&format=json&maxrecords=5&timespan=7d`
+    `https://api.gdeltproject.org/api/v2/doc/doc?query=${TICKER}&mode=artlist&format=json&maxrecords=5&timespan=7d`,
+    { retryOnRateLimit: true }
   );
   results.push({
     name: `News (GDELT, ${TICKER})`,
