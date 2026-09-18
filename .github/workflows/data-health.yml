@@ -121,6 +121,15 @@ jobs:
           path: reports/health-results.json
           retention-days: 30
 
+      # Pubblica l'esito di questo run in status/data-health.json, committato nel
+      # repo insieme allo storico qui sotto. È la copia leggibile senza
+      # token — gli artifact richiedono autenticazione e scadono — che
+      # consuma la dashboard App Control Center. Non esegue controlli:
+      # traduce soltanto il report che questo agente ha già scritto.
+      - name: Pubblica lo stato leggibile
+        if: always()
+        run: node status/build-status.mjs data-health
+
       # Salva le voci di storico appena scritte da health/history.mjs
       # (history/data/data-health.jsonl) direttamente nel repo — nessun
       # database, solo Git. Non blocca mai il run: se non c'è nulla da
@@ -129,18 +138,18 @@ jobs:
       # workflow_dispatch manuale) riprova con un fetch+rebase, e se anche
       # questo fallisce i dati restano comunque nell'artifact JSON qui
       # sopra — non è una perdita.
-      - name: Salva lo storico
+      - name: Salva storico e stato
         if: always()
         continue-on-error: true
         run: |
-          if [ -z "$(git status --porcelain history/data/data-health.jsonl)" ]; then
-            echo "Nessuna nuova voce di storico da salvare."
+          if [ -z "$(git status --porcelain history/data/data-health.jsonl status/data-health.json)" ]; then
+            echo "Nessuna nuova voce di storico o stato da salvare."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add history/data/data-health.jsonl
-          git commit -m "chore(data-health): aggiorna storico run [skip ci]"
+          git add history/data/data-health.jsonl status/data-health.json
+          git commit -m "chore(data-health): aggiorna storico e stato run [skip ci]"
           for i in 1 2 3; do
             if git push; then
               exit 0

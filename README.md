@@ -33,6 +33,12 @@ Nello stesso repository ci sono anche cinque moduli indipendenti in più:
 - **Security Agent**: `npm audit` sulle dipendenze di qa-agent stesso.
   Vedi **[security/README.md](security/README.md)**.
 
+Infine, **[status/](status/README.md)** non è un agente: a fine run ogni
+agente ci scrive l'essenziale del proprio esito in `status/<agente>.json`,
+committato nel repo. È la copia leggibile **senza token e senza scadenza**
+(gli artifact richiedono autenticazione e scadono) che consuma la dashboard
+**App Control Center** — quella aggrega e mostra, non ricontrolla nulla.
+
 Tutti con workflow separato, lanciabile da telefono come il QA Agent,
 stessa logica AI-solo-se-serve. Data Health, Performance, Scale e Security
 tengono anche uno storico compatto dei propri run (nessun database — solo

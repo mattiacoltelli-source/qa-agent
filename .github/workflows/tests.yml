@@ -34,6 +34,11 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    # Serve solo per lo step "Salva lo stato" in fondo (commit+push su
+    # status/qa.json): il GITHUB_TOKEN di default è a sola lettura.
+    # Nessun altro step scrive nel repo.
+    permissions:
+      contents: write
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -125,3 +130,40 @@ jobs:
           name: results-json
           path: reports/results.json
           retention-days: 30
+
+      # Pubblica l'esito di questo run in status/qa.json, committato nel
+      # repo. È la copia leggibile senza token — gli artifact qui sopra
+      # richiedono autenticazione e scadono dopo 30 giorni — che consuma la
+      # dashboard App Control Center. Non esegue controlli: traduce soltanto
+      # il report che questo agente ha già scritto.
+      - name: Pubblica lo stato leggibile
+        if: always()
+        run: node status/build-status.mjs qa
+
+      # Stesso meccanismo già in uso da Data Health/Performance/Scale/
+      # Security per il loro storico: nessun database, solo Git. Non blocca
+      # mai il run — se non c'è nulla da salvare esce subito, se il push
+      # viene rifiutato (run concorrente) riprova con fetch+rebase, e se
+      # anche questo fallisce l'esito resta comunque nell'artifact qui sopra.
+      - name: Salva lo stato
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -z "$(git status --porcelain status/qa.json)" ]; then
+            echo "Nessun nuovo stato da salvare."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add status/qa.json
+          git commit -m "chore(qa): aggiorna stato run [skip ci]"
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rifiutato (run concorrente?), tentativo $i/3: riprovo dopo un fetch+rebase."
+            sleep $((i * 5))
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}" || { echo "Rebase in conflitto: abbandono, l'esito resta comunque nell'artifact JSON."; git rebase --abort; exit 0; }
+          done
+          echo "Push non riuscito dopo i tentativi: non blocco il run, l'esito resta nell'artifact JSON."
