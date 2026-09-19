@@ -1,0 +1,62 @@
+{
+  "agent": "sentry",
+  "label": "Errori (Sentry)",
+  "updatedAt": "2026-09-19T07:00:33.662Z",
+  "apps": {
+    "cinefighi": {
+      "result": "PASS",
+      "summary": "Nessun errore in 24h",
+      "metrics": {
+        "issues": 0,
+        "eventi": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-19T07:00:33.662Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+    },
+    "cinetracker": {
+      "result": "PASS",
+      "summary": "Nessun errore in 24h",
+      "metrics": {
+        "issues": 0,
+        "eventi": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-19T07:00:33.662Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+    },
+    "spot": {
+      "result": "PASS",
+      "summary": "Nessun errore in 24h",
+      "metrics": {
+        "issues": 0,
+        "eventi": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-19T07:00:33.662Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+    },
+    "prova": {
+      "result": "PASS",
+      "summary": "Nessun errore in 24h",
+      "metrics": {
+        "issues": 0,
+        "eventi": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-19T07:00:33.662Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+    },
+    "control-center": {
+      "result": "PASS",
+      "summary": "Nessun errore in 24h",
+      "metrics": {
+        "issues": 0,
+        "eventi": 0
+      },
+      "problems": [],
+      "runAt": "2026-09-19T07:00:33.662Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+    }
+  }
+}
