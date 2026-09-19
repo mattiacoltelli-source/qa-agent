@@ -1,0 +1,65 @@
+name: Errori (Sentry)
+
+# Non è un agente come gli altri cinque: non esegue controlli, legge le
+# issue che Sentry ha già raccolto dalle cinque app nelle ultime 24 ore e
+# le pubblica in status/sentry.json, nello stesso formato degli altri.
+#
+# Perché gira qui e non nella dashboard: leggere le issue richiede un token
+# Sentry in lettura, e la dashboard è una pagina statica pubblica dove un
+# token sarebbe leggibile da chiunque. Qui il token è un secret e sul repo
+# finisce solo il riassunto — nessuna credenziale attraversa il confine.
+#
+# Richiede il secret SENTRY_AUTH_TOKEN (scope project:read ed event:read).
+# Finché manca, lo script lo rileva, lo dice nel log ed esce senza fallire:
+# a valle la dashboard mostra "non attivo", che è la verità.
+
+on:
+  workflow_dispatch:
+  # Permette a Controllo Completo (full-check.yml) di richiamarlo come
+  # ultimo anello della sua catena — stessa nota negli altri workflow.
+  workflow_call:
+
+jobs:
+  errori:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Serve solo per lo step "Salva lo stato errori" in fondo (commit+push
+    # su status/sentry.json): il GITHUB_TOKEN di default è a sola lettura.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # Nessun `npm install`: lo script usa solo moduli nativi di Node.
+
+      - name: Leggi gli errori da Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: node status/sentry-status.mjs
+
+      - name: Salva lo stato errori
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -z "$(git status --porcelain status/sentry.json)" ]; then
+            echo "Nessun nuovo stato errori da salvare."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add status/sentry.json
+          git commit -m "chore(sentry): aggiorna stato errori [skip ci]"
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rifiutato (run concorrente?), tentativo $i/3: riprovo dopo un fetch+rebase."
+            sleep $((i * 5))
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}" || { echo "Rebase in conflitto: abbandono."; git rebase --abort; exit 0; }
+          done
+          echo "Push non riuscito dopo i tentativi: non blocco il run."
