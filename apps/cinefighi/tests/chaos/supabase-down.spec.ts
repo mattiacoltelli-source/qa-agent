@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { clearBrowserStorage } from "../../../../core/storage.ts";
 import { abortRoute } from "../../../../core/network.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Chaos test" (vedi apps/cinetracker/tests/chaos/ per la spiegazione della
 // categoria): Supabase irraggiungibile al boot, cache fredda (nessun
@@ -28,14 +29,14 @@ test.describe("CineFighi — Supabase irraggiungibile", () => {
     // init() fa due fetch falliti in sequenza (utenti, poi libreria), ognuno
     // con il proprio avviso — verifichiamo entrambi, non solo il primo.
     await expect(
-      page.locator(".toast.error", { hasText: "Impossibile contattare il server" })
+      page.locator(S.toastError, { hasText: "Impossibile contattare il server" })
     ).toBeVisible();
     await expect(
-      page.locator(".toast.error", { hasText: "Impossibile aggiornare la libreria" })
+      page.locator(S.toastError, { hasText: "Impossibile aggiornare la libreria" })
     ).toBeVisible();
 
     // Senza sessione salvata l'app deve proporre la scelta utente invece di
     // restare bloccata sullo splash.
-    await expect(page.locator("#userPickerOverlay")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(S.userPickerOverlay)).toBeVisible({ timeout: 10_000 });
   });
 });

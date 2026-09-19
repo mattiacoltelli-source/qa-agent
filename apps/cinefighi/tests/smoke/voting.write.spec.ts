@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { ensureQaUserSelected, firstAddableSearchCard, search } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Questi test SCRIVONO sul database Supabase condiviso dal gruppo CineFighi:
 // le credenziali sono hardcoded nel bundle JS dell'app, quindi non esiste un
@@ -40,32 +41,32 @@ test.describe("CineFighi — voto e libreria @write", () => {
     // di rete) salta il cleanup qui sotto e lascia il residuo alla sola rete
     // di sicurezza della CI (scripts/cleanup-write-residue.mjs), invece che
     // ripulirlo subito.
-    await firstCard.locator('button[data-status="seen"]').click();
+    await firstCard.locator(S.buttonStatusSeen).click();
 
     try {
       // handleAddFromSearch apre automaticamente il dettaglio del titolo
       // appena salvato, ma prima aspetta l'insert su Supabase: il timeout di
       // default (5s) ha già dato un flake in CI sotto latenza di rete;
       // allineato ai 10s già usati altrove nella suite per attese di rete.
-      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
 
       // Slider 0–10 step 0.5: il valore mostrato deve corrispondere esattamente.
-      await page.locator("#detailVoteSlider").fill(expectedVote);
-      await page.locator("#detailCommentInput").fill("Voto di test automatico (QA)");
-      await page.locator("#detailSaveVoteBtn").click();
+      await page.locator(S.detailVoteSlider).fill(expectedVote);
+      await page.locator(S.detailCommentInput).fill("Voto di test automatico (QA)");
+      await page.locator(S.detailSaveVoteBtn).click();
 
       // Da c115604: niente più animazione "gettone che vola", solo un toast
       // semplice — mai verificato finora.
-      await expect(page.locator("#toastWrap .toast .toast__text")).toHaveText("Voto salvato");
-      await expect(page.locator("#detailVoteValue")).toHaveText(expectedVote);
+      await expect(page.locator(S.toastWrapToastText)).toHaveText("Voto salvato");
+      await expect(page.locator(S.detailVoteValue)).toHaveText(expectedVote);
 
-      const myVoteRow = page.locator(".vote-row", { hasText: "(tu)" });
+      const myVoteRow = page.locator(S.voteRow, { hasText: "(tu)" });
       await expect(myVoteRow).toBeVisible();
-      await expect(myVoteRow.locator(".vote-row__score")).toHaveText(expectedVote);
+      await expect(myVoteRow.locator(S.voteRowScore)).toHaveText(expectedVote);
     } finally {
-      await page.locator("#detailRemoveBtn").click();
-      await page.locator("#confirmYesBtn").click();
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await page.locator(S.detailRemoveBtn).click();
+      await page.locator(S.confirmYesBtn).click();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 
@@ -79,12 +80,12 @@ test.describe("CineFighi — voto e libreria @write", () => {
     await search(page, "Inception");
     const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
-    await firstCard.locator('button[data-status="seen"]').click();
+    await firstCard.locator(S.buttonStatusSeen).click();
 
     try {
-      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
-      const statusBtn = page.locator("#detailStatusBtn");
-      const removeBtn = page.locator("#detailRemoveBtn");
+      await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
+      const statusBtn = page.locator(S.detailStatusBtn);
+      const removeBtn = page.locator(S.detailRemoveBtn);
       await expect(statusBtn).toHaveText("Segna come non visto");
       await expect(removeBtn).toHaveText("Rimuovi");
 
@@ -93,7 +94,7 @@ test.describe("CineFighi — voto e libreria @write", () => {
       await expect(statusBtn).toHaveText("✓ Segna come visto");
       await expect(removeBtn).toHaveText("Rimuovi dalla mia watchlist");
       // Il titolo resta in libreria, solo lo status cambia (niente ritorno a home).
-      await expect(page.locator("#screen-detail")).toBeVisible();
+      await expect(page.locator(S.screenDetail)).toBeVisible();
     } finally {
       // A differenza degli altri test qui sopra, il demote riuscito ha
       // portato item.status a "watchlist": da fc82451, handleRemove() in
@@ -104,16 +105,16 @@ test.describe("CineFighi — voto e libreria @write", () => {
       // non compare mai. Se invece il demote non fosse arrivato in fondo
       // (un assert sopra fallito a metà try, titolo ancora "seen"), la
       // conferma pesante torna a comparire — gestiamo entrambi i casi.
-      await page.locator("#detailRemoveBtn").click();
+      await page.locator(S.detailRemoveBtn).click();
       const confirmShown = await page
-        .locator("#confirmOverlay")
+        .locator(S.confirmOverlay)
         .waitFor({ state: "visible", timeout: 2_000 })
         .then(() => true)
         .catch(() => false);
       if (confirmShown) {
-        await page.locator("#confirmYesBtn").click();
+        await page.locator(S.confirmYesBtn).click();
       }
-      await expect(page.locator("#screen-home")).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(S.screenHome)).toBeVisible({ timeout: 10_000 });
     }
   });
 
@@ -126,18 +127,18 @@ test.describe("CineFighi — voto e libreria @write", () => {
     await search(page, "Inception");
     const firstCard = firstAddableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("#searchClearBtn")).toBeVisible();
-    await firstCard.locator('button[data-status="seen"]').click();
+    await expect(page.locator(S.searchClearBtn)).toBeVisible();
+    await firstCard.locator(S.buttonStatusSeen).click();
 
     try {
-      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
-      await expect(page.locator("#searchInput")).toHaveValue("");
-      await expect(page.locator("#searchClearBtn")).toBeHidden();
-      await expect(page.locator(".search-input-wrap")).not.toHaveClass(/has-value/);
+      await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(S.searchInput)).toHaveValue("");
+      await expect(page.locator(S.searchClearBtn)).toBeHidden();
+      await expect(page.locator(S.searchInputWrap)).not.toHaveClass(/has-value/);
     } finally {
-      await page.locator("#detailRemoveBtn").click();
-      await page.locator("#confirmYesBtn").click();
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await page.locator(S.detailRemoveBtn).click();
+      await page.locator(S.confirmYesBtn).click();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 
@@ -148,23 +149,23 @@ test.describe("CineFighi — voto e libreria @write", () => {
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
     // Vedi commento gemello nel test precedente: il try/finally copre anche
     // l'attesa di #screen-detail, non solo i passi dopo.
-    await firstCard.locator('button[data-status="seen"]').click();
+    await firstCard.locator(S.buttonStatusSeen).click();
 
     try {
-      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
-      await page.locator("#detailVoteSlider").fill("6");
-      await page.locator("#detailSaveVoteBtn").click();
-      await expect(page.locator(".vote-row", { hasText: "(tu)" })).toBeVisible();
+      await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
+      await page.locator(S.detailVoteSlider).fill("6");
+      await page.locator(S.detailSaveVoteBtn).click();
+      await expect(page.locator(S.voteRow, { hasText: "(tu)" })).toBeVisible();
 
-      await page.locator("#detailClearVoteBtn").click();
-      await expect(page.locator("#toastWrap .toast .toast__text")).toHaveText("Voto rimosso");
-      await expect(page.locator(".vote-row", { hasText: "(tu)" })).toHaveCount(0);
+      await page.locator(S.detailClearVoteBtn).click();
+      await expect(page.locator(S.toastWrapToastText)).toHaveText("Voto rimosso");
+      await expect(page.locator(S.voteRow, { hasText: "(tu)" })).toHaveCount(0);
       // Il titolo resta in libreria (non torna alla schermata home).
-      await expect(page.locator("#screen-detail")).toBeVisible();
+      await expect(page.locator(S.screenDetail)).toBeVisible();
     } finally {
-      await page.locator("#detailRemoveBtn").click();
-      await page.locator("#confirmYesBtn").click();
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await page.locator(S.detailRemoveBtn).click();
+      await page.locator(S.confirmYesBtn).click();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 });

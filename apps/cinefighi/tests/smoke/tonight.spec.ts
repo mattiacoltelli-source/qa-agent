@@ -11,6 +11,7 @@ import {
   toggleTonightPerson,
   tonightPeopleRow,
 } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Stasera" legge lo storico voti REALE su Supabase, che persiste tra una
 // run e l'altra (i test @write puliscono i titoli che aggiungono, ma non
@@ -30,16 +31,16 @@ test.describe("CineFighi — Stasera cosa guardo (TMDB discover live)", () => {
   });
 
   test("il pulsante consigli produce sempre un esito valido, mai un errore silenzioso o un caricamento infinito", async ({ page }) => {
-    await page.locator("#tonightBtn").click();
-    const result = page.locator("#tonightResult");
+    await page.locator(S.tonightBtn).click();
+    const result = page.locator(S.tonightResult);
     // Il testo di caricamento reale (app.js) è "🔍 Sto cercando 6 titoli
     // adatti…" — stesso fix del file gemello in CineTracker
     // (tonight.spec.ts), dove la stringa sbagliata ha causato un
     // fallimento reale in CI (hintVisible letto a metà del re-render).
     await expect(result).not.toContainText("Sto cercando", { timeout: 15_000 });
 
-    const hint = result.locator(".tonight__hint");
-    const cards = result.locator(".poster-card");
+    const hint = result.locator(S.tonightHint);
+    const cards = result.locator(S.posterCard);
     const hintVisible = await hint.isVisible().catch(() => false);
     const cardCount = await cards.count();
 
@@ -56,7 +57,7 @@ test.describe("CineFighi — Stasera cosa guardo (TMDB discover live)", () => {
       // solo sui profili veri.
       expect(cardCount).toBeGreaterThan(0);
       expect(cardCount).toBeLessThanOrEqual(6);
-      await expect(cards.first().locator(".tonight-card__affinity")).toBeVisible();
+      await expect(cards.first().locator(S.tonightCardAffinity)).toBeVisible();
     }
   });
 
@@ -67,7 +68,7 @@ test.describe("CineFighi — Stasera cosa guardo (TMDB discover live)", () => {
     // al singolare e il pannello è chiuso.
     await expect(page.locator("#tonightTitle")).toHaveText("Stasera cosa guardo?");
     await expect(page.locator("#tonightPeopleNames")).toHaveText("Tu");
-    await expect(page.locator("#tonightPeopleStack .avatar")).toHaveCount(1);
+    await expect(page.locator(S.tonightPeopleStackAvatar)).toHaveCount(1);
     await expect(page.locator("#tonightPeoplePanel")).toBeHidden();
 
     await toggleTonightPeoplePanel(page);
@@ -75,7 +76,7 @@ test.describe("CineFighi — Stasera cosa guardo (TMDB discover live)", () => {
 
     // Una riga per ogni membro del gruppo, la propria sempre attiva e non
     // disattivabile (sei sempre incluso).
-    const rows = page.locator("#tonightPeoplePanel .tonight-people-row");
+    const rows = page.locator(S.tonightPeopleRow);
     expect(await rows.count()).toBeGreaterThan(0);
     await expect(tonightPeopleRow(page, QA_USER)).toHaveClass(/active/);
     await expect(tonightPeopleRow(page, QA_USER)).not.toBeDisabled();
@@ -187,11 +188,11 @@ async function gotoFreshWithMockedGroup(
   await page.goto(".");
   await clearBrowserStorage(page);
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
   const picked = await selectExistingUser(page, QA_USER);
   if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
   await openScreen(page, "tonight");
-  await page.locator("#tonightPeopleStack .avatar").first().waitFor({ state: "visible" });
+  await page.locator(S.tonightPeopleStackAvatar).first().waitFor({ state: "visible" });
 }
 
 test.describe("CineFighi — Stasera, modalità di gruppo (libreria mockata)", () => {
@@ -215,7 +216,7 @@ test.describe("CineFighi — Stasera, modalità di gruppo (libreria mockata)", (
       "Consigli basati sui gusti di 2 persone."
     );
     await expect(page.locator("#tonightPeopleNames")).toHaveText(`Tu, ${OTHER_USER}`);
-    await expect(page.locator("#tonightPeopleStack .avatar")).toHaveCount(2);
+    await expect(page.locator(S.tonightPeopleStackAvatar)).toHaveCount(2);
     // Trasparenza (a1cff6e): la nota dice quanti voti ha ciascuno, così si
     // capisce su che base sono calcolati i consigli.
     await expect(page.locator("#tonightPeopleNote")).toHaveText(
@@ -223,7 +224,7 @@ test.describe("CineFighi — Stasera, modalità di gruppo (libreria mockata)", (
     );
     // Cambiare i presenti invalida i consigli mostrati: tornano all'invito
     // iniziale invece di restare quelli di un'altra composizione.
-    await expect(page.locator("#tonightResult .tonight__hint")).toHaveText(
+    await expect(page.locator(S.tonightResultTonightHint)).toHaveText(
       "Premi un pulsante per ricevere un consiglio."
     );
 
@@ -243,8 +244,8 @@ test.describe("CineFighi — Stasera, modalità di gruppo (libreria mockata)", (
     await expect(row).toBeDisabled();
     // Il conteggio "1/50" compare solo per chi è sotto soglia: è la
     // spiegazione del perché la riga è spenta, senza doverla indovinare.
-    await expect(row.locator(".votes")).toHaveText(`1/${MIN_VOTED_FOR_GROUP_TONIGHT}`);
-    await expect(tonightPeopleRow(page, OTHER_USER).locator(".votes")).toHaveCount(0);
+    await expect(row.locator(S.votes)).toHaveText(`1/${MIN_VOTED_FOR_GROUP_TONIGHT}`);
+    await expect(tonightPeopleRow(page, OTHER_USER).locator(S.votes)).toHaveCount(0);
 
     // Un click su una riga disabilitata non deve cambiare nulla.
     await row.click({ force: true });
@@ -260,24 +261,24 @@ test.describe("CineFighi — Stasera, modalità di gruppo (libreria mockata)", (
     await toggleTonightPerson(page, OTHER_USER);
     await toggleTonightPeoplePanel(page);
 
-    await page.locator("#tonightBtn").click();
-    const result = page.locator("#tonightResult");
+    await page.locator(S.tonightBtn).click();
+    const result = page.locator(S.tonightResult);
     await expect(result).not.toContainText("Sto cercando", { timeout: 15_000 });
 
     // 3 fasce temporali fisse × 1/2/3 titoli (dfd034a): esattamente 6 con
     // un pool abbastanza ampio come quello mockato qui.
-    const cards = result.locator(".poster-card");
+    const cards = result.locator(S.posterCard);
     await expect(cards).toHaveCount(6);
 
     for (let i = 0; i < 6; i++) {
       const card = cards.nth(i);
       // Affinità di gruppo = MINIMO tra i presenti, non media: un titolo
       // che piace a uno e non all'altro non è un buon consiglio comune.
-      await expect(card.locator(".tonight-card__affinity")).toHaveText(/^\d+%$/);
-      await expect(card.locator(".tonight-card__reason")).toBeVisible();
+      await expect(card.locator(S.tonightCardAffinity)).toHaveText(/^\d+%$/);
+      await expect(card.locator(S.tonightCardReason)).toBeVisible();
       // Il breakdown per persona esiste SOLO in gruppo (a1cff6e): il voto
       // previsto per ciascuno, dai profili non normalizzati.
-      const breakdown = card.locator(".tonight-card__breakdown");
+      const breakdown = card.locator(S.tonightCardBreakdown);
       await expect(breakdown).toContainText(QA_USER);
       await expect(breakdown).toContainText(OTHER_USER);
       await expect(breakdown).toHaveText(/\d+%.+\d+%/);
@@ -286,13 +287,13 @@ test.describe("CineFighi — Stasera, modalità di gruppo (libreria mockata)", (
     // Ordinate per anno crescente (finalSix in app.js), non per punteggio:
     // è la forma con cui vengono presentate al gruppo.
     const years = await cards
-      .locator(".poster-card__meta")
+      .locator(S.posterCardMeta)
       .evaluateAll((els) => els.map((el) => Number((el.textContent ?? "").slice(0, 4))));
     expect(years).toEqual([...years].sort((a, b) => a - b));
 
     // Nessun duplicato tra i 6 (usedKeys in app.js).
     const titles = await cards
-      .locator(".poster-card__title")
+      .locator(S.posterCardTitle)
       .evaluateAll((els) => els.map((el) => el.textContent?.trim() ?? ""));
     expect(new Set(titles).size).toBe(6);
   });

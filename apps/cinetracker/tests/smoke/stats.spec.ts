@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { mockJson } from "../../../../core/network.ts";
 import { gotoFresh, openScreen } from "../../fixtures/cinetracker-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Verifica lo schermo Statistiche: card numeriche, media voto per genere
 // (★, aggiunta di recente) e podio/classifica separati Film/Serie TV.
@@ -65,7 +66,7 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await mockJson(page, /rest\/v1\/Coltel/, COLTEL_ROWS);
   await gotoFresh(page);
   await openScreen(page, "stats");
-  await page.locator("#genreBars .genre-bubble").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.genreBarsGenreBubble).first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
 test.describe("CineTracker — Statistiche", () => {
@@ -79,57 +80,57 @@ test.describe("CineTracker — Statistiche", () => {
 
     // Il toggle è in vista "Bolle" di default (vedi commento sopra).
     await expect(
-      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bubbles"]')
+      page.locator(S.genreViewToggleGenreViewBtnBubbles)
     ).toHaveClass(/active/);
     await expect(page.locator("#genreLegend")).toContainText("Riempimento");
 
-    const bubbles = page.locator("#genreBars .genre-bubble");
+    const bubbles = page.locator(S.genreBarsGenreBubble);
     await expect(bubbles).toHaveCount(2);
 
     const thriller = bubbles.nth(0);
-    await expect(thriller.locator(".genre-bubble-text .name")).toHaveText("THRILLER");
-    await expect(thriller.locator(".genre-bubble-text .count")).toHaveText("4");
-    await expect(thriller.locator(".genre-bubble-text .label")).toHaveText("titoli");
+    await expect(thriller.locator(S.genreBubbleTextName)).toHaveText("THRILLER");
+    await expect(thriller.locator(S.genreBubbleTextCount)).toHaveText("4");
+    await expect(thriller.locator(S.genreBubbleTextLabel)).toHaveText("titoli");
     // Il voto medio resta nascosto finché la bolla non viene toccata.
-    await expect(thriller.locator(".genre-bubble-text .vote")).toBeHidden();
+    await expect(thriller.locator(S.genreBubbleTextVote)).toBeHidden();
     await thriller.click();
-    await expect(thriller.locator(".genre-bubble-text .vote")).toBeVisible();
-    await expect(thriller.locator(".genre-bubble-text .vote")).toHaveText("★ 7,5");
+    await expect(thriller.locator(S.genreBubbleTextVote)).toBeVisible();
+    await expect(thriller.locator(S.genreBubbleTextVote)).toHaveText("★ 7,5");
 
     const commedia = bubbles.nth(1);
-    await expect(commedia.locator(".genre-bubble-text .name")).toHaveText("COMMEDIA");
-    await expect(commedia.locator(".genre-bubble-text .count")).toHaveText("1");
+    await expect(commedia.locator(S.genreBubbleTextName)).toHaveText("COMMEDIA");
+    await expect(commedia.locator(S.genreBubbleTextCount)).toHaveText("1");
     await commedia.click();
-    await expect(commedia.locator(".genre-bubble-text .vote")).toHaveText("★ 9,0");
+    await expect(commedia.locator(S.genreBubbleTextVote)).toHaveText("★ 9,0");
     // Solo una bolla attiva alla volta: aprirne una chiude l'altra.
-    await expect(thriller.locator(".genre-bubble-text .vote")).toBeHidden();
+    await expect(thriller.locator(S.genreBubbleTextVote)).toBeHidden();
   });
 
   test("vista Barre per genere (toggle #genreViewToggle)", async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
 
-    await page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bars"]').click();
+    await page.locator(S.genreViewToggleGenreViewBtnBars).click();
     await expect(
-      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bars"]')
+      page.locator(S.genreViewToggleGenreViewBtnBars)
     ).toHaveClass(/active/);
     await expect(page.locator("#genreLegend")).toHaveText("★ media voto");
 
-    const bars = page.locator("#genreBars .bar-row");
+    const bars = page.locator(S.genreBarsBarRow);
     await expect(bars).toHaveCount(2);
-    await expect(bars.nth(0).locator(".bar-row__name")).toHaveText("Thriller");
+    await expect(bars.nth(0).locator(S.barRowName)).toHaveText("Thriller");
     // .bar-row__avg è annidato dentro .bar-row__count (stesso span), non un
     // fratello separato come in CineFighi — vedi ui.js::renderGenreBars.
-    await expect(bars.nth(0).locator(".bar-row__count")).toContainText("4 titoli");
-    await expect(bars.nth(0).locator(".bar-row__avg")).toHaveText("★ 7,5");
-    await expect(bars.nth(1).locator(".bar-row__name")).toHaveText("Commedia");
-    await expect(bars.nth(1).locator(".bar-row__count")).toContainText("1 titolo");
-    await expect(bars.nth(1).locator(".bar-row__avg")).toHaveText("★ 9,0");
+    await expect(bars.nth(0).locator(S.barRowCount)).toContainText("4 titoli");
+    await expect(bars.nth(0).locator(S.barRowAvg)).toHaveText("★ 7,5");
+    await expect(bars.nth(1).locator(S.barRowName)).toHaveText("Commedia");
+    await expect(bars.nth(1).locator(S.barRowCount)).toContainText("1 titolo");
+    await expect(bars.nth(1).locator(S.barRowAvg)).toHaveText("★ 9,0");
 
     // Il toggle persiste in localStorage: riaprendo Statistiche (senza
     // ricaricare la pagina) resta su "Barre" invece di tornare a "Bolle".
     await openScreen(page, "home");
     await openScreen(page, "stats");
-    await expect(page.locator("#genreBars .bar-row")).toHaveCount(2);
+    await expect(page.locator(S.genreBarsBarRow)).toHaveCount(2);
   });
 
   test("classifica Film: podio ordinato per voto, il tab Serie TV è un pannello separato", async ({
@@ -142,13 +143,13 @@ test.describe("CineTracker — Statistiche", () => {
     await expect(page.locator("#rankingPanelMovies")).toBeVisible();
     await expect(page.locator("#rankingPanelSeries")).toBeHidden();
     await expect(page.locator("#top100CountBadge")).toHaveText("3");
-    const moviePodium = page.locator("#top100Podium .podium-card");
+    const moviePodium = page.locator(S.top100PodiumPodiumCard);
     await expect(moviePodium).toHaveCount(3);
-    await expect(moviePodium.nth(0).locator(".podium-card__title")).toHaveText("Film C QA");
-    await expect(moviePodium.nth(0).locator(".podium-card__vote")).toHaveText("★ 9");
-    await expect(moviePodium.nth(1).locator(".podium-card__title")).toHaveText("Film A QA");
-    await expect(moviePodium.nth(2).locator(".podium-card__title")).toHaveText("Film B QA");
-    await expect(page.locator("#top100List .rank-row")).toHaveCount(0);
+    await expect(moviePodium.nth(0).locator(S.podiumCardTitle)).toHaveText("Film C QA");
+    await expect(moviePodium.nth(0).locator(S.podiumCardVote)).toHaveText("★ 9");
+    await expect(moviePodium.nth(1).locator(S.podiumCardTitle)).toHaveText("Film A QA");
+    await expect(moviePodium.nth(2).locator(S.podiumCardTitle)).toHaveText("Film B QA");
+    await expect(page.locator(S.top100ListRankRow)).toHaveCount(0);
     // Con solo 3 film (tutti in podio) non c'è nulla da espandere.
     await expect(page.locator("#top100ExpandBtn")).toHaveClass(/hidden/);
 
@@ -158,11 +159,11 @@ test.describe("CineTracker — Statistiche", () => {
     await expect(page.locator("#rankingPanelSeries")).toBeVisible();
     await expect(page.locator("#rankingPanelMovies")).toBeHidden();
     await expect(page.locator("#top100SeriesCountBadge")).toHaveText("2");
-    const seriesPodium = page.locator("#top100SeriesPodium .podium-card");
+    const seriesPodium = page.locator(S.top100SeriesPodiumPodiumCard);
     await expect(seriesPodium).toHaveCount(2);
-    await expect(seriesPodium.nth(0).locator(".podium-card__title")).toHaveText("Serie B QA");
-    await expect(seriesPodium.nth(0).locator(".podium-card__vote")).toHaveText("★ 9");
-    await expect(seriesPodium.nth(1).locator(".podium-card__title")).toHaveText("Serie A QA");
+    await expect(seriesPodium.nth(0).locator(S.podiumCardTitle)).toHaveText("Serie B QA");
+    await expect(seriesPodium.nth(0).locator(S.podiumCardVote)).toHaveText("★ 9");
+    await expect(seriesPodium.nth(1).locator(S.podiumCardTitle)).toHaveText("Serie A QA");
   });
 
   test('classifica: "Mostra tutti"/"Mostra meno" oltre i primi 4 sotto il podio', async ({ page }) => {
@@ -190,35 +191,35 @@ test.describe("CineTracker — Statistiche", () => {
     await mockJson(page, /rest\/v1\/Coltel/, RANK_SEEN.map((data) => ({ list: "seen", data })));
     await gotoFresh(page);
     await openScreen(page, "stats");
-    await page.locator("#top100Podium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.top100PodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
     await expect(page.locator("#top100CountBadge")).toHaveText("10");
-    await expect(page.locator("#top100Podium .podium-card")).toHaveCount(3);
+    await expect(page.locator(S.top100PodiumPodiumCard)).toHaveCount(3);
 
-    const list = page.locator("#top100List .rank-row");
+    const list = page.locator(S.top100ListRankRow);
     const expandBtn = page.locator("#top100ExpandBtn");
     await expect(list).toHaveCount(4);
-    await expect(list.first().locator(".rank-row__title")).toHaveText("Rank D");
-    await expect(list.first().locator(".rank-row__pos")).toHaveText("4");
+    await expect(list.first().locator(S.rankRowTitle)).toHaveText("Rank D");
+    await expect(list.first().locator(S.rankRowPos)).toHaveText("4");
     await expect(expandBtn).not.toHaveClass(/hidden/);
-    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra tutti");
-    await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveText("· 3");
+    await expect(expandBtn.locator(S.rankExpandBtnLabel)).toHaveText("Mostra tutti");
+    await expect(expandBtn.locator(S.rankExpandBtnCount)).toHaveText("· 3");
 
     await expandBtn.click();
     await expect(list).toHaveCount(7);
-    await expect(list.last().locator(".rank-row__title")).toHaveText("Rank J");
-    await expect(list.last().locator(".rank-row__pos")).toHaveText("10");
-    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra meno");
-    await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveClass(/hidden/);
+    await expect(list.last().locator(S.rankRowTitle)).toHaveText("Rank J");
+    await expect(list.last().locator(S.rankRowPos)).toHaveText("10");
+    await expect(expandBtn.locator(S.rankExpandBtnLabel)).toHaveText("Mostra meno");
+    await expect(expandBtn.locator(S.rankExpandBtnCount)).toHaveClass(/hidden/);
 
     await expandBtn.click();
     await expect(list).toHaveCount(4);
-    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra tutti");
+    await expect(expandBtn.locator(S.rankExpandBtnLabel)).toHaveText("Mostra tutti");
 
     // Pannello Serie TV: solo 2 titoli, tutti in podio, niente da espandere.
     await page.locator("#rankingToggleSeries").click();
-    await expect(page.locator("#top100SeriesPodium .podium-card")).toHaveCount(2);
-    await expect(page.locator("#top100SeriesList .rank-row")).toHaveCount(0);
+    await expect(page.locator(S.top100SeriesPodiumPodiumCard)).toHaveCount(2);
+    await expect(page.locator(S.top100SeriesListRankRow)).toHaveCount(0);
     await expect(page.locator("#top100SeriesExpandBtn")).toHaveClass(/hidden/);
   });
 });
@@ -257,26 +258,26 @@ test.describe("CineTracker — Statistiche — stabilità su render ripetuti", (
     // #screen-stats nascosto.
     for (let i = 0; i < 3; i++) {
       await openScreen(page, "stats");
-      await page.locator("#top100Podium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+      await page.locator(S.top100PodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
       await page.waitForTimeout(600);
       await openScreen(page, "home");
       await page.waitForTimeout(600);
     }
     await openScreen(page, "stats");
-    await page.locator("#top100Podium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.top100PodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const list = page.locator("#top100List .rank-row");
+    const list = page.locator(S.top100ListRankRow);
     const expandBtn = page.locator("#top100ExpandBtn");
     await expect(list).toHaveCount(4);
 
     await expandBtn.click();
     await expect(list).toHaveCount(7);
-    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra meno");
+    await expect(expandBtn.locator(S.rankExpandBtnLabel)).toHaveText("Mostra meno");
 
     // E il ritorno funziona allo stesso modo (un click = un toggle, non due).
     await expandBtn.click();
     await expect(list).toHaveCount(4);
-    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra tutti");
+    await expect(expandBtn.locator(S.rankExpandBtnLabel)).toHaveText("Mostra tutti");
   });
 });
 
@@ -310,18 +311,18 @@ test.describe("CineTracker — Statistiche — sei generi al massimo", () => {
     await mockJson(page, /rest\/v1\/Coltel/, MANY_GENRE_SEEN.map((data) => ({ list: "seen", data })));
     await gotoFresh(page);
     await openScreen(page, "stats");
-    await page.locator("#genreBars .genre-bubble").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.genreBarsGenreBubble).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const bubbles = page.locator("#genreBars .genre-bubble");
+    const bubbles = page.locator(S.genreBarsGenreBubble);
     await expect(bubbles).toHaveCount(6);
-    await expect(bubbles.nth(0).locator(".genre-bubble-text .name")).toHaveText("DRAMA");
-    await expect(bubbles.nth(5).locator(".genre-bubble-text .name")).toHaveText("FANTASCIENZA");
+    await expect(bubbles.nth(0).locator(S.genreBubbleTextName)).toHaveText("DRAMA");
+    await expect(bubbles.nth(5).locator(S.genreBubbleTextName)).toHaveText("FANTASCIENZA");
     await expect(page.locator("#genreBars")).not.toContainText("WESTERN");
 
     // Stesso taglio nella vista Barre: sono gli stessi topGenres disegnati
     // in due modi (renderGenreView in app.js), non due calcoli diversi.
-    await page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bars"]').click();
-    await expect(page.locator("#genreBars .bar-row")).toHaveCount(6);
+    await page.locator(S.genreViewToggleGenreViewBtnBars).click();
+    await expect(page.locator(S.genreBarsBarRow)).toHaveCount(6);
     await expect(page.locator("#genreBars")).not.toContainText("Western");
   });
 });

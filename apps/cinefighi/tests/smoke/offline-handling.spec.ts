@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { clearBrowserStorage } from "../../../../core/storage.ts";
 import { mockJson } from "../../../../core/network.ts";
 import { QA_USER, selectExistingUser } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // A differenza di CineTracker, CineFighi non ha un banner offline globale
 // (nessun elemento #offlineBanner: verificato sul sorgente, app.js non lo
@@ -61,10 +62,10 @@ test.describe("CineFighi — gestione offline per azione (nessun banner globale)
     await page.goto(".");
     await clearBrowserStorage(page);
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
     const picked = await selectExistingUser(page, QA_USER);
     if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-    await page.locator('.nav__btn[data-screen="tonight"]').click();
+    await page.locator(S.navBtnScreenTonight).click();
   });
 
   test("chiedere consigli da offline mostra un invito a riconnettersi, non resta bloccata in silenzio", async ({
@@ -79,8 +80,8 @@ test.describe("CineFighi — gestione offline per azione (nessun banner globale)
     // una vera fetch di rete.
     await page.waitForFunction(() => !navigator.onLine);
 
-    await page.locator("#tonightBtn").click();
-    await expect(page.locator("#tonightResult")).toContainText(/offline/i, { timeout: 10_000 });
+    await page.locator(S.tonightBtn).click();
+    await expect(page.locator(S.tonightResult)).toContainText(/offline/i, { timeout: 10_000 });
 
     await context.setOffline(false);
   });

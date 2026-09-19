@@ -9,6 +9,7 @@ import {
   snapshotStatus,
   ASSETS,
 } from "../../fixtures/prova-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Nessun mock qui: la dashboard legge dati reali generati dalla pipeline
 // Python (GitHub Actions), non un backend che possiamo controllare da questi
@@ -41,7 +42,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
       await selectAsset(page, asset);
       const card = assetCard(page, asset);
       await expect(card).toBeVisible();
-      await expect(card.locator(".badge-accuracy")).toContainText("Accuratezza:");
+      await expect(card.locator(S.badgeAccuracy)).toContainText("Accuratezza:");
     }
   });
 
@@ -50,7 +51,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
   }) => {
     await gotoFresh(page);
 
-    await expect(page.locator("#asset-filter .horizon-filter-btn")).toHaveCount(ASSETS.length);
+    await expect(page.locator(S.assetFilterHorizonBtn)).toHaveCount(ASSETS.length);
     await expect(assetFilterButton(page, ASSETS[0])).toHaveClass(/active/);
     for (const asset of ASSETS.slice(1)) {
       await expect(assetFilterButton(page, asset)).not.toHaveClass(/active/);
@@ -89,7 +90,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
       await selectAsset(page, asset);
       const note = dataStatusNote(page, asset);
       if (await note.isVisible()) {
-        await expect(note.locator(".icon svg")).toBeVisible();
+        await expect(note.locator(S.iconSvg)).toBeVisible();
         await expect(note).toContainText("mancavano");
       } else {
         await expect(note).toBeHidden();

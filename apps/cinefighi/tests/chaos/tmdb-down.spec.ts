@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { ensureQaUserSelected, search } from "../../fixtures/cinefighi-page.ts";
 import { abortRoute } from "../../../../core/network.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Chaos test" (vedi apps/cinetracker/tests/chaos/ per la spiegazione della
 // categoria): TMDB irraggiungibile durante una ricerca. doSearch() in
@@ -24,7 +25,7 @@ test.describe("CineFighi — TMDB irraggiungibile durante una ricerca", () => {
     // solo non innescherebbe mai il catch che vogliamo verificare qui.
     await search(page, "Inception");
 
-    const empty = page.locator("#resultsEmpty");
+    const empty = page.locator(S.resultsEmpty);
     await expect(empty).toBeVisible({ timeout: 10_000 });
     await expect(empty).toContainText("Errore di ricerca");
   });

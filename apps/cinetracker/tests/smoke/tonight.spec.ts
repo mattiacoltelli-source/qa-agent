@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { gotoFresh, openScreen } from "../../fixtures/cinetracker-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Stasera cosa guardo" legge lo storico voti REALE dell'utente su Supabase
 // (CineTracker è single-user, nessun account di test separato dietro cui
@@ -28,8 +29,8 @@ test.describe("CineTracker — Stasera cosa guardo (TMDB discover live)", () => 
     // cardCount 6 insieme).
     await expect(result).not.toContainText("Sto cercando", { timeout: 15_000 });
 
-    const hint = result.locator(".tonight__hint");
-    const cards = result.locator(".poster-card");
+    const hint = result.locator(S.tonightHint);
+    const cards = result.locator(S.posterCard);
     const hintVisible = await hint.isVisible().catch(() => false);
     const cardCount = await cards.count();
 
@@ -43,7 +44,7 @@ test.describe("CineTracker — Stasera cosa guardo (TMDB discover live)", () => 
       // ciascuno con una % di affinità.
       expect(cardCount).toBeGreaterThan(0);
       expect(cardCount).toBeLessThanOrEqual(6);
-      await expect(cards.first().locator(".tonight-card__affinity")).toBeVisible();
+      await expect(cards.first().locator(S.tonightCardAffinity)).toBeVisible();
     }
   });
 
@@ -71,8 +72,8 @@ test.describe("CineTracker — Stasera cosa guardo (TMDB discover live)", () => 
     // #recommendBtn se si aspettasse la stringa sbagliata.
     await expect(result).not.toContainText("Sto cercando qualcosa di nuovo", { timeout: 15_000 });
 
-    const hint = result.locator(".tonight__hint");
-    const card = result.locator(".tonight-solo .poster-card");
+    const hint = result.locator(S.tonightHint);
+    const card = result.locator(S.tonightSoloPosterCard);
     const hintVisible = await hint.isVisible().catch(() => false);
     const cardVisible = await card.isVisible().catch(() => false);
 
@@ -84,11 +85,11 @@ test.describe("CineTracker — Stasera cosa guardo (TMDB discover live)", () => 
       // "Aggiungi almeno 3 titoli visti..." è l'unico hint atteso se invece
       // la libreria reale è sotto soglia — qui la card è comparsa, quindi
       // verifichiamone la struttura reale (renderDiscoverResult in ui.js).
-      await expect(card.locator(".poster-card__title")).toContainText("✨");
-      await expect(card.locator(".tonight-card__reason")).toBeVisible();
-      await expect(card.locator(".action-watch")).toBeVisible();
-      await expect(card.locator(".action-seen")).toBeVisible();
-      await expect(card.locator(".action-details")).toHaveText("Scheda →");
+      await expect(card.locator(S.posterCardTitle)).toContainText("✨");
+      await expect(card.locator(S.tonightCardReason)).toBeVisible();
+      await expect(card.locator(S.actionWatch)).toBeVisible();
+      await expect(card.locator(S.actionSeen)).toBeVisible();
+      await expect(card.locator(S.actionDetails)).toHaveText("Scheda →");
     }
   });
 
@@ -98,8 +99,8 @@ test.describe("CineTracker — Stasera cosa guardo (TMDB discover live)", () => 
     await page.locator("#classicBtn").click();
 
     const result = page.locator("#tonightSuggestion");
-    const hint = result.locator(".tonight__hint");
-    const card = result.locator(".tonight-solo .poster-card");
+    const hint = result.locator(S.tonightHint);
+    const card = result.locator(S.tonightSoloPosterCard);
     // suggestClassic() è puramente locale (nessun fetch): l'esito è immediato,
     // niente stato di caricamento intermedio da aspettare.
     const hintVisible = await hint.isVisible().catch(() => false);
@@ -112,9 +113,9 @@ test.describe("CineTracker — Stasera cosa guardo (TMDB discover live)", () => 
       // renderClassicResult in ui.js: titolo col prefisso 🏛️, voto e un
       // commento che dipende dal voto — qui verifichiamo solo la struttura,
       // non il commento esatto (dipende dal voto del titolo reale scelto).
-      await expect(card.locator(".poster-card__title")).toContainText("🏛️");
-      await expect(card.locator(".poster-card__meta")).toContainText("tuo voto:");
-      await expect(card.locator(".tonight-card__reason")).toBeVisible();
+      await expect(card.locator(S.posterCardTitle)).toContainText("🏛️");
+      await expect(card.locator(S.posterCardMeta)).toContainText("tuo voto:");
+      await expect(card.locator(S.tonightCardReason)).toBeVisible();
       // Apre il dettaglio del titolo, non un fetch esterno — coerente con
       // "classico" pescato dalla libreria già posseduta.
       await expect(card).toHaveClass(/open-stored-detail/);

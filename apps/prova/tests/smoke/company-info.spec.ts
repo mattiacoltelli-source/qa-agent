@@ -10,6 +10,7 @@ import {
   ROBOTICS_ASSETS,
   ASSETS,
 } from "../../fixtures/prova-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Da c5dd80a: ogni card (Tech e Trend strutturali) ha una tendina "Info
 // azienda" con dati statici verificati a mano (COMPANY_INFO in index.html:
@@ -27,10 +28,10 @@ test.describe("AI Predictor — tendina \"Info azienda\" per card", () => {
       await expect(panel).toHaveCount(1);
       await expect(panel).not.toHaveJSProperty("open", true);
 
-      await panel.locator("summary").click();
+      await panel.locator(S.summary).click();
       await expect(panel).toHaveJSProperty("open", true);
 
-      const body = panel.locator(".info-panel-body");
+      const body = panel.locator(S.infoPanelBody);
       await expect(body).toContainText("Sede:");
       await expect(body).toContainText("Fondata:");
       await expect(body).toContainText("Settore:");
@@ -65,8 +66,8 @@ test.describe("AI Predictor — tendina \"Info azienda\" per card", () => {
     for (const { key, label } of ROBOTICS_ASSETS) {
       await selectRoboticsAsset(page, key);
       const panel = companyInfoPanel(roboticsCard(page, key));
-      await panel.locator("summary").click();
-      const body = panel.locator(".info-panel-body");
+      await panel.locator(S.summary).click();
+      const body = panel.locator(S.infoPanelBody);
       await expect(body).toContainText("Settore:");
 
       const text = (await body.textContent()) ?? "";

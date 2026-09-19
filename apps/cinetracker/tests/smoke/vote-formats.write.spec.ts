@@ -7,6 +7,7 @@ import {
   removeCurrentDetail,
 } from "../../fixtures/cinetracker-page.ts";
 import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
+import { S } from "../../fixtures/selectors.ts";
 
 // Questi test scrivono nella libreria REALE dell'utente (Supabase "Coltel",
 // user_id fisso "default" — è la TUA collezione personale, non un dataset
@@ -53,16 +54,16 @@ test.describe("CineTracker — formati voto @write", () => {
       const card = firstAddableSearchCard(page);
       await expect(card).toBeVisible({ timeout: 10_000 });
       await addSearchResultAs(card, "seen");
-      await expect(page.locator("#screen-detail")).toBeVisible();
+      await expect(page.locator(S.screenDetail)).toBeVisible();
 
       try {
-        await page.locator("#detailVoteInput").fill(input);
-        await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
-        await page.locator("#detailSaveNoteBtn").click();
-        await expect(page.locator("#detailVoteInput")).toHaveValue(expectedLabel);
+        await page.locator(S.detailVoteInput).fill(input);
+        await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+        await page.locator(S.detailSaveNoteBtn).click();
+        await expect(page.locator(S.detailVoteInput)).toHaveValue(expectedLabel);
       } finally {
         await removeCurrentDetail(page);
-        await expect(page.locator("#screen-home")).toBeVisible();
+        await expect(page.locator(S.screenHome)).toBeVisible();
       }
     });
   }
@@ -74,16 +75,16 @@ test.describe("CineTracker — formati voto @write", () => {
     const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
     await addSearchResultAs(card, "seen");
-    await expect(page.locator("#screen-detail")).toBeVisible();
+    await expect(page.locator(S.screenDetail)).toBeVisible();
 
     try {
-      await page.locator("#detailVoteInput").fill("15");
-      await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
-      await page.locator("#detailSaveNoteBtn").click();
-      await expect(page.locator("#detailVoteInput")).toHaveValue("10");
+      await page.locator(S.detailVoteInput).fill("15");
+      await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+      await page.locator(S.detailSaveNoteBtn).click();
+      await expect(page.locator(S.detailVoteInput)).toHaveValue("10");
     } finally {
       await removeCurrentDetail(page);
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 
@@ -94,23 +95,23 @@ test.describe("CineTracker — formati voto @write", () => {
     const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
     await addSearchResultAs(card, "seen");
-    await expect(page.locator("#screen-detail")).toBeVisible();
+    await expect(page.locator(S.screenDetail)).toBeVisible();
 
     try {
-      await page.locator("#detailVoteInput").fill("7,5");
-      await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
-      await page.locator("#detailSaveNoteBtn").click();
-      await expect(page.locator("#detailVoteInput")).toHaveValue("7,5");
+      await page.locator(S.detailVoteInput).fill("7,5");
+      await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+      await page.locator(S.detailSaveNoteBtn).click();
+      await expect(page.locator(S.detailVoteInput)).toHaveValue("7,5");
 
-      await page.locator("#detailVoteInput").fill("abc");
-      await page.locator("#detailSaveNoteBtn").click();
+      await page.locator(S.detailVoteInput).fill("abc");
+      await page.locator(S.detailSaveNoteBtn).click();
       // validateVote() respinge l'input e la funzione ritorna prima di
       // salvare: il voto precedente ("7,5") resta quello effettivamente
       // persistito, l'utente viene avvisato con un toast di errore.
-      await expect(page.locator(".toast.error")).toBeVisible();
+      await expect(page.locator(S.toastError)).toBeVisible();
     } finally {
       await removeCurrentDetail(page);
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 });

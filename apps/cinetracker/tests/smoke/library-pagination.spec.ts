@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { clearBrowserStorage, seedLocalStorage } from "../../../../core/storage.ts";
 import { abortRoute } from "../../../../core/network.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Verifica il caricamento progressivo di "Vedi tutto" (app.js::doRenderLibrary/
 // renderNextLibraryPage/observeLibrarySentinel): con un archivio grande, la
@@ -38,7 +39,7 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await clearBrowserStorage(page);
   await seedLocalStorage(page, "cineTrackerDBCache", CACHE);
   await page.reload();
-  await page.locator(".app.app--ready").waitFor({ state: "attached", timeout: 10_000 });
+  await page.locator(S.appReady).waitFor({ state: "attached", timeout: 10_000 });
 }
 
 test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () => {
@@ -47,9 +48,9 @@ test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () =>
 
     await page.locator("#openSeenMovies").click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.libraryListListItem).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const rendered = await page.locator("#libraryList .list-item").count();
+    const rendered = await page.locator(S.libraryListListItem).count();
     expect(rendered).toBeGreaterThan(0);
     expect(rendered).toBeLessThan(200); // non tutto subito
   });
@@ -59,9 +60,9 @@ test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () =>
 
     await page.locator("#openSeenMovies").click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.libraryListListItem).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const initialCount = await page.locator("#libraryList .list-item").count();
+    const initialCount = await page.locator(S.libraryListListItem).count();
     expect(initialCount).toBeLessThan(200); // il primo blocco, non tutto
 
     // Ogni blocco richiede DUE cose in sequenza: uno scroll fino in fondo e
@@ -77,7 +78,7 @@ test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () =>
       .poll(
         async () => {
           await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-          return page.locator("#libraryList .list-item").count();
+          return page.locator(S.libraryListListItem).count();
         },
         { timeout: 20_000 }
       )
@@ -89,12 +90,12 @@ test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () =>
 
     await page.locator("#openSeenMovies").click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.libraryListListItem).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    await page.locator('.filter-pill[data-filter="series"]').click();
+    await page.locator(S.filterPillSeries).click();
     await page.waitForTimeout(300);
 
-    const rendered = await page.locator("#libraryList .list-item").count();
+    const rendered = await page.locator(S.libraryListListItem).count();
     // Le 50 serie TV mockate, non sommate ai 200 film già visti prima del cambio filtro.
     expect(rendered).toBeLessThanOrEqual(50);
     expect(rendered).toBeGreaterThan(0);
@@ -105,15 +106,15 @@ test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () =>
 
     await page.locator("#openSeenMovies").click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.libraryListListItem).first().waitFor({ state: "visible", timeout: 10_000 });
 
     await page.locator("#libraryBackBtn").click();
-    await page.locator("#screen-home").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#openWatchAll").click();
+    await page.locator(S.screenHome).waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.openWatchAll).click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
     await page.waitForTimeout(300);
 
-    await expect(page.locator("#libraryList .list-item")).toHaveCount(0);
+    await expect(page.locator(S.libraryListListItem)).toHaveCount(0);
     await expect(page.locator("#libraryEmpty")).toBeVisible();
   });
 });

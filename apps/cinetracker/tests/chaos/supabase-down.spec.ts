@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { clearBrowserStorage } from "../../../../core/storage.ts";
 import { abortRoute } from "../../../../core/network.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Chaos test": non verifica che l'app funzioni, verifica che DEGRADI bene
 // quando una dipendenza è irraggiungibile — categoria di test che oggi non
@@ -31,14 +32,14 @@ test.describe("CineTracker — Supabase irraggiungibile", () => {
     await page.reload({ waitUntil: "domcontentloaded" });
 
     await expect(
-      page.locator(".toast.error", { hasText: "Sincronizzazione non riuscita" })
+      page.locator(S.toastError, { hasText: "Sincronizzazione non riuscita" })
     ).toBeVisible();
 
     // Ora che abbiamo colto il toast, aspettiamo con calma che l'app sia
     // davvero pronta — e non basta "non essere bloccati": deve restare
     // navigabile, non solo mostrare un errore e poi restare inerte.
-    await page.locator(".app.app--ready").waitFor({ state: "attached", timeout: 15_000 });
-    await page.locator('.nav__btn[data-screen="stats"]').click();
+    await page.locator(S.appReady).waitFor({ state: "attached", timeout: 15_000 });
+    await page.locator(S.navBtnScreenStats).click();
     await expect(page.locator("#screen-stats")).toBeVisible();
   });
 });

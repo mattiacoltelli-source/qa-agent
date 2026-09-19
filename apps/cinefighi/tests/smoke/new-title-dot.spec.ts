@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { clearBrowserStorage, seedLocalStorage } from "../../../../core/storage.ts";
 import { mockJson } from "../../../../core/network.ts";
 import { QA_USER, selectExistingUser, setWatchlistMode } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Verifica il puntino discreto sui titoli aggiunti da altri dopo l'ultima
 // apertura (storage.js::getLastSeenAt/setLastSeenAt, ui.js::renderShelf).
@@ -66,14 +67,14 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await page.goto(".");
   await clearBrowserStorage(page);
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
   const picked = await selectExistingUser(page, QA_USER);
   if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
   // I titoli finti sono tutti added_by "Un Amico" (il punto del test è il
   // puntino su roba aggiunta da altri): col default "Io" (d114b13) la
   // watchlist Home li nasconderebbe tutti. Passiamo a "Gruppo" per vederli.
   await setWatchlistMode(page, "group");
-  await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
 test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
@@ -83,7 +84,7 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     // esistente al primo avvio (vedi ui.js::renderShelf, isNew richiede
     // lastSeenAt truthy).
     await gotoFreshWithMockedLibrary(page);
-    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
+    await expect(page.locator(S.shelfCardNewDot)).toHaveCount(0);
   });
 
   test("un titolo aggiunto dopo l'ultima visita riceve il puntino, uno precedente no", async ({ page }) => {
@@ -101,12 +102,12 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
     // titoli finti (added_by "Un Amico").
     await setWatchlistMode(page, "group");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const newCard = page.locator(".shelf-card", { hasText: "Titolo Recentissimo QA" });
-    const oldCard = page.locator(".shelf-card", { hasText: "Titolo Antico QA" });
-    await expect(newCard.locator(".shelf-card__new-dot")).toHaveCount(1);
-    await expect(oldCard.locator(".shelf-card__new-dot")).toHaveCount(0);
+    const newCard = page.locator(S.shelfCard, { hasText: "Titolo Recentissimo QA" });
+    const oldCard = page.locator(S.shelfCard, { hasText: "Titolo Antico QA" });
+    await expect(newCard.locator(S.shelfCardNewDot)).toHaveCount(1);
+    await expect(oldCard.locator(S.shelfCardNewDot)).toHaveCount(0);
   });
 
   test("riaprendo subito dopo, il puntino è già sparito", async ({ page }) => {
@@ -121,8 +122,8 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
     // titoli finti (added_by "Un Amico").
     await setWatchlistMode(page, "group");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
-    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
+    await expect(page.locator(S.shelfCardNewDot)).toHaveCount(1); // precondizione: il puntino c'era
 
     // init() aggiorna subito "l'ultima visita" a ora: una seconda apertura,
     // senza nulla di nuovo aggiunto nel frattempo, non deve più mostrarlo.
@@ -131,8 +132,8 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
     // titoli finti (added_by "Un Amico").
     await setWatchlistMode(page, "group");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
-    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
+    await expect(page.locator(S.shelfCardNewDot)).toHaveCount(0);
   });
 
   test("lasciando la Home per Statistiche e tornando indietro (tab bar), il puntino sparisce senza reload", async ({ page }) => {
@@ -151,16 +152,16 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
     // titoli finti (added_by "Un Amico").
     await setWatchlistMode(page, "group");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
-    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
+    await expect(page.locator(S.shelfCardNewDot)).toHaveCount(1); // precondizione: il puntino c'era
 
-    await page.locator('.nav__btn[data-screen="stats"]').click();
+    await page.locator(S.navBtnScreenStats).click();
     await page.locator("#screen-stats").waitFor({ state: "visible", timeout: 5_000 });
 
-    await page.locator('.nav__btn[data-screen="home"]').click();
-    await page.locator("#screen-home").waitFor({ state: "visible", timeout: 5_000 });
+    await page.locator(S.navBtnScreenHome).click();
+    await page.locator(S.screenHome).waitFor({ state: "visible", timeout: 5_000 });
 
-    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
+    await expect(page.locator(S.shelfCardNewDot)).toHaveCount(0);
   });
 
   test("tornando alla Home col bottone indietro del browser dopo aver aperto un dettaglio, il puntino è già sparito", async ({ page }) => {
@@ -175,15 +176,15 @@ test.describe("CineFighi — puntino discreto sui titoli nuovi", () => {
     // reload la resetta al default "me" ("Io"), che nasconderebbe di nuovo i
     // titoli finti (added_by "Un Amico").
     await setWatchlistMode(page, "group");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
-    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(1); // precondizione: il puntino c'era
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
+    await expect(page.locator(S.shelfCardNewDot)).toHaveCount(1); // precondizione: il puntino c'era
 
-    await page.locator(".shelf-card").first().click();
-    await page.locator("#screen-detail").waitFor({ state: "visible", timeout: 5_000 });
+    await page.locator(S.shelfCard).first().click();
+    await page.locator(S.screenDetail).waitFor({ state: "visible", timeout: 5_000 });
 
     await page.goBack();
-    await page.locator("#screen-home").waitFor({ state: "visible", timeout: 5_000 });
+    await page.locator(S.screenHome).waitFor({ state: "visible", timeout: 5_000 });
 
-    await expect(page.locator(".shelf-card__new-dot")).toHaveCount(0);
+    await expect(page.locator(S.shelfCardNewDot)).toHaveCount(0);
   });
 });

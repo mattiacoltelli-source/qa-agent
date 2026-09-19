@@ -7,6 +7,7 @@ import {
   removeCurrentDetail,
 } from "../../fixtures/cinetracker-page.ts";
 import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
+import { S } from "../../fixtures/selectors.ts";
 
 // Questi test scrivono nella libreria REALE dell'utente (stesso avvertimento
 // di vote-formats.write.spec.ts: CineTracker è single-user, non c'è un
@@ -49,25 +50,25 @@ test.describe("CineTracker — toggle stato visto/watchlist @write", () => {
     const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
     await addSearchResultAs(card, "seen");
-    await expect(page.locator("#screen-detail")).toBeVisible();
+    await expect(page.locator(S.screenDetail)).toBeVisible();
 
     try {
       const seenBtn = page.locator("#detailSeenBtn");
       const watchBtn = page.locator("#detailWatchBtn");
-      const removeBtn = page.locator("#detailRemoveBtn");
+      const removeBtn = page.locator(S.detailRemoveBtn);
 
       await expect(seenBtn).toBeHidden();
       await expect(watchBtn).toHaveText("Segna come non visto");
       await expect(removeBtn).toHaveText("Rimuovi");
       // Già visto: "Salva voto/commento" resta l'unico modo di aggiornare voto/commento.
-      await expect(page.locator("#detailSaveNoteBtn")).toBeVisible();
+      await expect(page.locator(S.detailSaveNoteBtn)).toBeVisible();
 
       // Marcatore nel commento PRIMA del click che scrive: il demote crea la
       // riga "watchlist" leggendo il commento corrente (vedi app.js), quindi
       // la riga risultante resta comunque riconoscibile dalla rete di
       // sicurezza indipendente (scripts/cleanup-write-residue.mjs) anche se
       // il finally qui sotto non arrivasse in fondo.
-      await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
+      await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
       await watchBtn.click();
 
       await expect(seenBtn).toBeVisible();
@@ -76,12 +77,12 @@ test.describe("CineTracker — toggle stato visto/watchlist @write", () => {
       await expect(removeBtn).toHaveText("Rimuovi dalla mia watchlist");
       // Non ancora visto (di nuovo): "Salva voto/commento" sparisce, "Segna
       // come visto" da solo copre anche il salvataggio di voto/commento.
-      await expect(page.locator("#detailSaveNoteBtn")).toBeHidden();
+      await expect(page.locator(S.detailSaveNoteBtn)).toBeHidden();
       // Il titolo resta in libreria, solo lo stato cambia (niente ritorno a home).
-      await expect(page.locator("#screen-detail")).toBeVisible();
+      await expect(page.locator(S.screenDetail)).toBeVisible();
     } finally {
       await removeCurrentDetail(page);
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 });

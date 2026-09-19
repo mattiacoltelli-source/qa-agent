@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { clearBrowserStorage } from "../../../../core/storage.ts";
 import { mockJson } from "../../../../core/network.ts";
 import { QA_USER, selectExistingUser, setWatchlistMode } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Verifica la watchlist Home divisa Mia/Gruppo (d114b13): di default ("Io")
 // mostra solo i titoli aggiunti dall'utente corrente, il toggle "Gruppo" fa
@@ -56,7 +57,7 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await page.goto(".");
   await clearBrowserStorage(page);
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
   const picked = await selectExistingUser(page, QA_USER);
   if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
   // selectUser() (app.js) imposta currentUser ma NON richiama renderHome():
@@ -70,19 +71,19 @@ test.describe("CineFighi — watchlist Home Mia/Gruppo", () => {
   test('di default ("Io") mostra solo i titoli aggiunti dall\'utente corrente', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
     await setWatchlistMode(page, "me");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Mio QA" })).toBeVisible();
-    await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Di Un Amico QA" })).toHaveCount(0);
+    await expect(page.locator(S.watchShelfShelfCard, { hasText: "Titolo Mio QA" })).toBeVisible();
+    await expect(page.locator(S.watchShelfShelfCard, { hasText: "Titolo Di Un Amico QA" })).toHaveCount(0);
   });
 
   test('passando a "Gruppo" si vedono anche i titoli aggiunti da altri', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
     await setWatchlistMode(page, "group");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Di Un Amico QA" })).toBeVisible();
-    await expect(page.locator("#watchShelf .shelf-card", { hasText: "Titolo Mio QA" })).toBeVisible();
+    await expect(page.locator(S.watchShelfShelfCard, { hasText: "Titolo Di Un Amico QA" })).toBeVisible();
+    await expect(page.locator(S.watchShelfShelfCard, { hasText: "Titolo Mio QA" })).toBeVisible();
   });
 
   // renderShelf (ui.js) passa showAdder=true solo alla shelf Watchlist in
@@ -92,16 +93,16 @@ test.describe("CineFighi — watchlist Home Mia/Gruppo", () => {
   test('vista "Gruppo": ogni card mostra chi ha aggiunto il titolo, con "+N" se più di uno', async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
     await setWatchlistMode(page, "group");
-    await page.locator("#watchShelf .shelf-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.watchShelfShelfCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const friendCard = page.locator("#watchShelf .shelf-card", { hasText: "Titolo Di Un Amico QA" });
-    await expect(friendCard.locator(".shelf-card__voter-name")).toHaveText("Un Amico");
-    await expect(friendCard.locator(".shelf-card__voter-count")).toHaveCount(0);
+    const friendCard = page.locator(S.watchShelfShelfCard, { hasText: "Titolo Di Un Amico QA" });
+    await expect(friendCard.locator(S.shelfCardVoterName)).toHaveText("Un Amico");
+    await expect(friendCard.locator(S.shelfCardVoterCount)).toHaveCount(0);
 
     // Ordine alfabetico ("it"): "Un Altro Amico" prima di "Un Amico" —
     // vedi firstOfNames in cine-core.js.
-    const doubleCard = page.locator("#watchShelf .shelf-card", { hasText: "Titolo Doppio QA" });
-    await expect(doubleCard.locator(".shelf-card__voter-name")).toHaveText("Un Altro Amico");
-    await expect(doubleCard.locator(".shelf-card__voter-count")).toHaveText("+1");
+    const doubleCard = page.locator(S.watchShelfShelfCard, { hasText: "Titolo Doppio QA" });
+    await expect(doubleCard.locator(S.shelfCardVoterName)).toHaveText("Un Altro Amico");
+    await expect(doubleCard.locator(S.shelfCardVoterCount)).toHaveText("+1");
   });
 });

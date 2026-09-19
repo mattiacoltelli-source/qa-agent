@@ -4,6 +4,7 @@
 
 import type { Page } from "@playwright/test";
 import { clearBrowserStorage } from "../../../core/storage.ts";
+import { S } from "./selectors.ts";
 
 /** Nome dell'utente di test dedicato a questa suite. addUser() lato app è
  * idempotente (case-insensitive: se il nome esiste già nel gruppo, non lo
@@ -57,8 +58,8 @@ export async function gotoFresh(page: Page): Promise<void> {
  * del gruppo. Restituisce la prima card SENZA quel tag, cioè aggiungibile. */
 export function firstAddableSearchCard(page: Page) {
   return page
-    .locator("#results .poster-card")
-    .filter({ hasNot: page.locator(".poster-card__tag") })
+    .locator(S.resultsPosterCard)
+    .filter({ hasNot: page.locator(S.posterCardTag) })
     .first();
 }
 
@@ -75,8 +76,8 @@ export function firstAddableSearchCard(page: Page) {
  * apparso, su un titolo reale già in watchlist di un amico. */
 export function firstPreviewableSearchCard(page: Page) {
   return page
-    .locator("#results .poster-card")
-    .filter({ has: page.locator(".open-preview") })
+    .locator(S.resultsPosterCard)
+    .filter({ has: page.locator(S.openPreview) })
     .first();
 }
 
@@ -93,7 +94,7 @@ export async function selectExistingUser(page: Page, name: string): Promise<bool
  * un messaggio esplicito invece di un timeout muto. */
 export async function ensureQaUserSelected(page: Page): Promise<void> {
   await gotoFresh(page);
-  const overlay = page.locator("#userPickerOverlay");
+  const overlay = page.locator(S.userPickerOverlay);
   if (await overlay.isVisible()) {
     const picked = await selectExistingUser(page, QA_USER);
     if (!picked) {
@@ -108,7 +109,7 @@ export async function ensureQaUserSelected(page: Page): Promise<void> {
       await page.locator("#userPickerAddBtn").click();
     }
   }
-  await page.locator("#app").waitFor({ state: "visible" });
+  await page.locator(S.app).waitFor({ state: "visible" });
 }
 
 export async function openScreen(
@@ -123,8 +124,8 @@ export async function openScreen(
  * gestito a parte da app.js sullo stesso handler doSearch) — un .fill() da
  * solo non innesca più nulla. */
 export async function search(page: Page, query: string): Promise<void> {
-  await page.locator("#searchInput").fill(query);
-  await page.locator("#searchBtn").click();
+  await page.locator(S.searchInput).fill(query);
+  await page.locator(S.searchBtn).click();
 }
 
 /** I tre toggle Io/Gruppo (watchlist in Home, Statistiche, Report) hanno
@@ -178,7 +179,7 @@ export async function setReportMode(page: Page, mode: "io" | "gruppo"): Promise<
  * qui sono deliberatamente ravvicinati (nessun delay tra l'uno e l'altro)
  * per restare dentro quella finestra anche su una macchina CI lenta. */
 export async function tapReportTitleSevenTimes(page: Page): Promise<void> {
-  const title = page.locator("#reportTitleTap");
+  const title = page.locator(S.reportTitleTap);
   for (let i = 0; i < 7; i++) {
     await title.click();
   }

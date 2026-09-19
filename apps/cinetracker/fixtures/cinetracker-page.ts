@@ -6,6 +6,7 @@
 
 import type { Page, Locator } from "@playwright/test";
 import { clearBrowserStorage } from "../../../core/storage.ts";
+import { S } from "./selectors.ts";
 
 /** Naviga sull'app partendo da uno stato di dispositivo pulito (vedi
  * commento gemello in apps/cinefighi/fixtures/cinefighi-page.ts). */
@@ -13,7 +14,7 @@ export async function gotoFresh(page: Page): Promise<void> {
   await page.goto(".");
   await clearBrowserStorage(page);
   await page.reload();
-  await page.locator("#screen-home").waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.screenHome).waitFor({ state: "visible", timeout: 10_000 });
   // #screen-home è visibile nel markup statico ancora prima che bootApp()
   // finisca: bindEvents() (che aggancia i listener su #searchBtn e sui
   // bottoni della nav) gira solo dopo l'await loadDB() (round-trip a
@@ -22,7 +23,7 @@ export async function gotoFresh(page: Page): Promise<void> {
   // agganciato e non fare nulla. app.js aggiunge la classe "app--ready" a
   // ".app" nel finally di bootApp(), subito dopo bindEvents(): è il segnale
   // affidabile che l'hydration è completa.
-  await page.locator(".app.app--ready").waitFor({ state: "attached", timeout: 10_000 });
+  await page.locator(S.appReady).waitFor({ state: "attached", timeout: 10_000 });
 }
 
 export async function openScreen(
@@ -39,7 +40,7 @@ export async function openScreen(
  * sicuro per i tap ripetuti — è già la schermata corrente, quindi i click
  * in più sono no-op per app.js. */
 export async function openBackupViaSecretGesture(page: Page): Promise<void> {
-  const homeBtn = page.locator('.nav__btn[data-screen="home"]');
+  const homeBtn = page.locator(S.navBtnScreenHome);
   for (let i = 0; i < 7; i++) {
     await homeBtn.click();
   }
@@ -47,8 +48,8 @@ export async function openBackupViaSecretGesture(page: Page): Promise<void> {
 }
 
 export async function search(page: Page, query: string): Promise<void> {
-  await page.locator("#searchInput").fill(query);
-  await page.locator("#searchBtn").click();
+  await page.locator(S.searchInput).fill(query);
+  await page.locator(S.searchBtn).click();
 }
 
 /** Il primo risultato di ricerca potrebbe essere già in libreria (per
@@ -60,8 +61,8 @@ export async function search(page: Page, query: string): Promise<void> {
  * soluzione già usata in apps/cinefighi/fixtures/cinefighi-page.ts. */
 export function firstAddableSearchCard(page: Page): Locator {
   return page
-    .locator("#results .poster-card")
-    .filter({ hasNot: page.locator(".poster-card__tag") })
+    .locator(S.resultsPosterCard)
+    .filter({ hasNot: page.locator(S.posterCardTag) })
     .first();
 }
 
@@ -78,6 +79,6 @@ export async function addSearchResultAs(
  * su #confirmYesBtn) — serve un secondo click, non basta gestire un evento
  * "dialog" che qui non arriva mai. */
 export async function removeCurrentDetail(page: Page): Promise<void> {
-  await page.locator("#detailRemoveBtn").click();
-  await page.locator("#confirmYesBtn").click();
+  await page.locator(S.detailRemoveBtn).click();
+  await page.locator(S.confirmYesBtn).click();
 }

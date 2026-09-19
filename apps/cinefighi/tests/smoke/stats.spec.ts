@@ -9,6 +9,7 @@ import {
   setGenreView,
   setStatsMode,
 } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Verifica lo schermo Statistiche: card numeriche, media voto per genere
 // (★, aggiunta di recente) e podio/classifica, sia in modalità "Io"
@@ -54,11 +55,11 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await page.goto(".");
   await clearBrowserStorage(page);
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
   const picked = await selectExistingUser(page, QA_USER);
   if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-  await page.locator('.nav__btn[data-screen="stats"]').click();
-  await page.locator("#genreBars .bar-row").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.navBtnScreenStats).click();
+  await page.locator(S.genreBarsBarRow).first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
 test.describe("CineFighi — Statistiche", () => {
@@ -71,16 +72,16 @@ test.describe("CineFighi — Statistiche", () => {
     await expect(page.locator("#statSeen")).toHaveText("2");
     await expect(page.locator("#statMovies")).toHaveText("2");
 
-    const bars = page.locator("#genreBars .bar-row");
+    const bars = page.locator(S.genreBarsBarRow);
     await expect(bars).toHaveCount(1);
-    await expect(bars.nth(0).locator(".bar-row__name")).toHaveText("Thriller");
-    await expect(bars.nth(0).locator(".bar-row__vote")).toHaveText("★ 7,0");
+    await expect(bars.nth(0).locator(S.barRowName)).toHaveText("Thriller");
+    await expect(bars.nth(0).locator(S.barRowVote)).toHaveText("★ 7,0");
 
     // Da fc3a5c2 il toggle è la pillola con slider (.io-gruppo-btn), non
     // più .stats-toggle-btn: id e data-mode invariati, classe "active"
     // ancora sul bottone selezionato.
-    await expect(page.locator("#statsIoGruppoToggle .io-gruppo-btn[data-mode=\"me\"]")).toHaveClass(/active/);
-    await expect(page.locator("#statsIoGruppoToggle .io-gruppo-btn[data-mode=\"group\"]")).not.toHaveClass(/active/);
+    await expect(page.locator(S.statsToggleMe)).toHaveClass(/active/);
+    await expect(page.locator(S.statsToggleGroup)).not.toHaveClass(/active/);
   });
 
   test("modalità Gruppo (esplicita): card, media voto per genere e classifica su tutti i voti", async ({ page }) => {
@@ -94,13 +95,13 @@ test.describe("CineFighi — Statistiche", () => {
     // Thriller: 2 titoli, media dei punteggi di gruppo per titolo
     // (Film A 7.0, Film B 6.0) = 6.5. Ordinato per conteggio, prima di
     // Commedia (1 titolo, Film C 9.0).
-    const bars = page.locator("#genreBars .bar-row");
+    const bars = page.locator(S.genreBarsBarRow);
     await expect(bars).toHaveCount(2);
-    await expect(bars.nth(0).locator(".bar-row__name")).toHaveText("Thriller");
-    await expect(bars.nth(0).locator(".bar-row__count")).toHaveText("2 titoli");
-    await expect(bars.nth(0).locator(".bar-row__vote")).toHaveText("★ 6,5");
-    await expect(bars.nth(1).locator(".bar-row__name")).toHaveText("Commedia");
-    await expect(bars.nth(1).locator(".bar-row__vote")).toHaveText("★ 9,0");
+    await expect(bars.nth(0).locator(S.barRowName)).toHaveText("Thriller");
+    await expect(bars.nth(0).locator(S.barRowCount)).toHaveText("2 titoli");
+    await expect(bars.nth(0).locator(S.barRowVote)).toHaveText("★ 6,5");
+    await expect(bars.nth(1).locator(S.barRowName)).toHaveText("Commedia");
+    await expect(bars.nth(1).locator(S.barRowVote)).toHaveText("★ 9,0");
 
     // Classifica Film (default in #rankingMediaToggle): ordinata per media
     // di gruppo desc — Film C (9.0), Film A (7.0), Film B (6.0). Con solo 3
@@ -112,14 +113,14 @@ test.describe("CineFighi — Statistiche", () => {
     // pagina) — quindi il 1° in classifica (Film C) è alla POSIZIONE 1 nel
     // DOM, non alla 0.
     await expect(page.locator("#rankingCountBadge")).toHaveText("3");
-    const podium = page.locator("#rankingPodium .podium-card");
+    const podium = page.locator(S.rankingPodiumPodiumCard);
     await expect(podium).toHaveCount(3);
-    await expect(podium.nth(0).locator(".podium-card__title")).toHaveText("Film A QA");
-    await expect(podium.nth(1).locator(".podium-card__title")).toHaveText("Film C QA");
-    await expect(podium.nth(1).locator(".podium-card__vote")).toHaveText("★ 9.0");
+    await expect(podium.nth(0).locator(S.podiumCardTitle)).toHaveText("Film A QA");
+    await expect(podium.nth(1).locator(S.podiumCardTitle)).toHaveText("Film C QA");
+    await expect(podium.nth(1).locator(S.podiumCardVote)).toHaveText("★ 9.0");
     await expect(podium.nth(1)).toHaveClass(/podium-card--first/);
-    await expect(podium.nth(2).locator(".podium-card__title")).toHaveText("Film B QA");
-    await expect(page.locator("#rankingList .rank-row")).toHaveCount(0);
+    await expect(podium.nth(2).locator(S.podiumCardTitle)).toHaveText("Film B QA");
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(0);
   });
 
   test('modalità "Io" dopo un giro andata-ritorno da Gruppo: generi e classifica solo sui titoli che ho votato io', async ({ page }) => {
@@ -148,23 +149,23 @@ test.describe("CineFighi — Statistiche", () => {
     await expect(page.locator("#statMovies")).toHaveText("2");
 
     // Un solo genere: Commedia (solo su Film C) sparisce del tutto.
-    const bars = page.locator("#genreBars .bar-row");
+    const bars = page.locator(S.genreBarsBarRow);
     await expect(bars).toHaveCount(1);
-    await expect(bars.nth(0).locator(".bar-row__name")).toHaveText("Thriller");
-    await expect(bars.nth(0).locator(".bar-row__count")).toHaveText("2 titoli");
+    await expect(bars.nth(0).locator(S.barRowName)).toHaveText("Thriller");
+    await expect(bars.nth(0).locator(S.barRowCount)).toHaveText("2 titoli");
     // Media dei MIEI voti su Thriller: (8 + 6) / 2 = 7.0 — diversa dalla
     // media di gruppo (6.5) vista nel test precedente, stesso genere.
-    await expect(bars.nth(0).locator(".bar-row__vote")).toHaveText("★ 7,0");
+    await expect(bars.nth(0).locator(S.barRowVote)).toHaveText("★ 7,0");
 
     // Con solo 2 titoli non c'è un 3° posto: podiumOrder produce solo
     // [2°, 1°] (nessuno slot vuoto per il 3°) — il 1° (Film A) resta
     // comunque il secondo nel DOM, con .podium-card--first.
     await expect(page.locator("#rankingCountBadge")).toHaveText("2");
-    const podium = page.locator("#rankingPodium .podium-card");
+    const podium = page.locator(S.rankingPodiumPodiumCard);
     await expect(podium).toHaveCount(2);
-    await expect(podium.nth(0).locator(".podium-card__title")).toHaveText("Film B QA");
-    await expect(podium.nth(1).locator(".podium-card__title")).toHaveText("Film A QA");
-    await expect(podium.nth(1).locator(".podium-card__vote")).toHaveText("★ 8.0");
+    await expect(podium.nth(0).locator(S.podiumCardTitle)).toHaveText("Film B QA");
+    await expect(podium.nth(1).locator(S.podiumCardTitle)).toHaveText("Film A QA");
+    await expect(podium.nth(1).locator(S.podiumCardVote)).toHaveText("★ 8.0");
     await expect(podium.nth(1)).toHaveClass(/podium-card--first/);
   });
 });
@@ -197,30 +198,30 @@ test.describe("CineFighi — Statistiche — Classifica, tasto Mostra tutti/meno
     await page.goto(".");
     await clearBrowserStorage(page);
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
     const picked = await selectExistingUser(page, QA_USER);
     if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-    await page.locator('.nav__btn[data-screen="stats"]').click();
-    await page.locator("#rankingPodium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.navBtnScreenStats).click();
+    await page.locator(S.rankingPodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
     // 7 titoli votati: podio (3) + 2 righe di default = 5, altri 2 dietro
     // al tasto.
     await expect(page.locator("#rankingCountBadge")).toHaveText("7");
-    await expect(page.locator("#rankingPodium .podium-card")).toHaveCount(3);
-    await expect(page.locator("#rankingList .rank-row")).toHaveCount(2);
+    await expect(page.locator(S.rankingPodiumPodiumCard)).toHaveCount(3);
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(2);
     const expandBtn = page.locator("#rankingExpandBtn");
-    const label = expandBtn.locator(".rank-expand-btn__label");
+    const label = expandBtn.locator(S.rankExpandBtnLabel);
     await expect(expandBtn).toBeVisible();
     await expect(label).toHaveText("Mostra tutti");
-    await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveText("· 2");
+    await expect(expandBtn.locator(S.rankExpandBtnCount)).toHaveText("· 2");
     await expect(expandBtn).not.toHaveClass(/is-up/);
 
     // Espandi: il tasto resta (non sparisce), cambia testo/freccia.
     await expandBtn.click();
-    await expect(page.locator("#rankingList .rank-row")).toHaveCount(4);
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(4);
     await expect(expandBtn).toBeVisible();
     await expect(label).toHaveText("Mostra meno");
-    await expect(expandBtn.locator(".rank-expand-btn__count")).toBeHidden();
+    await expect(expandBtn.locator(S.rankExpandBtnCount)).toBeHidden();
     await expect(expandBtn).toHaveClass(/is-up/);
 
     // Riduci: torna a 2 righe, testo/freccia tornano com'erano, e la vista
@@ -237,9 +238,9 @@ test.describe("CineFighi — Statistiche — Classifica, tasto Mostra tutti/meno
     // così non dipende più da quanto è lunga la pagina.
     await expandBtn.scrollIntoViewIfNeeded();
     await expandBtn.click();
-    await expect(page.locator("#rankingList .rank-row")).toHaveCount(2);
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(2);
     await expect(label).toHaveText("Mostra tutti");
-    await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveText("· 2");
+    await expect(expandBtn.locator(S.rankExpandBtnCount)).toHaveText("· 2");
     await expect(expandBtn).not.toHaveClass(/is-up/);
     // Lo scroll è "smooth": toBeInViewport riprova finché l'animazione non
     // è finita, invece di leggere una posizione a metà corsa.
@@ -249,13 +250,13 @@ test.describe("CineFighi — Statistiche — Classifica, tasto Mostra tutti/meno
     // (non resta espanso da prima), stesso tasto, stesso conteggio — unico
     // votante, quindi stesso ordine di "Gruppo".
     await setStatsMode(page, "me");
-    await expect(page.locator("#rankingList .rank-row")).toHaveCount(2);
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(2);
     await expect(expandBtn).toBeVisible();
     await expect(label).toHaveText("Mostra tutti");
-    await expect(expandBtn.locator(".rank-expand-btn__count")).toHaveText("· 2");
+    await expect(expandBtn.locator(S.rankExpandBtnCount)).toHaveText("· 2");
 
     await expandBtn.click();
-    await expect(page.locator("#rankingList .rank-row")).toHaveCount(4);
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(4);
     await expect(label).toHaveText("Mostra meno");
   });
 });
@@ -277,21 +278,21 @@ test.describe("CineFighi — Statistiche — Classifica, torna al film dopo il d
     await page.goto(".");
     await clearBrowserStorage(page);
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
     const picked = await selectExistingUser(page, QA_USER);
     if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-    await page.locator('.nav__btn[data-screen="stats"]').click();
-    await page.locator("#rankingPodium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.navBtnScreenStats).click();
+    await page.locator(S.rankingPodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
     // Film C QA (2° in classifica, media 8) è nel podio — sempre visibile,
     // nessuna espansione necessaria.
-    const podiumCard = page.locator('#rankingPodium .podium-card[data-id]').first();
+    const podiumCard = page.locator(S.rankingPodiumPodiumCardId).first();
     const id = await podiumCard.getAttribute("data-id");
     await podiumCard.click();
-    await page.locator("#screen-detail:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.screenDetailNotHidden).waitFor({ state: "visible", timeout: 10_000 });
 
     await page.goBack();
-    await page.locator("#screen-stats:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.screenStatsNotHidden).waitFor({ state: "visible", timeout: 10_000 });
     await expect(page.locator(`#screen-stats [data-id="${id}"].open-detail`)).toBeInViewport();
   });
 
@@ -305,22 +306,22 @@ test.describe("CineFighi — Statistiche — Classifica, torna al film dopo il d
     await page.goto(".");
     await clearBrowserStorage(page);
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
     const picked = await selectExistingUser(page, QA_USER);
     if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-    await page.locator('.nav__btn[data-screen="stats"]').click();
-    await page.locator("#rankingPodium .podium-card").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.navBtnScreenStats).click();
+    await page.locator(S.rankingPodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
     // Espande, apre l'ultimo film (7°, dietro al tasto "Mostra tutti" nel
     // render iniziale) e torna indietro.
     await page.locator("#rankingExpandBtn").click();
-    const deepCard = page.locator("#rankingList .rank-row").last();
+    const deepCard = page.locator(S.rankingListRankRow).last();
     const deepId = await deepCard.getAttribute("data-id");
     await deepCard.click();
-    await page.locator("#screen-detail:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.screenDetailNotHidden).waitFor({ state: "visible", timeout: 10_000 });
 
     await page.goBack();
-    await page.locator("#screen-stats:not(.hidden)").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.screenStatsNotHidden).waitFor({ state: "visible", timeout: 10_000 });
 
     // La Classifica riparte SEMPRE collassata dopo un render (vedi test
     // sopra) — qui deve essersi riespansa da sola per far riapparire la
@@ -329,9 +330,9 @@ test.describe("CineFighi — Statistiche — Classifica, torna al film dopo il d
     // dietro anche da espanso) ma deve riflettere lo stato espanso.
     const expandBtn = page.locator("#rankingExpandBtn");
     await expect(expandBtn).toBeVisible();
-    await expect(expandBtn.locator(".rank-expand-btn__label")).toHaveText("Mostra meno");
+    await expect(expandBtn.locator(S.rankExpandBtnLabel)).toHaveText("Mostra meno");
     await expect(expandBtn).toHaveClass(/is-up/);
-    await expect(page.locator("#rankingList .rank-row")).toHaveCount(4);
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(4);
     await expect(page.locator(`#screen-stats [data-id="${deepId}"].open-detail`)).toBeInViewport();
   });
 });
@@ -354,30 +355,30 @@ test.describe("CineFighi — Statistiche — vista Generi (Barre/Bolle)", () => 
     await gotoFreshWithMockedLibrary(page);
 
     await expect(
-      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bars"]')
+      page.locator(S.genreViewToggleGenreViewBtnBars)
     ).toHaveClass(/active/);
     await expect(page.locator("#genreLegend")).toHaveText("★ media voto");
-    await expect(page.locator("#genreBars .bar-row")).toHaveCount(1);
+    await expect(page.locator(S.genreBarsBarRow)).toHaveCount(1);
 
     await setGenreView(page, "bubbles");
     await expect(
-      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bubbles"]')
+      page.locator(S.genreViewToggleGenreViewBtnBubbles)
     ).toHaveClass(/active/);
     await expect(page.locator("#genreLegend")).toContainText("Riempimento");
-    await expect(page.locator("#genreBars .bar-row")).toHaveCount(0);
+    await expect(page.locator(S.genreBarsBarRow)).toHaveCount(0);
 
     // In "Io" (default) c'è un solo genere: Thriller, 2 titoli, media dei
     // miei voti (8 + 6) / 2 = 7,0 — lo stesso numero della vista Barre,
     // stessa fonte dati, solo disegnato diversamente.
-    const bubbles = page.locator("#genreBars .genre-bubble");
+    const bubbles = page.locator(S.genreBarsGenreBubble);
     await expect(bubbles).toHaveCount(1);
-    await expect(bubbles.first().locator(".genre-bubble-text .name")).toHaveText("THRILLER");
-    await expect(bubbles.first().locator(".genre-bubble-text .count")).toHaveText("2");
-    await expect(bubbles.first().locator(".genre-bubble-text .label")).toHaveText("titoli");
+    await expect(bubbles.first().locator(S.genreBubbleTextName)).toHaveText("THRILLER");
+    await expect(bubbles.first().locator(S.genreBubbleTextCount)).toHaveText("2");
+    await expect(bubbles.first().locator(S.genreBubbleTextLabel)).toHaveText("titoli");
 
     // Il voto medio compare solo al tocco (a bolla chiusa conta il colpo
     // d'occhio): qui è l'attributo hidden, non display:none come in Cos90.
-    const vote = bubbles.first().locator(".genre-bubble-text .vote");
+    const vote = bubbles.first().locator(S.genreBubbleTextVote);
     await expect(vote).toBeHidden();
     await bubbles.first().click();
     await expect(vote).toBeVisible();
@@ -388,9 +389,9 @@ test.describe("CineFighi — Statistiche — vista Generi (Barre/Bolle)", () => 
     await openScreen(page, "home");
     await openScreen(page, "stats");
     await expect(
-      page.locator('#genreViewToggle .genre-view-btn[data-genre-view="bubbles"]')
+      page.locator(S.genreViewToggleGenreViewBtnBubbles)
     ).toHaveClass(/active/);
-    await expect(page.locator("#genreBars .genre-bubble")).toHaveCount(1);
+    await expect(page.locator(S.genreBarsGenreBubble)).toHaveCount(1);
   });
 
   test("Bolle in modalità Gruppo: una bolla per genere, solo una aperta alla volta", async ({
@@ -404,19 +405,19 @@ test.describe("CineFighi — Statistiche — vista Generi (Barre/Bolle)", () => 
     // Gruppo: Thriller (2 titoli, media dei punteggi di gruppo 6,5) e
     // Commedia (1 titolo, 9,0) — gli stessi numeri già verificati in vista
     // Barre nel primo describe di questo file.
-    const bubbles = page.locator("#genreBars .genre-bubble");
+    const bubbles = page.locator(S.genreBarsGenreBubble);
     await expect(bubbles).toHaveCount(2);
     const thriller = bubbles.nth(0);
     const commedia = bubbles.nth(1);
-    await expect(thriller.locator(".genre-bubble-text .name")).toHaveText("THRILLER");
-    await expect(commedia.locator(".genre-bubble-text .name")).toHaveText("COMMEDIA");
-    await expect(commedia.locator(".genre-bubble-text .label")).toHaveText("titolo");
+    await expect(thriller.locator(S.genreBubbleTextName)).toHaveText("THRILLER");
+    await expect(commedia.locator(S.genreBubbleTextName)).toHaveText("COMMEDIA");
+    await expect(commedia.locator(S.genreBubbleTextLabel)).toHaveText("titolo");
 
     await thriller.click();
-    await expect(thriller.locator(".genre-bubble-text .vote")).toHaveText("★ 6,5");
+    await expect(thriller.locator(S.genreBubbleTextVote)).toHaveText("★ 6,5");
     await commedia.click();
-    await expect(commedia.locator(".genre-bubble-text .vote")).toHaveText("★ 9,0");
+    await expect(commedia.locator(S.genreBubbleTextVote)).toHaveText("★ 9,0");
     // Aprirne una chiude l'altra.
-    await expect(thriller.locator(".genre-bubble-text .vote")).toBeHidden();
+    await expect(thriller.locator(S.genreBubbleTextVote)).toBeHidden();
   });
 });

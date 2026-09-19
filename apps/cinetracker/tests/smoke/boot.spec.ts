@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { gotoFresh } from "../../fixtures/cinetracker-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 test.describe("CineTracker — avvio", () => {
   test(
@@ -7,7 +8,7 @@ test.describe("CineTracker — avvio", () => {
       "(comportamento PREVISTO: single-user, a differenza di CineFighi)",
     async ({ page }) => {
       await gotoFresh(page);
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await expect(page.locator(S.screenHome)).toBeVisible();
       await expect(page.locator("#userPickerOverlay")).toHaveCount(0);
     }
   );
@@ -19,7 +20,7 @@ test.describe("CineTracker — avvio", () => {
   // indietro.
   test("la bottom nav espone le 4 sezioni Home/Statistiche/Stasera/Report", async ({ page }) => {
     await gotoFresh(page);
-    await expect(page.locator(".nav__btn[data-screen]")).toHaveCount(4);
+    await expect(page.locator(S.navBtnScreen)).toHaveCount(4);
   });
 
   test("le shelf vuote mostrano lo stato vuoto invece di una lista vuota silenziosa", async ({ page }) => {
@@ -42,7 +43,7 @@ test.describe("CineTracker — avvio", () => {
     // era vero solo con la libreria PIENA: a libreria vuota entrambi
     // risultavano non nascosti e il test falliva pur essendo l'app
     // corretta.
-    const cards = page.locator("#watchShelf .shelf-card");
+    const cards = page.locator(S.watchShelfShelfCard);
     const watchEmpty = page.locator("#watchShelfEmpty");
     await expect
       .poll(

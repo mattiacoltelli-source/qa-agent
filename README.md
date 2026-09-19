@@ -66,7 +66,9 @@ restano comunque richiamabili anche singolarmente come prima.
 core/                    utility generiche (rete, viewport, storage) — non sanno nulla di una app specifica
 apps/
   cinefighi/
-    fixtures/            helper e selettori specifici di CineFighi
+    fixtures/
+      selectors.ts       i selettori fragili o condivisi, in un posto solo
+      cinefighi-page.ts  helper specifici di CineFighi
     tests/smoke/         test (*.spec.ts sola lettura, *.write.spec.ts scrittura, gate @write)
     README.md            modello di sicurezza dati, env var, backlog
   cinetracker/            (stessa struttura, per il repo Cos90)
@@ -78,6 +80,25 @@ playwright.config.ts      un project mobile + uno desktop per app, baseURL da en
 Per aggiungere un'altra app: creare `apps/<nome>/tests`, aggiungere due
 `projects` (mobile + desktop) in `playwright.config.ts` con il suo
 `baseURL`. Non serve toccare `/core` né le altre app.
+
+## Quando cambi la UI di un'app
+
+I selettori **fragili o condivisi** stanno in `apps/<app>/fixtures/selectors.ts`:
+quelli basati su classi CSS — che cambiano quando rifai lo stile, senza
+che l'app si lamenti — e quelli usati da più di un file di test. Se la UI
+cambia, si aggiorna **una riga lì** invece di cercare lo stesso selettore
+in una dozzina di file.
+
+Gli `id` usati una volta sola restano inline nel test che li usa: sono già
+leggibili così, e il JavaScript dell'app dipende da loro (`#detailSaveVoteBtn`
+compare sei volte in CineFighi), quindi non possono derivare di nascosto —
+rinominarli romperebbe l'app prima dei test.
+
+Resta un terzo punto di attrito, più subdolo: gli assert sul **contenuto**
+(`toHaveText("Salva voto")`, `hasText: "Errore nel salvare il voto"`). Si
+rompono se riscrivi un'etichetta, anche quando l'app funziona benissimo.
+Dove puoi, verifica il comportamento invece del testo — è già il criterio
+usato per Prova, vedi "Determinismo" più sotto.
 
 ## Esecuzione
 

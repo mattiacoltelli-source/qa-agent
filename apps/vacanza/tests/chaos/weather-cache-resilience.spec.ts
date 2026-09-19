@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { clearBrowserStorage, seedLocalStorage } from "../../../../core/storage.ts";
 import { abortRoute } from "../../../../core/network.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Chaos test" (vedi apps/cinetracker/tests/chaos/ per la spiegazione della
 // categoria). Distinto dal test "API meteo tutte giù" già presente in
@@ -41,11 +42,11 @@ test.describe("Spot — cache meteo preservata durante un'interruzione di rete",
     await clearBrowserStorage(page);
     await seedLocalStorage(page, "weather_cache", JSON.stringify(cache));
     await page.reload();
-    await page.locator("#page-home").waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.pageHome).waitFor({ state: "visible", timeout: 10_000 });
 
     // loadWeatherFromCache() mostra subito i dati cache; il tentativo di
     // refresh in background fallisce, ma non deve svuotare nulla.
-    const alert = page.locator("#weatherAlert");
+    const alert = page.locator(S.weatherAlert);
     await expect(alert).toContainText("Cielo sereno", { timeout: 10_000 });
     await expect(alert).toHaveClass(/ok/);
 
@@ -53,6 +54,6 @@ test.describe("Spot — cache meteo preservata durante un'interruzione di rete",
     // dati cache siano ancora lì (non sostituiti da "Meteo non disponibile").
     await page.waitForTimeout(1000);
     await expect(alert).toContainText("Cielo sereno");
-    await expect(page.locator("#statsGrid")).toContainText("27°");
+    await expect(page.locator(S.statsGrid)).toContainText("27°");
   });
 });

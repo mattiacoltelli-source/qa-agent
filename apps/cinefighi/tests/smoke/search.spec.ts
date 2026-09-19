@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { ensureQaUserSelected, search } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Ricerca TMDB dal vivo, sola lettura: nessuno di questi test aggiunge nulla
 // alla libreria condivisa, quindi girano sempre (nessun gate @write).
@@ -13,35 +14,35 @@ test.describe("CineFighi — ricerca titoli (TMDB live, sola lettura)", () => {
   test("cercare un titolo noto mostra risultati con poster", async ({ page }) => {
     await search(page, "Inception");
     await expect(page.locator("#resultsSection")).toBeVisible();
-    const firstCard = page.locator("#results .poster-card").first();
+    const firstCard = page.locator(S.resultsPosterCard).first();
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
-    expect(await page.locator("#results .poster-card").count()).toBeGreaterThan(0);
+    expect(await page.locator(S.resultsPosterCard).count()).toBeGreaterThan(0);
   });
 
   test("cercare una stringa senza risultati mostra lo stato vuoto", async ({ page }) => {
     await search(page, "zzxxqqnonesisteproprio123456");
-    const empty = page.locator("#resultsEmpty");
+    const empty = page.locator(S.resultsEmpty);
     await expect(empty).toBeVisible({ timeout: 10_000 });
     await expect(empty).toHaveText(/Nessun risultato/);
   });
 
   test('il tab "Film" filtra il tipo di risultato (solo card con badge Film)', async ({ page }) => {
-    await page.locator('.tab[data-type="movie"]').click();
+    await page.locator(S.tabTypeMovie).click();
     await search(page, "Batman");
-    await expect(page.locator("#results .poster-card").first()).toBeVisible({ timeout: 10_000 });
-    const badgeTexts = await page.locator("#results .badge").allTextContents();
+    await expect(page.locator(S.resultsPosterCard).first()).toBeVisible({ timeout: 10_000 });
+    const badgeTexts = await page.locator(S.resultsBadge).allTextContents();
     expect(badgeTexts.length).toBeGreaterThan(0);
     for (const text of badgeTexts) expect(text).toBe("Film");
   });
 
   test("svuotare la ricerca e confermare nasconde di nuovo la sezione risultati", async ({ page }) => {
-    const input = page.locator("#searchInput");
+    const input = page.locator(S.searchInput);
     await search(page, "Inception");
     await expect(page.locator("#resultsSection")).toBeVisible({ timeout: 10_000 });
     // Da 0fbf26a: svuotare il campo non basta più da solo, serve anche un
     // Cerca/Invio esplicito (stesso comportamento di CineTracker).
     await input.fill("");
-    await page.locator("#searchBtn").click();
+    await page.locator(S.searchBtn).click();
     await expect(page.locator("#resultsSection")).toBeHidden();
   });
 
@@ -52,9 +53,9 @@ test.describe("CineFighi — ricerca titoli (TMDB live, sola lettura)", () => {
   test('la "X" di svuotamento ricerca appare solo con testo e ripulisce campo e risultati in un tap', async ({
     page,
   }) => {
-    const input = page.locator("#searchInput");
-    const clearBtn = page.locator("#searchClearBtn");
-    const wrap = page.locator(".search-input-wrap");
+    const input = page.locator(S.searchInput);
+    const clearBtn = page.locator(S.searchClearBtn);
+    const wrap = page.locator(S.searchInputWrap);
 
     await expect(clearBtn).toBeHidden();
     await expect(wrap).not.toHaveClass(/has-value/);

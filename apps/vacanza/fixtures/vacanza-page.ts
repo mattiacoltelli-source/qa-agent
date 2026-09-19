@@ -5,6 +5,7 @@
 
 import type { Page, BrowserContext } from "@playwright/test";
 import { clearBrowserStorage } from "../../../core/storage.ts";
+import { S } from "./selectors.ts";
 
 export type VacanzaPage = "home" | "top" | "map" | "spots" | "detail";
 
@@ -16,7 +17,7 @@ export async function gotoFresh(page: Page): Promise<void> {
   await page.goto(".");
   await clearBrowserStorage(page);
   await page.reload();
-  await page.locator("#page-home").waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.pageHome).waitFor({ state: "visible", timeout: 10_000 });
 }
 
 export async function switchPage(page: Page, name: VacanzaPage): Promise<void> {

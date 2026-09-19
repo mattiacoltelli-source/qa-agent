@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { ensureQaUserSelected, firstPreviewableSearchCard, search } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Copre la "scheda di consultazione" (previewItem in app.js): un percorso
 // del dettaglio completamente separato da quello di un titolo già in
@@ -29,20 +30,20 @@ test.describe("CineFighi — scheda di consultazione (previewItem) @write", () =
     await search(page, "Inception");
     const firstCard = firstPreviewableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
-    await firstCard.locator(".open-preview").click();
+    await firstCard.locator(S.openPreview).click();
 
-    await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
     // Stato "preview" (openPreview in app.js): un solo bottone voto a tutta
     // riga che promuove direttamente a "visto", niente "Aggiorna voto" né
     // "Rimuovi" (il titolo non esiste ancora in libreria).
-    await expect(page.locator("#detailSaveVoteBtn")).toHaveText("✓ Salva voto (segna come visto)");
-    await expect(page.locator("#detailSaveVoteBtn")).toHaveClass(/btn--full-row/);
-    await expect(page.locator("#detailClearVoteBtn")).toBeHidden();
+    await expect(page.locator(S.detailSaveVoteBtn)).toHaveText("✓ Salva voto (segna come visto)");
+    await expect(page.locator(S.detailSaveVoteBtn)).toHaveClass(/btn--full-row/);
+    await expect(page.locator(S.detailClearVoteBtn)).toBeHidden();
     // Da 05a7ff1: niente più cuore davanti al testo.
-    await expect(page.locator("#detailStatusBtn")).toHaveText("Aggiungi a watchlist");
-    await expect(page.locator("#detailStatusBtn")).toHaveClass(/\bbtn\b/);
-    await expect(page.locator("#detailStatusBtn")).not.toHaveClass(/btn-link-quiet/);
-    await expect(page.locator("#detailRemoveBtn")).toBeHidden();
+    await expect(page.locator(S.detailStatusBtn)).toHaveText("Aggiungi a watchlist");
+    await expect(page.locator(S.detailStatusBtn)).toHaveClass(/\bbtn\b/);
+    await expect(page.locator(S.detailStatusBtn)).not.toHaveClass(/btn-link-quiet/);
+    await expect(page.locator(S.detailRemoveBtn)).toBeHidden();
     await expect(page.locator("#detailPrimaryActions")).not.toHaveClass(/detail-primary-actions--seen/);
 
     // Uscire dalla scheda senza salvare non deve creare nulla in libreria:
@@ -56,27 +57,27 @@ test.describe("CineFighi — scheda di consultazione (previewItem) @write", () =
     await search(page, "Inception");
     const firstCard = firstPreviewableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
-    await firstCard.locator(".open-preview").click();
-    await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+    await firstCard.locator(S.openPreview).click();
+    await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
 
     try {
-      await page.locator("#detailVoteSlider").fill(expectedVote);
-      await page.locator("#detailCommentInput").fill("Voto di test automatico (QA)");
-      await page.locator("#detailSaveVoteBtn").click();
+      await page.locator(S.detailVoteSlider).fill(expectedVote);
+      await page.locator(S.detailCommentInput).fill("Voto di test automatico (QA)");
+      await page.locator(S.detailSaveVoteBtn).click();
 
-      await expect(page.locator("#toastWrap .toast .toast__text")).toHaveText("Voto salvato");
+      await expect(page.locator(S.toastWrapToastText)).toHaveText("Voto salvato");
       // handleSaveVote riapre il dettaglio con push:false sullo stesso
       // titolo, ora però come titolo salvato "seen": i bottoni tornano allo
       // stato normale di openDetail (non più quello di previewItem).
-      await expect(page.locator("#screen-detail")).toBeVisible();
-      await expect(page.locator("#detailVoteValue")).toHaveText(expectedVote);
-      await expect(page.locator("#detailSaveVoteBtn")).toHaveText("Aggiorna voto");
-      await expect(page.locator("#detailRemoveBtn")).toBeVisible();
-      await expect(page.locator("#detailRemoveBtn")).toHaveText("Rimuovi");
+      await expect(page.locator(S.screenDetail)).toBeVisible();
+      await expect(page.locator(S.detailVoteValue)).toHaveText(expectedVote);
+      await expect(page.locator(S.detailSaveVoteBtn)).toHaveText("Aggiorna voto");
+      await expect(page.locator(S.detailRemoveBtn)).toBeVisible();
+      await expect(page.locator(S.detailRemoveBtn)).toHaveText("Rimuovi");
     } finally {
-      await page.locator("#detailRemoveBtn").click();
-      await page.locator("#confirmYesBtn").click();
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await page.locator(S.detailRemoveBtn).click();
+      await page.locator(S.confirmYesBtn).click();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 
@@ -86,34 +87,34 @@ test.describe("CineFighi — scheda di consultazione (previewItem) @write", () =
     await search(page, "Inception");
     const firstCard = firstPreviewableSearchCard(page);
     await expect(firstCard).toBeVisible({ timeout: 10_000 });
-    await firstCard.locator(".open-preview").click();
-    await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+    await firstCard.locator(S.openPreview).click();
+    await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
 
-    const title = await page.locator("#detailTitle").textContent();
+    const title = await page.locator(S.detailTitle).textContent();
 
     try {
-      await page.locator("#detailStatusBtn").click();
+      await page.locator(S.detailStatusBtn).click();
 
-      await expect(page.locator("#toastWrap .toast .toast__text")).toHaveText(`${title} aggiunto alla watchlist`);
-      await expect(page.locator("#screen-detail")).toBeVisible();
+      await expect(page.locator(S.toastWrapToastText)).toHaveText(`${title} aggiunto alla watchlist`);
+      await expect(page.locator(S.screenDetail)).toBeVisible();
       // Titolo ora salvato come "watchlist" normale: stessi bottoni di un
       // qualunque altro titolo in watchlist (openDetail, non più preview).
-      await expect(page.locator("#detailStatusBtn")).toHaveText("✓ Segna come visto");
-      await expect(page.locator("#detailRemoveBtn")).toHaveText("Rimuovi dalla mia watchlist");
+      await expect(page.locator(S.detailStatusBtn)).toHaveText("✓ Segna come visto");
+      await expect(page.locator(S.detailRemoveBtn)).toHaveText("Rimuovi dalla mia watchlist");
     } finally {
       // Titolo status "watchlist": handleRemove salta la conferma pesante e
       // va dritto a "home" (vedi stesso caso già gestito in
       // voting.write.spec.ts per il test di demote).
-      await page.locator("#detailRemoveBtn").click();
+      await page.locator(S.detailRemoveBtn).click();
       const confirmShown = await page
-        .locator("#confirmOverlay")
+        .locator(S.confirmOverlay)
         .waitFor({ state: "visible", timeout: 2_000 })
         .then(() => true)
         .catch(() => false);
       if (confirmShown) {
-        await page.locator("#confirmYesBtn").click();
+        await page.locator(S.confirmYesBtn).click();
       }
-      await expect(page.locator("#screen-home")).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(S.screenHome)).toBeVisible({ timeout: 10_000 });
     }
   });
 });

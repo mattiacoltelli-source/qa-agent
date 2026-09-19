@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { gotoFresh } from "../../fixtures/cinetracker-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Simula la perdita/ripristino di connessione con context.setOffline(): non
 // scrive nulla su Supabase, gira sempre (nessun gate @write).
@@ -16,7 +17,7 @@ test.describe("CineTracker — banner offline", () => {
 
     await context.setOffline(false);
     await expect(banner).toBeHidden();
-    await expect(page.locator(".toast.success")).toContainText("Connessione ripristinata");
+    await expect(page.locator(S.toastSuccess)).toContainText("Connessione ripristinata");
   });
 
   test("una ricerca avviata da offline viene rifiutata subito, senza tentare la chiamata di rete", async ({
@@ -37,9 +38,9 @@ test.describe("CineTracker — banner offline", () => {
     // (stesso evento "offline" del banner): ".toast.error" da solo è
     // ambiguo (strict mode, 2 match). Scopiamo su quello specifico della
     // ricerca tramite il suo titolo ("Ricerca", passato a showToast()).
-    await page.locator("#searchInput").fill("Inception");
-    await page.locator("#searchBtn").click();
-    const searchToast = page.locator(".toast.error", { hasText: "Ricerca" });
+    await page.locator(S.searchInput).fill("Inception");
+    await page.locator(S.searchBtn).click();
+    const searchToast = page.locator(S.toastError, { hasText: "Ricerca" });
     await expect(searchToast).toContainText(/offline/i);
     await context.setOffline(false);
   });

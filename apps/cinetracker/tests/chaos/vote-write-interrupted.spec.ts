@@ -8,6 +8,7 @@ import {
 } from "../../fixtures/cinetracker-page.ts";
 import { abortRoute } from "../../../../core/network.ts";
 import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Chaos test" variante "crash recovery" (vedi apps/cinefighi/tests/chaos/
 // vote-write-interrupted.spec.ts per la stessa idea sull'altra app — qui il
@@ -47,38 +48,38 @@ test.describe("CineTracker — salvataggio voto con Supabase irraggiungibile @wr
     // firstAddableSearchCard salta i risultati già in libreria (vedi il suo
     // commento), quindi potrebbe finire su un altro titolo della stessa
     // ricerca. Catturiamo il titolo vero per le verifiche più sotto.
-    const addedTitle = await card.locator(".poster-card__title").textContent();
+    const addedTitle = await card.locator(S.posterCardTitle).textContent();
     await addSearchResultAs(card, "seen");
-    await expect(page.locator("#screen-detail")).toBeVisible();
+    await expect(page.locator(S.screenDetail)).toBeVisible();
 
     try {
       // Interrompiamo Supabase SOLO da qui: aggiungere il titolo (sopra)
       // deve funzionare normalmente, vogliamo isolare il salvataggio voto.
       await abortRoute(page, /quwkqaovjxczuahjcmmh\.supabase\.co/);
 
-      await page.locator("#detailVoteInput").fill("8,5");
-      await page.locator("#detailCommentInput").fill(CINETRACKER_MARKER);
-      await page.locator("#detailSaveNoteBtn").click();
+      await page.locator(S.detailVoteInput).fill("8,5");
+      await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+      await page.locator(S.detailSaveNoteBtn).click();
 
       // Non "ottimistico con rollback" come CineFighi: qui il successo è
       // reale, perché il salvataggio locale non dipende da Supabase.
       await expect(
-        page.locator(".toast.success", { hasText: "Voto e commento salvati" })
+        page.locator(S.toastSuccess, { hasText: "Voto e commento salvati" })
       ).toBeVisible();
-      await expect(page.locator("#detailVoteInput")).toHaveValue("8,5");
+      await expect(page.locator(S.detailVoteInput)).toHaveValue("8,5");
 
       // Reload con Supabase ANCORA irraggiungibile: se il voto fosse solo
       // in memoria (non davvero in localStorage), sparirebbe qui.
       await page.reload({ waitUntil: "domcontentloaded" });
-      await page.locator(".app.app--ready").waitFor({ state: "attached", timeout: 15_000 });
+      await page.locator(S.appReady).waitFor({ state: "attached", timeout: 15_000 });
 
-      const card2 = page.locator(".shelf-card.open-stored-detail", { hasText: addedTitle! }).first();
+      const card2 = page.locator(S.shelfCardOpenStoredDetail, { hasText: addedTitle! }).first();
       await expect(card2).toBeVisible({ timeout: 10_000 });
-      await expect(card2.locator(".shelf-card__vote")).toHaveText("★ 8,5");
+      await expect(card2.locator(S.shelfCardVote)).toHaveText("★ 8,5");
       await card2.click();
-      await expect(page.locator("#screen-detail")).toBeVisible();
-      await expect(page.locator("#detailVoteInput")).toHaveValue("8,5");
-      await expect(page.locator("#detailCommentInput")).toHaveValue(CINETRACKER_MARKER);
+      await expect(page.locator(S.screenDetail)).toBeVisible();
+      await expect(page.locator(S.detailVoteInput)).toHaveValue("8,5");
+      await expect(page.locator(S.detailCommentInput)).toHaveValue(CINETRACKER_MARKER);
 
       // Ripristiniamo la rete prima della pulizia, così la rimozione qui
       // sotto sincronizza davvero su Supabase invece di affidarsi solo alla
@@ -86,7 +87,7 @@ test.describe("CineTracker — salvataggio voto con Supabase irraggiungibile @wr
       await page.unroute(/quwkqaovjxczuahjcmmh\.supabase\.co/);
     } finally {
       await removeCurrentDetail(page);
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 });

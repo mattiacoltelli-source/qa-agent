@@ -7,6 +7,7 @@ import {
   priceChartWrap,
   ASSETS,
 } from "../../fixtures/prova-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Il grafico accuratezza è sempre in vista; i grafici prezzo (principale +
 // per orizzonte) sono dentro <details> collassato di default — ciascuno può
@@ -28,21 +29,21 @@ test.describe("AI Predictor — grafici per asset", () => {
       await gotoFresh(page);
       await selectAsset(page, asset);
 
-      await expect(accuracyChartWrap(page, asset).locator("canvas, .chart-empty")).toHaveCount(1);
+      await expect(accuracyChartWrap(page, asset).locator(S.canvasChartEmpty)).toHaveCount(1);
       await expect(accuracyChartWrap(page, asset)).toBeVisible();
 
       const details = chartDetails(page, asset);
       await expect(details).not.toHaveJSProperty("open", true);
 
-      await details.locator("summary").click();
+      await details.locator(S.summary).click();
       await expect(details).toHaveJSProperty("open", true);
       await expect(priceChartWrap(page, asset)).toBeVisible();
-      await expect(priceChartWrap(page, asset).locator("canvas, .chart-empty")).toHaveCount(1);
+      await expect(priceChartWrap(page, asset).locator(S.canvasChartEmpty)).toHaveCount(1);
 
       for (const horizon of ["1d", "7d", "1m"] as const) {
         const wrap = priceChartWrap(page, asset, horizon);
         await expect(wrap).toBeVisible();
-        await expect(wrap.locator("canvas, .chart-empty")).toHaveCount(1);
+        await expect(wrap.locator(S.canvasChartEmpty)).toHaveCount(1);
       }
     });
   }

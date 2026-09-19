@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { gotoFresh, search } from "../../fixtures/cinetracker-page.ts";
 import { abortRoute } from "../../../../core/network.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Chaos test" (vedi supabase-down.spec.ts per la spiegazione della
 // categoria): TMDB irraggiungibile durante una ricerca. doSearch() in
@@ -15,7 +16,7 @@ test.describe("CineTracker — TMDB irraggiungibile durante una ricerca", () => 
 
     await search(page, "Inception");
 
-    await expect(page.locator(".toast.error", { hasText: "Errore di ricerca" })).toBeVisible();
-    await expect(page.locator("#resultsEmpty")).toContainText("Errore di ricerca");
+    await expect(page.locator(S.toastError, { hasText: "Errore di ricerca" })).toBeVisible();
+    await expect(page.locator(S.resultsEmpty)).toContainText("Errore di ricerca");
   });
 });

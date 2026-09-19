@@ -7,6 +7,7 @@ import {
   removeCurrentDetail,
   openBackupViaSecretGesture,
 } from "../../fixtures/cinetracker-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Esporta un backup, lo re-importa e verifica che la libreria risulti
 // identica: il round-trip è l'unico modo pratico di verificare che
@@ -54,7 +55,7 @@ test.describe("CineTracker — backup export/import @write", () => {
     await search(page, "Inception");
     const card = firstAddableSearchCard(page);
     await expect(card).toBeVisible({ timeout: 10_000 });
-    const addedTitle = await card.locator(".poster-card__title").textContent();
+    const addedTitle = await card.locator(S.posterCardTitle).textContent();
     await addSearchResultAs(card, "watch");
 
     try {
@@ -71,21 +72,21 @@ test.describe("CineTracker — backup export/import @write", () => {
       // stessa modale in-page (#confirmOverlay/#confirmYesBtn) usata da
       // removeCurrentDetail() nel fixture — serve un click esplicito.
       await page.locator("#importFileInput").setInputFiles(path!);
-      await page.locator("#confirmYesBtn").click();
+      await page.locator(S.confirmYesBtn).click();
       // A questo punto possono essere ancora visibili (non scompaiono subito,
       // restano ~2.8s) anche i toast di "aggiunto a watchlist" e "backup
       // esportato" dei passi precedenti: ".toast.success" da solo è ambiguo
       // (strict mode, più match). Scopiamo su quello specifico dell'import.
-      await expect(page.locator(".toast.success", { hasText: "importato" })).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(S.toastSuccess, { hasText: "importato" })).toBeVisible({ timeout: 10_000 });
 
       // 4. La libreria deve tornare coerente: il titolo aggiunto è ancora in watchlist.
       // #libraryList contiene TUTTA la watchlist reale (nel run che ha
       // scoperto questo bug, 20 titoli): "toContainText" su un locator con
       // più match va in strict mode violation. Scopiamo sulla riga del
       // titolo effettivamente aggiunto.
-      await page.locator('.nav__btn[data-screen="home"]').click();
-      await page.locator("#openWatchAll").click();
-      await expect(page.locator("#libraryList .list-item", { hasText: addedTitle! })).toBeVisible();
+      await page.locator(S.navBtnScreenHome).click();
+      await page.locator(S.openWatchAll).click();
+      await expect(page.locator(S.libraryListListItem, { hasText: addedTitle! })).toBeVisible();
     } finally {
       // Cleanup: riapriamo il titolo dalla watchlist e lo rimuoviamo. A
       // questo punto è già in libreria (l'abbiamo appena aggiunto sopra),
@@ -93,18 +94,18 @@ test.describe("CineTracker — backup export/import @write", () => {
       // (.poster-card__tag.open-stored-detail), non più .action-details —
       // quel pulsante esiste solo per risultati NON ancora posseduti (vedi
       // ui.js::renderSearchResults).
-      await page.locator('.nav__btn[data-screen="home"]').click();
+      await page.locator(S.navBtnScreenHome).click();
       await search(page, "Inception");
       const cardAgain = page
-        .locator("#results .poster-card")
-        .filter({ has: page.locator(".poster-card__title", { hasText: addedTitle! }) })
-        .filter({ has: page.locator(".poster-card__tag") })
+        .locator(S.resultsPosterCard)
+        .filter({ has: page.locator(S.posterCardTitle, { hasText: addedTitle! }) })
+        .filter({ has: page.locator(S.posterCardTag) })
         .first();
       await expect(cardAgain).toBeVisible({ timeout: 10_000 });
-      await cardAgain.locator(".open-stored-detail").click();
-      await expect(page.locator("#screen-detail")).toBeVisible();
+      await cardAgain.locator(S.openStoredDetail).click();
+      await expect(page.locator(S.screenDetail)).toBeVisible();
       await removeCurrentDetail(page);
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 });

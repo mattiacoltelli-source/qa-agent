@@ -11,6 +11,7 @@
 
 import { expect } from "@playwright/test";
 import type { Page, Locator } from "@playwright/test";
+import { S } from "./selectors.ts";
 
 export const ASSETS = ["NVDA", "MSFT", "AAPL"] as const;
 export type ProvaAsset = (typeof ASSETS)[number];
@@ -27,7 +28,7 @@ export type ProvaAsset = (typeof ASSETS)[number];
  * Prova/index.html). Per lavorare su un altro asset serve selectAsset(). */
 export async function gotoFresh(page: Page): Promise<void> {
   await page.goto(".");
-  await page.locator("#assets-grid .asset-card").first().waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.assetsGridAssetCard).first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
 /** Card di un asset della pagina Tech. Ancorata a #assets-grid e a
@@ -57,7 +58,7 @@ export async function selectAsset(page: Page, asset: ProvaAsset): Promise<void> 
 }
 
 export function chartDetails(page: Page, asset: ProvaAsset): Locator {
-  return assetCard(page, asset).locator("details.chart-details");
+  return assetCard(page, asset).locator(S.detailsChart);
 }
 
 /** Contenitore del grafico accuratezza: canvas o messaggio "nessun dato" a
@@ -81,13 +82,13 @@ export function priceChartWrap(page: Page, asset: ProvaAsset, horizon?: "1d" | "
  * "details.info-panel" non ancorato matcha più elementi e fa fallire i
  * test in strict mode, non solo quelli sul pannello sbagliato. */
 export function infoPanel(page: Page): Locator {
-  return page.locator("#page-tech > details.info-panel");
+  return page.locator(S.pageTechDetailsInfoPanel);
 }
 
 /** Gemello del precedente sulla pagina "Trend strutturali": "Come funziona
  * questa pagina?" (paniere robotica/data center, fasi cicliche, cadenze). */
 export function roboticsInfoPanel(page: Page): Locator {
-  return page.locator("#page-robotics > details.info-panel");
+  return page.locator(S.pageRoboticsDetailsInfoPanel);
 }
 
 /** Tendina "Info azienda" dentro una card (sede, anno di fondazione,
@@ -95,15 +96,15 @@ export function roboticsInfoPanel(page: Page): Locator {
  * COMPANY_INFO, più i fondamentali da data/tradingview/fundamentals.json
  * per i soli asset che ce li hanno). Esiste su entrambe le pagine. */
 export function companyInfoPanel(card: Locator): Locator {
-  return card.locator("details.info-panel");
+  return card.locator(S.detailsInfoPanel);
 }
 
 export function predictionRows(page: Page, asset: ProvaAsset): Locator {
-  return assetCard(page, asset).locator("tbody tr.pred-row");
+  return assetCard(page, asset).locator(S.tbodyTrPredRow);
 }
 
 export function outcomeRows(page: Page, asset: ProvaAsset): Locator {
-  return assetCard(page, asset).locator("tbody tr.outcome-row");
+  return assetCard(page, asset).locator(S.tbodyTrOutcomeRow);
 }
 
 /** Riga di dettaglio associata a una riga cliccabile, per indice (stesso
@@ -125,14 +126,14 @@ export function horizonFilterButton(page: Page, horizon: ProvaHorizonFilter): Lo
 }
 
 export function accuracyBadge(page: Page, asset: ProvaAsset): Locator {
-  return assetCard(page, asset).locator(".badge-accuracy");
+  return assetCard(page, asset).locator(S.badgeAccuracy);
 }
 
 /** Nota "dati mancanti" sotto il nome dell'asset: vuota/nascosta se
  * l'ultimo segnale aveva tutte le fonti opzionali disponibili (dato
  * reale, cambia ogni giorno — vedi missingDataNote() in index.html). */
 export function dataStatusNote(page: Page, asset: ProvaAsset): Locator {
-  return assetCard(page, asset).locator(".data-status");
+  return assetCard(page, asset).locator(S.status);
 }
 
 /** Orario della previsione giornaliera in ora italiana, dentro il
@@ -145,7 +146,7 @@ export function predictionTimeItalian(page: Page): Locator {
  * dell'ultima previsione, da 096dd0f) — vuoto se non c'è ancora nessuna
  * previsione salvata per quell'asset. */
 export function assetPriceLabel(page: Page, asset: ProvaAsset): Locator {
-  return assetCard(page, asset).locator(".asset-price");
+  return assetCard(page, asset).locator(S.assetPrice);
 }
 
 /** Riga "istantanea prezzo" sotto il nome asset (da 40e3184): nascosta se
@@ -153,7 +154,7 @@ export function assetPriceLabel(page: Page, asset: ProvaAsset): Locator {
  * previsione 1g con cui confrontarlo — dato reale, cambia più volte al
  * giorno, come dataStatusNote() sopra. */
 export function snapshotStatus(page: Page, asset: ProvaAsset): Locator {
-  return assetCard(page, asset).locator(".snapshot-status");
+  return assetCard(page, asset).locator(S.snapshotStatus);
 }
 
 // ─── TABELLE RICHIUDIBILI ("Ultimi Risultati Valutati" / "Ultimi Segnali
@@ -173,7 +174,7 @@ const COLLAPSIBLE_TITLE: Record<ProvaTableKind, string> = {
 /** Intestazione cliccabile di una sezione richiudibile dentro `scope`
  * (una card o la pagina intera), scelta per titolo. */
 export function collapsibleHeader(scope: Locator, title: string): Locator {
-  return scope.locator(".collapsible-header").filter({ hasText: title });
+  return scope.locator(S.collapsibleHeader).filter({ hasText: title });
 }
 
 /** Il contenuto associato a quell'intestazione: è il fratello immediato
@@ -322,7 +323,7 @@ export function reportPage(page: Page): Locator {
 
 /** Gemello di infoPanel()/roboticsInfoPanel() sulla pagina Report. */
 export function reportInfoPanel(page: Page): Locator {
-  return page.locator("#page-report > details.info-panel");
+  return page.locator(S.pageReportDetailsInfoPanel);
 }
 
 export function reportFilterButton(page: Page, key: ProvaReportType): Locator {

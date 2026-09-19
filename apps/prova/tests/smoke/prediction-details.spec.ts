@@ -10,6 +10,7 @@ import {
   outcomeDetailRow,
   ASSETS,
 } from "../../fixtures/prova-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // I dati sono reali e cambiano ogni giorno (nuove previsioni/valutazioni
 // generate dalla pipeline Python): questi test verificano il COMPORTAMENTO
@@ -114,7 +115,7 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
       // serve un test che guardi proprio lo stato iniziale.
       await gotoFresh(page);
       const card = assetCard(page, asset);
-      await expect(card.locator(".collapsible-content.collapsed")).toHaveCount(2);
+      await expect(card.locator(S.collapsibleContentCollapsed)).toHaveCount(2);
       // "Chiuso" è max-height:0 + overflow:hidden, non display:none: le
       // righe restano "visible" per Playwright (è il click a mancare il
       // bersaglio, sull'hit test), quindi l'asserzione onesta è che la
@@ -123,7 +124,7 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
       expect(await collapsibleHeight(card, "Ultimi Risultati Valutati")).toBe(0);
 
       await openAssetTable(page, asset, "predictions");
-      await expect(card.locator(".collapsible-content.collapsed")).toHaveCount(1);
+      await expect(card.locator(S.collapsibleContentCollapsed)).toHaveCount(1);
       expect(await collapsibleHeight(card, "Ultimi Segnali Generati")).toBeGreaterThan(0);
     });
   }

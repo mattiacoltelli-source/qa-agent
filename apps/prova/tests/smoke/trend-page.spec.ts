@@ -14,6 +14,7 @@ import {
   expandCollapsible,
   ROBOTICS_ASSETS,
 } from "../../fixtures/prova-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Seconda pagina della stessa dashboard (nessuna navigazione: switchPage()
 // mostra/nasconde #page-tech e #page-robotics), rietichettata "Trend
@@ -54,7 +55,7 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
     await gotoFresh(page);
     await openRoboticsPage(page);
 
-    await expect(page.locator("#robotics-asset-filter .horizon-filter-btn")).toHaveCount(
+    await expect(page.locator(S.roboticsAssetFilterHorizonBtn)).toHaveCount(
       ROBOTICS_ASSETS.length
     );
     // Vertiv (VRT) è l'aggiunta di 1fcb9c4, Teradyne (TER) quella
@@ -99,10 +100,10 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
         continue;
       }
 
-      await expect(body.locator(".cycle-badge").first()).toContainText("Fase ciclo:");
+      await expect(body.locator(S.cycleBadge).first()).toContainText("Fase ciclo:");
       // CAGR su 1/3/5/10 anni: quattro celle sempre, con "—" dove lo
       // storico non arriva (10 anni per un titolo quotato da meno).
-      await expect(body.locator(".cagr-grid .cagr-cell")).toHaveCount(4);
+      await expect(body.locator(S.cagrGridCell)).toHaveCount(4);
       await expect(body).toContainText("Distanza da ATH:");
       await expect(body).toContainText("Distanza da massimo 52 sett.:");
       await expect(body).toContainText("Valutazione ciclo");
@@ -114,7 +115,7 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
       // ogni lettura mai generata (verificabilità nel tempo).
       await expect(collapsibleContent(card, "Storico Letture")).toHaveClass(/collapsed/);
       await expandCollapsible(card, "Storico Letture");
-      const historyRows = collapsibleContent(card, "Storico Letture").locator("tbody tr");
+      const historyRows = collapsibleContent(card, "Storico Letture").locator(S.tbodyTr);
       expect(await historyRows.count(), `${label}: storico letture vuoto`).toBeGreaterThan(0);
     }
   });
@@ -145,10 +146,10 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
       if (text.includes("Nessuna analisi trend ancora disponibile")) continue;
 
       // Il contenuto che NON dipende da Chart.js resta tutto al suo posto…
-      await expect(body.locator(".cycle-badge").first()).toContainText("Fase ciclo:");
-      await expect(body.locator(".cagr-grid .cagr-cell")).toHaveCount(4);
+      await expect(body.locator(S.cycleBadge).first()).toContainText("Fase ciclo:");
+      await expect(body.locator(S.cagrGridCell)).toHaveCount(4);
       // …e al posto del grafico c'è un messaggio, non un riquadro vuoto.
-      await expect(body.locator(".chart-empty")).toBeVisible();
+      await expect(body.locator(S.chartEmpty)).toBeVisible();
     }
   });
 
@@ -160,9 +161,9 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
 
     const panel = roboticsInfoPanel(page);
     await expect(panel).not.toHaveJSProperty("open", true);
-    await panel.locator("summary").click();
+    await panel.locator(S.summary).click();
 
-    const body = panel.locator(".info-panel-body");
+    const body = panel.locator(S.infoPanelBody);
     await expect(body).toContainText("THK");
     await expect(body).toContainText("Harmonic Drive");
     await expect(body).toContainText("Teradyne");

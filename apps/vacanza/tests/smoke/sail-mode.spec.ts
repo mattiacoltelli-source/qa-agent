@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { gotoFresh, switchPage, toggleSailModeSwitch } from "../../fixtures/vacanza-page.ts";
 import { mockWeatherApis, WEATHER_PROFILES } from "../../fixtures/weather-mock.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 test.describe("Spot — Sail Mode / Travel Mode", () => {
   test.beforeEach(async ({ page }) => {
@@ -20,8 +21,8 @@ test.describe("Spot — Sail Mode / Travel Mode", () => {
     await toggleSailModeSwitch(page);
     await expect(page.locator("#modeLabelMain")).toHaveText("Sail Mode");
     await expect(page.locator("#modeLabelSub")).toHaveText("Sail mode ON");
-    await expect(page.locator("#statsGrid")).toContainText("Onde");
-    await expect(page.locator("#statsGrid")).not.toContainText("Temperatura");
+    await expect(page.locator(S.statsGrid)).toContainText("Onde");
+    await expect(page.locator(S.statsGrid)).not.toContainText("Temperatura");
 
     await switchPage(page, "spots");
     await expect(page.locator("#sailFilters")).toBeVisible();

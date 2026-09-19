@@ -17,6 +17,7 @@ import {
   expandCollapsible,
   REPORT_TYPES,
 } from "../../fixtures/prova-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Terza pagina della stessa dashboard (a83696d, 2026-09-18) — vedi il
 // commento esteso sopra le funzioni "PAGINA REPORT" in fixtures/prova-page.ts
@@ -52,7 +53,7 @@ test.describe("AI Predictor — pagina Report", () => {
     await gotoFresh(page);
     await openReportPage(page);
 
-    await expect(page.locator("#report-type-filter .horizon-filter-btn")).toHaveCount(REPORT_TYPES.length);
+    await expect(page.locator(S.reportTypeFilterHorizonBtn)).toHaveCount(REPORT_TYPES.length);
     for (const { key, label } of REPORT_TYPES) {
       await expect(reportFilterButton(page, key)).toHaveText(label);
     }
@@ -93,7 +94,7 @@ test.describe("AI Predictor — pagina Report", () => {
     // Badge di direzione: una delle tre etichette italiane reali (non
     // "UP/DOWN/FLAT", quelle sono solo il nome interno della classe CSS —
     // vedi TREND_DIRECTION_BADGE_CLASS in index.html).
-    await expect(body.locator(".badge")).toHaveText(/^(RIALZISTA|RIBASSISTA|LATERALE)$/);
+    await expect(body.locator(S.badge)).toHaveText(/^(RIALZISTA|RIBASSISTA|LATERALE)$/);
 
     // Da 3c1403e (2026-09-18): non più un unico paragrafo misto, ma un
     // blocco per settore (ROBOTICS_SECTOR in src/config.py — mappa fissa
@@ -133,7 +134,7 @@ test.describe("AI Predictor — pagina Report", () => {
       await selectReport(page, key);
 
       const section = reportSection(page, key);
-      const card = section.locator(".asset-card");
+      const card = section.locator(S.assetCard);
       const body = reportIndexBody(page, key);
 
       await expect(body).not.toHaveText("Caricamento…", { timeout: 15_000 });
@@ -143,7 +144,7 @@ test.describe("AI Predictor — pagina Report", () => {
       // semplice" per costruzione (vedi commento sopra #page-report in
       // index.html) — verifichiamo che sia davvero assente, non solo
       // che il resto funzioni.
-      await expect(card.locator("details.info-panel")).toHaveCount(0);
+      await expect(card.locator(S.detailsInfoPanel)).toHaveCount(0);
 
       const text = (await body.textContent()) ?? "";
       if (text.includes("Nessuna analisi trend ancora disponibile")) {
@@ -152,17 +153,17 @@ test.describe("AI Predictor — pagina Report", () => {
 
       // Prezzo e direzione: stesso formato delle card Trend strutturali.
       await expect(reportIndexPrice(page, key)).not.toBeEmpty();
-      await expect(reportIndexDirection(page, key).locator(".badge")).toBeVisible();
+      await expect(reportIndexDirection(page, key).locator(S.badge)).toBeVisible();
 
-      await expect(body.locator(".cycle-badge").first()).toContainText("Fase ciclo:");
-      await expect(body.locator(".cagr-grid .cagr-cell")).toHaveCount(4);
+      await expect(body.locator(S.cycleBadge).first()).toContainText("Fase ciclo:");
+      await expect(body.locator(S.cagrGridCell)).toHaveCount(4);
       await expect(body).toContainText("Distanza da ATH:");
       await expect(body).toContainText("Distanza da massimo 52 sett.:");
       await expect(body).toContainText("Lettura strutturale");
 
       await expect(collapsibleContent(card, "Storico Letture")).toHaveClass(/collapsed/);
       await expandCollapsible(card, "Storico Letture");
-      const historyRows = collapsibleContent(card, "Storico Letture").locator("tbody tr");
+      const historyRows = collapsibleContent(card, "Storico Letture").locator(S.tbodyTr);
       expect(await historyRows.count(), `${key}: storico letture vuoto`).toBeGreaterThan(0);
     });
   }
@@ -185,9 +186,9 @@ test.describe("AI Predictor — pagina Report", () => {
       const text = (await body.textContent()) ?? "";
       if (text.includes("Nessuna analisi trend ancora disponibile")) continue;
 
-      await expect(body.locator(".cycle-badge").first()).toContainText("Fase ciclo:");
-      await expect(body.locator(".cagr-grid .cagr-cell")).toHaveCount(4);
-      await expect(body.locator(".chart-empty")).toBeVisible();
+      await expect(body.locator(S.cycleBadge).first()).toContainText("Fase ciclo:");
+      await expect(body.locator(S.cagrGridCell)).toHaveCount(4);
+      await expect(body.locator(S.chartEmpty)).toBeVisible();
     }
   });
 
@@ -199,7 +200,7 @@ test.describe("AI Predictor — pagina Report", () => {
 
     const panel = reportInfoPanel(page);
     await expect(panel).not.toHaveJSProperty("open", true);
-    await panel.locator("summary").click();
+    await panel.locator(S.summary).click();
     await expect(panel).toHaveJSProperty("open", true);
 
     await expect(panel).toContainText("Paniere");

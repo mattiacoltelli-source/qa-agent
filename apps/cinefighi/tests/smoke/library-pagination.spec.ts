@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { clearBrowserStorage } from "../../../../core/storage.ts";
 import { mockJson } from "../../../../core/network.ts";
 import { QA_USER, selectExistingUser } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // Verifica il caricamento progressivo di "Vedi tutto" (app.js::renderLibraryScreen/
 // renderNextLibraryPage/observeLibrarySentinel): con una libreria grande, la lista
@@ -38,10 +39,10 @@ async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page)
   await page.goto(".");
   await clearBrowserStorage(page);
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.locator("#userPickerOverlay").waitFor({ state: "visible", timeout: 10_000 });
+  await page.locator(S.userPickerOverlay).waitFor({ state: "visible", timeout: 10_000 });
   const picked = await selectExistingUser(page, QA_USER);
   if (!picked) throw new Error(`"${QA_USER}" non trovato nella lista utenti mockata`);
-  await page.locator("#watchShelf .shelf-card, #seenMovieShelf .shelf-card").first()
+  await page.locator(S.watchShelfShelfCardSeenMovieShelf).first()
     .waitFor({ state: "visible", timeout: 10_000 });
 }
 
@@ -51,9 +52,9 @@ test.describe("CineFighi — caricamento progressivo di \"Vedi tutto\"", () => {
 
     await page.locator("#openSeenMovies").click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.libraryListListItem).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const rendered = await page.locator("#libraryList .list-item").count();
+    const rendered = await page.locator(S.libraryListListItem).count();
     expect(rendered).toBeGreaterThan(0);
     expect(rendered).toBeLessThan(200); // non tutto subito
   });
@@ -63,9 +64,9 @@ test.describe("CineFighi — caricamento progressivo di \"Vedi tutto\"", () => {
 
     await page.locator("#openSeenMovies").click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.libraryListListItem).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const initialCount = await page.locator("#libraryList .list-item").count();
+    const initialCount = await page.locator(S.libraryListListItem).count();
 
     // Scorre ripetutamente fino in fondo alla pagina finché la lista non si
     // stabilizza (tutti i blocchi caricati) o si raggiunge un tetto di tentativi.
@@ -73,7 +74,7 @@ test.describe("CineFighi — caricamento progressivo di \"Vedi tutto\"", () => {
     for (let i = 0; i < 10; i++) {
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await page.waitForTimeout(300);
-      const next = await page.locator("#libraryList .list-item").count();
+      const next = await page.locator(S.libraryListListItem).count();
       if (next === count) break;
       count = next;
     }
@@ -87,12 +88,12 @@ test.describe("CineFighi — caricamento progressivo di \"Vedi tutto\"", () => {
 
     await page.locator("#openSeenMovies").click();
     await page.locator("#screen-library").waitFor({ state: "visible", timeout: 10_000 });
-    await page.locator("#libraryList .list-item").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.libraryListListItem).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    await page.locator('.filter-pill[data-filter="tv"]').click();
+    await page.locator(S.filterPillTv).click();
     await page.waitForTimeout(300);
 
-    const rendered = await page.locator("#libraryList .list-item").count();
+    const rendered = await page.locator(S.libraryListListItem).count();
     // Le 50 serie TV mockate, non sommate ai 200 film già visti prima del cambio filtro.
     expect(rendered).toBeLessThanOrEqual(50);
     expect(rendered).toBeGreaterThan(0);

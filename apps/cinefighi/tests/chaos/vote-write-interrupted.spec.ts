@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { ensureQaUserSelected, firstAddableSearchCard, search } from "../../fixtures/cinefighi-page.ts";
+import { S } from "../../fixtures/selectors.ts";
 
 // "Chaos test" (vedi apps/cinetracker/tests/chaos/ per la spiegazione della
 // categoria), variante "crash recovery": qui non interrompiamo la rete
@@ -35,10 +36,10 @@ test.describe("CineFighi — interruzione di rete durante il salvataggio del vot
     // Il click ha già scritto il titolo su Supabase: da qui il try/finally
     // deve coprire anche l'attesa di #screen-detail (vedi commento gemello
     // in voting.write.spec.ts).
-    await firstCard.locator('button[data-status="seen"]').click();
+    await firstCard.locator(S.buttonStatusSeen).click();
 
     try {
-      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
 
       // Interrompiamo SOLO la scrittura (POST upsert) sulla tabella votes,
       // non le letture: reloadLibrary la interroga di nuovo più sotto, e
@@ -47,17 +48,17 @@ test.describe("CineFighi — interruzione di rete durante il salvataggio del vot
         route.request().method() === "GET" ? route.continue() : route.abort("failed")
       );
 
-      await page.locator("#detailVoteSlider").fill("8");
-      await page.locator("#detailSaveVoteBtn").click();
+      await page.locator(S.detailVoteSlider).fill("8");
+      await page.locator(S.detailSaveVoteBtn).click();
 
       await expect(
-        page.locator(".toast.error", { hasText: "Errore nel salvare il voto" })
+        page.locator(S.toastError, { hasText: "Errore nel salvare il voto" })
       ).toBeVisible();
 
       // Non ottimistico: né il bottone né la lista voti devono cambiare come
       // se il voto fosse stato registrato.
-      await expect(page.locator("#detailSaveVoteBtn")).toHaveText("Salva voto");
-      await expect(page.locator(".vote-row", { hasText: "(tu)" })).toHaveCount(0);
+      await expect(page.locator(S.detailSaveVoteBtn)).toHaveText("Salva voto");
+      await expect(page.locator(S.voteRow, { hasText: "(tu)" })).toHaveCount(0);
 
       await page.unroute(/supabase\.co\/rest\/v1\/votes/);
 
@@ -66,19 +67,19 @@ test.describe("CineFighi — interruzione di rete durante il salvataggio del vot
       // stato in memoria — se il voto fosse stato scritto a metà lato
       // server, qui emergerebbe.
       await page.reload();
-      await expect(page.locator("#app")).toBeVisible({ timeout: 15_000 });
-      await page.locator(".shelf-card.open-detail", { hasText: "Inception" }).first().click();
-      await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
-      await expect(page.locator("#detailSaveVoteBtn")).toHaveText("Salva voto");
-      await expect(page.locator(".vote-row", { hasText: "(tu)" })).toHaveCount(0);
+      await expect(page.locator(S.app)).toBeVisible({ timeout: 15_000 });
+      await page.locator(S.shelfCardOpenDetail, { hasText: "Inception" }).first().click();
+      await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(S.detailSaveVoteBtn)).toHaveText("Salva voto");
+      await expect(page.locator(S.voteRow, { hasText: "(tu)" })).toHaveCount(0);
     } finally {
-      if (!(await page.locator("#screen-detail").isVisible())) {
-        await page.locator(".shelf-card.open-detail", { hasText: "Inception" }).first().click();
-        await expect(page.locator("#screen-detail")).toBeVisible({ timeout: 10_000 });
+      if (!(await page.locator(S.screenDetail).isVisible())) {
+        await page.locator(S.shelfCardOpenDetail, { hasText: "Inception" }).first().click();
+        await expect(page.locator(S.screenDetail)).toBeVisible({ timeout: 10_000 });
       }
-      await page.locator("#detailRemoveBtn").click();
-      await page.locator("#confirmYesBtn").click();
-      await expect(page.locator("#screen-home")).toBeVisible();
+      await page.locator(S.detailRemoveBtn).click();
+      await page.locator(S.confirmYesBtn).click();
+      await expect(page.locator(S.screenHome)).toBeVisible();
     }
   });
 });
