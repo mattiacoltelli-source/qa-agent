@@ -55,12 +55,47 @@ Quel `runAt` vecchio è il segnale più importante che questo modulo produce:
 di mostrare un verde stantio. Per questo `result` non viene mai inventato
 quando un report manca: si preferisce non scrivere nulla.
 
+## `sentry.json`: l'unico che non viene da un agente
+
+Stesso formato, fonte diversa: le issue aperte su Sentry nelle ultime 24
+ore per tutte e cinque le app (le quattro monitorate più il Control Center
+stesso). Lo scrive `sentry-status.mjs`, in un job a parte di
+`full-check.yml` che gira sempre — anche quando qualche agente fallisce,
+perché è lì che gli errori degli utenti servono di più.
+
+**Perché sta qui e non nella dashboard**: leggere le issue richiede un
+token Sentry in lettura, e la dashboard è una pagina statica pubblica dove
+un token sarebbe leggibile da chiunque. Qui il token è un secret di
+GitHub Actions e sul repo resta solo il risultato — nessuna credenziale
+attraversa il confine. È lo stesso schema di tutto il resto: chi ha le
+credenziali produce un file, chi non le ha lo legge.
+
+Richiede il secret **`SENTRY_AUTH_TOKEN`** (scope `project:read` e
+`event:read`). Finché manca, lo script lo rileva, lo dice nel log ed esce
+senza fallire: a valle la dashboard mostra "sconosciuto" per gli errori,
+che è la verità.
+
+Severità volutamente mite — sono app personali, un errore JavaScript va
+guardato ma non è un incendio:
+
+| Situazione | Esito |
+|---|---|
+| nessuna issue aperta in 24h | PASS |
+| almeno una issue | WARN |
+| almeno una issue di livello `fatal` | FAIL |
+
+Se ogni errore facesse diventare rossa una card, in una settimana la
+dashboard sarebbe permanentemente rossa e smetteresti di guardarla.
+
 ## Struttura
 
 ```
 build-status.mjs        solo I/O: legge reports/, fonde, scrive status/<agente>.json
+sentry-status.mjs       solo I/O: interroga Sentry, scrive status/sentry.json
 lib/normalize.mjs       logica pura: sei lettori (uno per agente) + merge
 lib/normalize.test.mjs  test della logica pura (node --test, nessuna rete)
+lib/sentry.mjs          logica pura: issue Sentry -> forma comune
+lib/sentry.test.mjs     test della logica pura
 ```
 
 ## Uso

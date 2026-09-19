@@ -38,6 +38,12 @@ agente ci scrive l'essenziale del proprio esito in `status/<agente>.json`,
 committato nel repo. È la copia leggibile **senza token e senza scadenza**
 (gli artifact richiedono autenticazione e scadono) che consuma la dashboard
 **App Control Center** — quella aggrega e mostra, non ricontrolla nulla.
+Nello stesso posto finiscono anche gli **errori lato client raccolti da
+Sentry** nelle ultime 24 ore (`status/sentry.json`): non li produce un
+agente, ma il contratto è identico, e leggerli richiede un token che in
+una pagina pubblica non potrebbe stare. Richiede il secret
+`SENTRY_AUTH_TOKEN`; finché manca, quello stato semplicemente non viene
+pubblicato.
 
 Tutti con workflow separato, lanciabile da telefono come il QA Agent,
 stessa logica AI-solo-se-serve. Data Health, Performance, Scale e Security
