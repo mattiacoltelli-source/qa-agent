@@ -1,19 +1,24 @@
 {
   "agent": "data-health",
   "label": "Data Health Agent",
-  "updatedAt": "2026-09-19T00:22:31.088Z",
+  "updatedAt": "2026-09-19T07:00:11.652Z",
   "apps": {
     "cinefighi": {
-      "result": "PASS",
-      "summary": "Online · 0 anomalie",
+      "result": "WARN",
+      "summary": "Online · 1 anomalie",
       "metrics": {
         "users": 8,
         "titles": 566,
         "votes": 962
       },
-      "problems": [],
-      "runAt": "2026-09-19T00:22:31.088Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35408674100"
+      "problems": [
+        {
+          "severity": "LOW",
+          "message": "stale_qa_agent_residue (1): utente \"_QA_Agent_\" creato 2026-09-19T00:15:25.07737+00:00"
+        }
+      ],
+      "runAt": "2026-09-19T07:00:11.652Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
     },
     "cinetracker": {
       "result": "PASS",
@@ -22,16 +27,16 @@
         "entries": 353
       },
       "problems": [],
-      "runAt": "2026-09-19T00:22:31.088Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35408674100"
+      "runAt": "2026-09-19T07:00:11.652Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
     },
     "spot": {
       "result": "PASS",
       "summary": "Online · 0 anomalie",
       "metrics": {},
       "problems": [],
-      "runAt": "2026-09-19T00:22:31.088Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35408674100"
+      "runAt": "2026-09-19T07:00:11.652Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
     }
   }
 }
