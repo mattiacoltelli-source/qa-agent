@@ -1,7 +1,7 @@
 {
   "agent": "sentry",
   "label": "Errori (Sentry)",
-  "updatedAt": "2026-09-19T07:00:33.662Z",
+  "updatedAt": "2026-09-20T07:28:46.634Z",
   "apps": {
     "cinefighi": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:00:33.662Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+      "runAt": "2026-09-20T07:28:46.634Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     },
     "cinetracker": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:00:33.662Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+      "runAt": "2026-09-20T07:28:46.634Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     },
     "spot": {
       "result": "PASS",
@@ -33,8 +33,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:00:33.662Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+      "runAt": "2026-09-20T07:28:46.634Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     },
     "prova": {
       "result": "PASS",
@@ -44,8 +44,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:00:33.662Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+      "runAt": "2026-09-20T07:28:46.634Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     },
     "control-center": {
       "result": "PASS",
@@ -55,8 +55,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:00:33.662Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35428137231"
+      "runAt": "2026-09-20T07:28:46.634Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     }
   }
 }
