@@ -1,7 +1,7 @@
 {
   "agent": "security",
   "label": "Security Agent",
-  "updatedAt": "2026-09-19T07:04:34.978Z",
+  "updatedAt": "2026-09-20T07:28:29.754Z",
   "apps": {
     "qa-agent": {
       "result": "PASS",
@@ -14,8 +14,8 @@
         "total": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:04:34.978Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
+      "runAt": "2026-09-20T07:28:29.754Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     }
   }
 }
