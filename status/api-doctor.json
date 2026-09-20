@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-09-19T07:03:16.827Z",
+  "updatedAt": "2026-09-20T07:27:15.552Z",
   "apps": {
     "cinefighi": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:03:16.827Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
+      "runAt": "2026-09-20T07:27:15.552Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     },
     "cinetracker": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:03:16.827Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
+      "runAt": "2026-09-20T07:27:15.552Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     },
     "spot": {
       "result": "PASS",
@@ -33,24 +33,19 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-19T07:03:16.827Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
+      "runAt": "2026-09-20T07:27:15.552Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     },
     "prova": {
-      "result": "INFRA_ERROR",
-      "summary": "5/6 endpoint ok",
+      "result": "PASS",
+      "summary": "6/6 endpoint ok",
       "metrics": {
         "total": 6,
-        "failed": 1
+        "failed": 0
       },
-      "problems": [
-        {
-          "severity": "LOW",
-          "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429"
-        }
-      ],
-      "runAt": "2026-09-19T07:03:16.827Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35427744715"
+      "problems": [],
+      "runAt": "2026-09-20T07:27:15.552Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
     }
   }
 }
