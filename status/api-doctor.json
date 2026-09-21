@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-09-20T07:27:15.552Z",
+  "updatedAt": "2026-09-21T07:36:21.926Z",
   "apps": {
     "cinefighi": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-20T07:27:15.552Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
+      "runAt": "2026-09-21T07:36:21.926Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35572905586"
     },
     "cinetracker": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-20T07:27:15.552Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
+      "runAt": "2026-09-21T07:36:21.926Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35572905586"
     },
     "spot": {
       "result": "PASS",
@@ -33,19 +33,24 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-20T07:27:15.552Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
+      "runAt": "2026-09-21T07:36:21.926Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35572905586"
     },
     "prova": {
-      "result": "PASS",
-      "summary": "6/6 endpoint ok",
+      "result": "INFRA_ERROR",
+      "summary": "5/6 endpoint ok",
       "metrics": {
         "total": 6,
-        "failed": 0
+        "failed": 1
       },
-      "problems": [],
-      "runAt": "2026-09-20T07:27:15.552Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35496409678"
+      "problems": [
+        {
+          "severity": "LOW",
+          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed"
+        }
+      ],
+      "runAt": "2026-09-21T07:36:21.926Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35572905586"
     }
   }
 }
