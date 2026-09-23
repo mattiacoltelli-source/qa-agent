@@ -29,3 +29,4 @@
 {"runAt":"2026-09-20T07:28:06.981Z","result":"PASS","realCount":567,"extraTitles":1000,"targetCount":1567,"homeReadyMs":1666,"libraryFirstPageMs":62,"statsReadyMs":69}
 {"runAt":"2026-09-21T07:37:16.859Z","result":"PASS","realCount":567,"extraTitles":1000,"targetCount":1567,"homeReadyMs":1606,"libraryFirstPageMs":45,"statsReadyMs":56}
 {"runAt":"2026-09-22T07:15:23.902Z","result":"PASS","realCount":571,"extraTitles":1000,"targetCount":1571,"homeReadyMs":1660,"libraryFirstPageMs":58,"statsReadyMs":70}
+{"runAt":"2026-09-23T07:10:55.013Z","result":"PASS","realCount":572,"extraTitles":1000,"targetCount":1572,"homeReadyMs":1649,"libraryFirstPageMs":71,"statsReadyMs":69}

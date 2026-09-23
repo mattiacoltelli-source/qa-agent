@@ -1,37 +1,37 @@
 {
   "agent": "scale",
   "label": "Scale Agent",
-  "updatedAt": "2026-09-22T07:15:23.902Z",
+  "updatedAt": "2026-09-23T07:10:55.013Z",
   "apps": {
     "cinefighi": {
       "result": "PASS",
-      "summary": "1571 titoli · Home 1660ms",
+      "summary": "1572 titoli · Home 1649ms",
       "metrics": {
-        "targetCount": 1571,
-        "count": 1571,
-        "homeReadyMs": 1660,
-        "libraryFirstPageMs": 58,
+        "targetCount": 1572,
+        "count": 1572,
+        "homeReadyMs": 1649,
+        "libraryFirstPageMs": 71,
         "initialLibraryRows": 40,
-        "scrollMs": 2348,
+        "scrollMs": 2355,
         "libraryRowsAfterScroll": 200,
-        "statsReadyMs": 70
+        "statsReadyMs": 69
       },
       "problems": [
         {
           "severity": "MEDIUM",
-          "message": "Sopra soglia a 1571 titoli: homeReadyMs"
+          "message": "Sopra soglia a 1572 titoli: homeReadyMs"
         },
         {
           "severity": "MEDIUM",
-          "message": "Sopra soglia a 1571 titoli: libraryFirstPageMs"
+          "message": "Sopra soglia a 1572 titoli: libraryFirstPageMs"
         },
         {
           "severity": "MEDIUM",
-          "message": "Sopra soglia a 1571 titoli: statsReadyMs"
+          "message": "Sopra soglia a 1572 titoli: statsReadyMs"
         }
       ],
-      "runAt": "2026-09-22T07:15:23.902Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35697715145"
+      "runAt": "2026-09-23T07:10:55.013Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
     }
   }
 }
