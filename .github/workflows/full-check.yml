@@ -133,14 +133,13 @@ jobs:
       app: ${{ inputs.app || 'tutte' }}
     secrets: inherit
 
-  scale:
-    needs: api-doctor
-    if: ${{ !cancelled() }}
-    uses: ./.github/workflows/scale.yml
-    secrets: inherit
-
+  # Scale Agent fuori dalla catena dal 2026-09-23: riguarda solo CineFighi,
+  # sospesa su richiesta. Il suo workflow resta intatto e lanciabile a mano
+  # da Actions — per rimetterlo qui basta ripristinare questo blocco e
+  # rimettere `scale` nei `needs` qui sotto.
+  #
   security:
-    needs: scale
+    needs: api-doctor
     if: ${{ !cancelled() }}
     uses: ./.github/workflows/security.yml
     secrets: inherit
@@ -155,13 +154,13 @@ jobs:
   # soprattutto quando qualche agente ha fallito, non solo quando è tutto
   # verde.
   errori:
-    needs: [qa, health, performance, api-doctor, scale, security]
+    needs: [qa, health, performance, api-doctor, security]
     if: ${{ !cancelled() }}
     uses: ./.github/workflows/sentry.yml
     secrets: inherit
 
   notify:
-    needs: [qa, health, performance, api-doctor, scale, security]
+    needs: [qa, health, performance, api-doctor, security]
     if: ${{ !cancelled() && (contains(needs.*.result, 'failure') || inputs.test_notify) }}
     runs-on: ubuntu-latest
     steps:

@@ -1,9 +1,18 @@
 # QA Agent
 
-Suite di test Playwright per quattro app personali: **CineFighi** (cinema
-multiutente), **CineTracker** (repo `Cos90`, cinema single-user), **Spot**
-(guida di viaggio Ionio in barca a vela) e **Prova** (AI Predictor,
-esperimento predittivo sui mercati). Repository separato, dedicato solo
+Suite di test Playwright per le app personali: **CineTracker** (repo
+`Cos90`, cinema single-user), **Spot** (guida di viaggio Ionio in barca a
+vela) e **Prova** (AI Predictor, esperimento predittivo sui mercati).
+
+> **CineFighi è sospesa dal 2026-09-23.** Nessun test gira più contro
+> l'app del gruppo: era l'unica suite che scrivesse in un database usato
+> da persone vere (creava l'utente `_QA_Agent_` prima di ogni run). I
+> test in `apps/cinefighi/` non sono stati toccati e si riattivano
+> rimettendo i due `projects` in `playwright.config.ts`. Anche lo **Scale
+> Agent** è fuori dalla catena automatica, perché riguarda solo CineFighi
+> — resta lanciabile a mano. Continuano invece a girare su CineFighi i
+> controlli di **sola lettura**: uptime e integrità dati (Data Health),
+> Lighthouse, API esterne, errori Sentry. Repository separato, dedicato solo
 al testing — non entra in nessuna delle app in produzione.
 
 **Uso quotidiano**: si lancia da GitHub Actions (tab **Actions** → "Run
