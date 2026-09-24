@@ -1,7 +1,7 @@
 {
   "agent": "qa",
   "label": "QA Agent",
-  "updatedAt": "2026-09-23T07:00:36.579Z",
+  "updatedAt": "2026-09-24T06:57:50.513Z",
   "apps": {
     "cinefighi": {
       "result": "PASS",
@@ -26,8 +26,8 @@
         "skipped": 22
       },
       "problems": [],
-      "runAt": "2026-09-23T07:00:36.579Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T06:57:50.513Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "spot": {
       "result": "PASS",
@@ -39,8 +39,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:00:36.579Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T06:57:50.513Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "prova": {
       "result": "PASS",
@@ -52,8 +52,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:00:36.579Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T06:57:50.513Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     }
   }
 }
