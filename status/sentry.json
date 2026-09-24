@@ -1,18 +1,25 @@
 {
   "agent": "sentry",
   "label": "Errori (Sentry)",
-  "updatedAt": "2026-09-23T07:11:38.806Z",
+  "updatedAt": "2026-09-24T07:05:21.003Z",
   "apps": {
     "cinefighi": {
-      "result": "PASS",
-      "summary": "Nessun errore in 24h",
+      "result": "WARN",
+      "summary": "1 errore · 3 eventi in 24h",
       "metrics": {
-        "issues": 0,
-        "eventi": 0
+        "issues": 1,
+        "eventi": 3,
+        "utenti": 0
       },
-      "problems": [],
-      "runAt": "2026-09-23T07:11:38.806Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "problems": [
+        {
+          "severity": "MEDIUM",
+          "message": "ReferenceError: currentUser is not defined — init(app) (3 volte)",
+          "url": "https://mattia-e5.sentry.io/issues/148911998/"
+        }
+      ],
+      "runAt": "2026-09-24T07:05:21.003Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "cinetracker": {
       "result": "PASS",
@@ -22,8 +29,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:11:38.806Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:05:21.003Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "spot": {
       "result": "PASS",
@@ -33,8 +40,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:11:38.806Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:05:21.003Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "prova": {
       "result": "PASS",
@@ -44,8 +51,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:11:38.806Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:05:21.003Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "control-center": {
       "result": "PASS",
@@ -55,8 +62,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:11:38.806Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:05:21.003Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     }
   }
 }
