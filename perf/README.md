@@ -1,7 +1,7 @@
 # Performance Agent
 
 Terzo modulo indipendente nello stesso repository, insieme a QA Agent e
-Data Health Agent. Misura le prestazioni reali delle tre app (Performance,
+Data Health Agent. Misura le prestazioni reali delle app (Performance,
 Accessibility, Best Practices, SEO) con Google Lighthouse, l'unico dei tre
 controlli che si applica anche a Spot (nessun backend, quindi Data Health
 non lo copre sui dati).
@@ -15,7 +15,7 @@ non lo copre sui dati).
 Lighthouse gira in un Chromium headless — lo stesso binario già installato
 per il QA Agent (`npx playwright install --with-deps chromium`), nessun
 browser aggiuntivo da scaricare. Gira in modalità **mobile** di default
-(le tre app sono PWA usate principalmente da telefono).
+(le app sono PWA usate principalmente da telefono).
 
 Per ogni app: 4 punteggi (0-100), confrontati con le soglie in
 `perf/thresholds.mjs`, più le 5 metriche grezze che compongono davvero il
@@ -36,8 +36,8 @@ il titolo, non è un errore.
 ## Soglie
 
 Partite volutamente larghe al primo giro, poi tarate il 21/08/2026 sui
-punteggi reali osservati in produzione (CineFighi 96/91/96/90, CineTracker
-84/88/96/90, Spot 79/89/92/90):
+punteggi reali osservati in produzione (CineTracker 84/88/96/90,
+Spot 79/89/92/90):
 
 ```js
 { performance: 70, accessibility: 80, "best-practices": 85, seo: 80 }
@@ -75,13 +75,13 @@ un calo reale; 40→38 è -5% ma quasi ininfluente a un livello già basso) —
 segnala un calo di almeno 5 punti su una categoria. Ogni run accoda una
 riga compatta a `history/data/performance.jsonl` (committata direttamente
 nel repo dal workflow — vedi `history/lib/record.mjs` per il meccanismo
-condiviso a tutti e quattro gli agenti che ne dispongono). Nessun
+condiviso a tutti e tre gli agenti che ne dispongono). Nessun
 database: solo un file JSONL in Git, letto/scritto in modo
 arithmetic-only (nessuna IA coinvolta). Non fa mai fallire il run.
 
 ## Credenziali
 
-Nessuna nuova. Lighthouse legge solo l'HTML/JS pubblico delle tre app,
+Nessuna nuova. Lighthouse legge solo l'HTML/JS pubblico delle app,
 come farebbe un visitatore qualsiasi — nessun accesso a Supabase, nessuna
 scrittura da nessuna parte. Unico secret riusato: `ANTHROPIC_API_KEY`
 (già configurato per gli altri due moduli).

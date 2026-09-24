@@ -1,8 +1,6 @@
-// Controlli sull'API esterna reale usata da CineTracker: TMDB, con una
-// chiave DIVERSA da quella di CineFighi (verificato sul sorgente reale,
-// tmdb.js di Cos90) — le due app non condividono la chiave, quindi vanno
-// controllate separatamente: un problema sulla chiave di una non implica
-// nulla sull'altra.
+// Controlli sull'API esterna reale usata da CineTracker: TMDB, con la
+// chiave hardcoded nel bundle dell'app (verificato sul sorgente reale,
+// tmdb.js di Cos90).
 
 import { fetchJson } from "../lib/http.mjs";
 

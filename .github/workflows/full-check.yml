@@ -1,17 +1,16 @@
 name: Controllo Completo
 
-# Lancia i sei agenti in sequenza (mai in parallelo, per evitare che Data
+# Lancia i cinque agenti in sequenza (mai in parallelo, per evitare che Data
 # Health legga dati a metà scrittura se in futuro si abilitassero i test
 # @write da qui — vedi FAQ.md) sulla stessa app/e, con un solo bottone. Ogni
 # job scrive il proprio riepilogo nella stessa pagina di run — non serve
 # unirli a mano, GitHub li impila automaticamente uno sotto l'altro.
 #
-# I sei workflow restano comunque lanciabili singolarmente come prima
-# (tests.yml, data-health.yml, performance.yml, api-doctor.yml, scale.yml,
-# security.yml non sono stati toccati nella logica, solo resi richiamabili
-# anche da qui via workflow_call). Scale Agent è solo CineFighi (vedi
-# scale/README.md) e Security Agent controlla solo le dipendenze npm di
-# qa-agent stesso (vedi security/README.md), quindi i loro job non usano
+# I cinque workflow restano comunque lanciabili singolarmente come prima
+# (tests.yml, data-health.yml, performance.yml, api-doctor.yml, security.yml
+# non sono stati toccati nella logica, solo resi richiamabili anche da qui
+# via workflow_call). Security Agent controlla solo le dipendenze npm di
+# qa-agent stesso (vedi security/README.md), quindi il suo job non usa
 # l'input `app`.
 #
 # Prova (statico, nessun backend/database) è registrata solo in QA Agent
@@ -23,7 +22,7 @@ name: Controllo Completo
 # due agenti (nessun dato scritto da verificare, e le pagine statiche non
 # sono nello scope attuale del Performance Agent).
 #
-# `if: !cancelled()` su health/performance/api-doctor/scale/security: `needs:`
+# `if: !cancelled()` su health/performance/api-doctor/security: `needs:`
 # da solo richiederebbe il successo del job precedente, quindi un singolo
 # test smoke fallito bloccherebbe l'intera catena e gli altri agenti non
 # partirebbero mai — proprio nel run in cui servirebbe vederli tutti.
@@ -36,7 +35,7 @@ name: Controllo Completo
 # usa `inputs.app || 'tutte'` per ricadere sempre su "tutte" in quel caso.
 #
 # Il job `notify` in fondo manda un messaggio Telegram SOLO se almeno uno dei
-# sei agenti è fallito (nessun avviso quando va tutto bene, per non
+# cinque agenti è fallito (nessun avviso quando va tutto bene, per non
 # ridurlo a rumore). Richiede due secret nel repo — TELEGRAM_BOT_TOKEN e
 # TELEGRAM_CHAT_ID.
 #
@@ -45,26 +44,25 @@ name: Controllo Completo
 # siano ancora validi (es. dopo aver rigenerato il token del bot) senza
 # dover aspettare un fallimento vero.
 #
-# Prima della notifica, il job scarica i sei report JSON (ogni agente li
+# Prima della notifica, il job scarica i cinque report JSON (ogni agente li
 # carica come artifact separato: job diversi, filesystem diversi) e li dà in
-# pasto a incident/analyze.mjs, che CORRELA i sei segnali insieme — non
+# pasto a incident/analyze.mjs, che CORRELA i cinque segnali insieme — non
 # solo quello fallito — per una diagnosi d'insieme (vedi il file per il
 # perché: un singolo agente non può vedere, da solo, che QA fallisce per un
 # problema dell'API esterna anche se Data Health è pulito). Il risultato,
 # se presente, finisce in coda al messaggio Telegram. Zero chiamate a Claude
-# se, nonostante tutto, tutti e sei i report sono PASS; nessun errore
+# se, nonostante tutto, tutti e cinque i report sono PASS; nessun errore
 # qui blocca l'invio della notifica.
 
 on:
   workflow_dispatch:
     inputs:
       app:
-        description: "Quale app controllare (tutti e sei gli agenti)"
+        description: "Quale app controllare (tutti e cinque gli agenti)"
         type: choice
         default: "tutte"
         options:
           - tutte
-          - cinefighi
           - cinetracker
           - spot
           - prova
@@ -94,7 +92,7 @@ on:
 
 # I permessi di un workflow chiamante sono un tetto massimo per quelli
 # richiamati con `uses:` — senza questo, lo step "Salva lo storico" di
-# data-health/performance/scale/security (che dichiara contents:write al
+# data-health/performance/security (che dichiara contents:write al
 # proprio interno) si troverebbe comunque bloccato in sola lettura quando
 # lanciato da qui, e lo storico non verrebbe mai salvato in un run di
 # Controllo Completo. Non serve su tests.yml/api-doctor.yml, che non
@@ -133,11 +131,6 @@ jobs:
       app: ${{ inputs.app || 'tutte' }}
     secrets: inherit
 
-  # Scale Agent fuori dalla catena dal 2026-09-23: riguarda solo CineFighi,
-  # sospesa su richiesta. Il suo workflow resta intatto e lanciabile a mano
-  # da Actions — per rimetterlo qui basta ripristinare questo blocco e
-  # rimettere `scale` nei `needs` qui sotto.
-  #
   security:
     needs: api-doctor
     if: ${{ !cancelled() }}
@@ -146,7 +139,7 @@ jobs:
 
   # Ultimo anello: gli errori lato client raccolti da Sentry nelle 24 ore.
   #
-  # `needs` su tutti e sei non perché dipenda dai loro dati (non li usa), ma
+  # `needs` su tutti e cinque non perché dipenda dai loro dati (non li usa), ma
   # per non contendere il push con i loro step di commit: l'ultimo a
   # scrivere trova il repo fermo.
   #
@@ -204,13 +197,6 @@ jobs:
           name: api-doctor-results-json
           path: reports
 
-      - name: Scarica il report Scale Agent
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: scale-results-json
-          path: reports
-
       - name: Scarica il report Security Agent
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -222,7 +208,7 @@ jobs:
       # step l'incident analyzer si fermerebbe subito ("costo zero"), quindi
       # il pulsante di test non verificherebbe mai la chiamata vera a Claude
       # né la diagnosi che finisce su Telegram — solo l'invio del messaggio.
-      # Sovrascrive due dei sei report scaricati con un fallimento
+      # Sovrascrive due dei cinque report scaricati con un fallimento
       # finto, ma realistico (stesso endpoint in errore su QA e API Doctor,
       # Data Health pulito) — lo stesso scenario di correlazione descritto
       # in incident/README.md. Locale al job, non tocca nulla di reale.
@@ -231,13 +217,13 @@ jobs:
         run: |
           mkdir -p reports
           cat > reports/results.json << 'EOF'
-          {"suites":[{"specs":[{"title":"[TEST] il voto restituisce errore 500","file":"vote.spec.ts","tests":[{"projectName":"cinefighi-mobile","status":"unexpected","results":[{"duration":1200,"errors":[{"message":"Expected 200, got 500 on POST /rest/v1/votes"}]}]}]}],"suites":[]}]}
+          {"suites":[{"specs":[{"title":"[TEST] il voto restituisce errore 500","file":"vote.spec.ts","tests":[{"projectName":"cinetracker-mobile","status":"unexpected","results":[{"duration":1200,"errors":[{"message":"Expected 200, got 500 on POST /rest/v1/votes"}]}]}]}],"suites":[]}]}
           EOF
           cat > reports/api-doctor-results.json << 'EOF'
-          {"generatedAt":"2026-01-01T00:00:00Z","apps":{"cinefighi":{"label":"CineFighi","result":"FAIL","checks":[{"name":"[TEST] votes upsert","endpoint":"https://example.supabase.co/rest/v1/votes","method":"POST","status":500,"ok":false,"reason":"server error","bodySnippet":"internal error"}]},"cinetracker":{"label":"CineTracker","result":"PASS","checks":[]},"vacanza":{"label":"Spot","result":"PASS","checks":[]}}}
+          {"generatedAt":"2026-01-01T00:00:00Z","apps":{"cinetracker":{"label":"CineTracker","result":"FAIL","checks":[{"name":"[TEST] votes upsert","endpoint":"https://example.supabase.co/rest/v1/votes","method":"POST","status":500,"ok":false,"reason":"server error","bodySnippet":"internal error"}]},"vacanza":{"label":"Spot","result":"PASS","checks":[]}}}
           EOF
 
-      - name: Incident analyzer (correla i sei report con Claude)
+      - name: Incident analyzer (correla i cinque report con Claude)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node incident/analyze.mjs

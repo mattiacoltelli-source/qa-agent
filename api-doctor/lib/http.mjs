@@ -4,9 +4,9 @@
 // qui — decide se è PASS/FAIL chi chiama, in base alla forma attesa della
 // risposta di QUELLA specifica API.
 //
-// `headers` opzionale: nessuna delle API di CineFighi/CineTracker/Spot ne
-// ha mai avuto bisogno, ma SEC EDGAR (Prova) richiede uno User-Agent con
-// un contatto reale per policy — vedi api-doctor/endpoints/prova.mjs.
+// `headers` opzionale: nessuna delle API di CineTracker/Spot ne ha mai
+// avuto bisogno, ma SEC EDGAR (Prova) richiede uno User-Agent con un
+// contatto reale per policy — vedi api-doctor/endpoints/prova.mjs.
 
 const TIMEOUT_MS = 15_000;
 const BODY_SNIPPET_MAX = 500;

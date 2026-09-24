@@ -3,17 +3,6 @@
   "label": "API Doctor Agent",
   "updatedAt": "2026-09-24T07:04:42.782Z",
   "apps": {
-    "cinefighi": {
-      "result": "PASS",
-      "summary": "3/3 endpoint ok",
-      "metrics": {
-        "total": 3,
-        "failed": 0
-      },
-      "problems": [],
-      "runAt": "2026-09-24T07:04:42.782Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
-    },
     "cinetracker": {
       "result": "PASS",
       "summary": "3/3 endpoint ok",

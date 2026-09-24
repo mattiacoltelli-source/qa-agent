@@ -1,10 +1,8 @@
 import { defineConfig } from "@playwright/test";
 import { MOBILE_CONTEXT, DESKTOP_CONTEXT } from "./core/viewports.ts";
 
-// URL live (GitHub Pages) delle tre app. Override via env var per puntare a
+// URL live (GitHub Pages) delle app. Override via env var per puntare a
 // un ambiente diverso (es. un fork di test) senza toccare questo file.
-const CINEFIGHI_URL =
-  process.env.CINEFIGHI_BASE_URL ?? "https://mattiacoltelli-source.github.io/CineFighi/";
 const CINETRACKER_URL =
   process.env.CINETRACKER_BASE_URL ?? "https://mattiacoltelli-source.github.io/Cos90/";
 const VACANZA_URL =
@@ -35,27 +33,6 @@ export default defineConfig({
     video: "retain-on-failure",
   },
 
-  // CineFighi è SOSPESO su richiesta (2026-09-23): nessun test gira più
-  // contro l'app del gruppo. I test in apps/cinefighi/ restano dove sono e
-  // non sono stati toccati — per riattivarli basta rimettere i due project
-  // qui sotto, rimettere "cinefighi" fra le opzioni in tests.yml e
-  // ripristinare lo step che crea l'utente di test.
-  //
-  // Motivo: CineFighi è l'unica app con un database condiviso da persone
-  // vere, ed è l'unica suite che ci scrive dentro (crea l'utente
-  // "_QA_Agent_" prima di ogni run). Finché è sospesa, niente di
-  // automatico tocca quei dati.
-  //
-  // {
-  //   name: "cinefighi-mobile",
-  //   testDir: "./apps/cinefighi/tests",
-  //   use: { ...MOBILE_CONTEXT, baseURL: CINEFIGHI_URL },
-  // },
-  // {
-  //   name: "cinefighi-desktop",
-  //   testDir: "./apps/cinefighi/tests",
-  //   use: { ...DESKTOP_CONTEXT, baseURL: CINEFIGHI_URL },
-  // },
   projects: [
     {
       name: "cinetracker-mobile",

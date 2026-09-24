@@ -4,7 +4,6 @@
 // così le due letture restano sempre coerenti tra loro.
 
 const APP_LABELS = {
-  cinefighi: "CineFighi",
   cinetracker: "CineTracker",
   vacanza: "Spot",
   prova: "Prova",

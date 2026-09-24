@@ -41,7 +41,6 @@ test("cleanError: rimuove i codici ANSI e tronca oltre il limite", () => {
 });
 
 test("appNameFromProject: mappa il prefisso del progetto Playwright al nome app", () => {
-  assert.equal(appNameFromProject("cinefighi-mobile"), "CineFighi");
   assert.equal(appNameFromProject("cinetracker-desktop"), "CineTracker");
   assert.equal(appNameFromProject("vacanza-mobile"), "Spot");
   assert.equal(appNameFromProject("progetto-sconosciuto"), "progetto-sconosciuto");
@@ -49,7 +48,7 @@ test("appNameFromProject: mappa il prefisso del progetto Playwright al nome app"
 
 test("failureKey: stabile e distingue spec/test diversi", () => {
   const spec = { file: "a.spec.ts", title: "titolo" };
-  const test1 = { projectName: "cinefighi-mobile" };
-  const test2 = { projectName: "cinefighi-desktop" };
+  const test1 = { projectName: "cinetracker-mobile" };
+  const test2 = { projectName: "cinetracker-desktop" };
   assert.notEqual(failureKey(spec, test1), failureKey(spec, test2));
 });

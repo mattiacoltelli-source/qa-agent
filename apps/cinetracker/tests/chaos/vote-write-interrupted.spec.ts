@@ -10,11 +10,8 @@ import { abortRoute } from "../../../../core/network.ts";
 import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
 import { S } from "../../fixtures/selectors.ts";
 
-// "Chaos test" variante "crash recovery" (vedi apps/cinefighi/tests/chaos/
-// vote-write-interrupted.spec.ts per la stessa idea sull'altra app — qui il
-// comportamento reale è DIVERSO, non copiato: CineTracker è "local-first"
-// (vedi storage.js::saveDB), non "ottimistico ma con rollback" come
-// CineFighi. doSaveDetailNotes() (app.js) salva SUBITO in localStorage
+// "Chaos test" variante "crash recovery": CineTracker è "local-first"
+// (vedi storage.js::saveDB). doSaveDetailNotes() (app.js) salva SUBITO in localStorage
 // (saveLocalCache, sincrono) e il toast di successo dipende SOLO da
 // quell'esito; il push su Supabase parte in background con retry
 // automatico (withRetry, storage.js) e un suo fallimento non tocca né la UI

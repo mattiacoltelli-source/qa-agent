@@ -12,10 +12,9 @@ generale al repository.
 
 ## Cosa controlla
 
-- **CineFighi**, **CineTracker**: 3 endpoint TMDB ciascuna (ricerca,
-  dettaglio titolo, scoperta titoli) — ogni app con la propria `api_key`
-  reale, hardcoded nel bundle JS come nell'app stessa (le due chiavi sono
-  diverse tra loro, verificato sul sorgente reale `tmdb.js`).
+- **CineTracker**: 3 endpoint TMDB (ricerca, dettaglio titolo, scoperta
+  titoli) — con la `api_key` reale, hardcoded nel bundle JS come
+  nell'app stessa, verificato sul sorgente reale `tmdb.js`.
 - **Spot**: 3 API keyless (Open-Meteo forecast, Open-Meteo marine,
   sunrise-sunset.org), verificate sul sorgente reale `app.js`, su un punto
   reale (Corfù, Città Vecchia) già presente in `spots.js`.
@@ -55,8 +54,7 @@ di queste API (o una nuova aggiunta in futuro) inizia a mandarli.
 api-doctor/
   lib/http.mjs              fetch condiviso: timeout, redazione api_key nei log, nessuna valutazione
   endpoints/
-    cinefighi.mjs             3 check TMDB, chiave di CineFighi
-    cinetracker.mjs            3 check TMDB, chiave di CineTracker (diversa)
+    cinetracker.mjs            3 check TMDB, chiave di CineTracker
     spot.mjs                    3 check meteo/mare/alba-tramonto, nessuna chiave
     prova.mjs                   6 check Yahoo Finance (prezzo + storico Tokyo/^SOX)/SEC EDGAR (x2)/GDELT, nessuna chiave
   engine.mjs                  orchestratore: gira i controlli, scrive reports/api-doctor-results.json
@@ -102,8 +100,8 @@ prima che Claude veda niente. Per ogni FAIL restituisce, in italiano:
 
 ## Credenziali
 
-Le `api_key` TMDB usate qui sono le stesse già hardcoded e pubbliche nei
-bundle JS delle due app (chiunque le trova aprendo gli strumenti sviluppo
+La `api_key` TMDB usata qui è la stessa già hardcoded e pubblica nel
+bundle JS dell'app (chiunque la trova aprendo gli strumenti sviluppo
 del browser): nessun segreto nuovo. Le API di Spot non richiedono
 autenticazione.
 

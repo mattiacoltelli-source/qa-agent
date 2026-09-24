@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // API Doctor — engine: per ogni app, interroga le API esterne reali che usa
-// davvero (TMDB per CineFighi/CineTracker, meteo/mare/alba-tramonto per
+// davvero (TMDB per CineTracker, meteo/mare/alba-tramonto per
 // Spot, Yahoo Finance/SEC EDGAR/GDELT per Prova — verificate sul sorgente
 // reale, non dedotte) e verifica che rispondano nella forma attesa. In più,
 // propaga gli header di rate-limit quando l'API li invia (vedi
@@ -19,13 +19,12 @@
 // allarme è la ricetta per finire per ignorare le notifiche.
 
 import fs from "node:fs";
-import * as cinefighi from "./endpoints/cinefighi.mjs";
 import * as cinetracker from "./endpoints/cinetracker.mjs";
 import * as spot from "./endpoints/spot.mjs";
 import * as prova from "./endpoints/prova.mjs";
 import { classify, rollupApp } from "./lib/classify.mjs";
 
-const PROJECTS = { cinefighi, cinetracker, spot, prova };
+const PROJECTS = { cinetracker, spot, prova };
 
 const OUTPUT_PATH = "reports/api-doctor-results.json";
 

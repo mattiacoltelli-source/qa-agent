@@ -1,9 +1,9 @@
 // Lettura paginata via API REST di Supabase (PostgREST) — stesso meccanismo
-// HTTP già usato da scripts/cleanup-write-residue.mjs e
-// scripts/ensure-cinefighi-qa-user.mjs, qui solo in lettura (nessun DELETE,
-// nessun INSERT). Usa la stessa chiave "publishable"/anon già hardcoded nei
-// bundle JS delle due app: nessun segreto nuovo, nessun permesso più ampio
-// di quello che un client in un browser qualsiasi ha già.
+// HTTP già usato da scripts/cleanup-write-residue.mjs, qui solo in lettura
+// (nessun DELETE, nessun INSERT). Usa la stessa chiave "publishable"/anon
+// già hardcoded nel bundle JS dell'app: nessun segreto nuovo, nessun
+// permesso più ampio di quello che un client in un browser qualsiasi ha
+// già.
 //
 // La paginazione è necessaria perché PostgREST limita le righe per singola
 // richiesta (di norma 1000): senza il loop con l'header Range, una tabella

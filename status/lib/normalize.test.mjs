@@ -1,5 +1,5 @@
 // Test della logica pura dietro status/build-status.mjs: la traduzione dei
-// sei report nella forma comune e il merge con lo stato già pubblicato.
+// cinque report nella forma comune e il merge con lo stato già pubblicato.
 // Nessun filesystem, nessuna rete — solo dato in, dato out.
 
 import { test } from "node:test";
@@ -8,7 +8,7 @@ import { AGENTS, mergeStatus, canonical, truncate } from "./normalize.mjs";
 
 test("canonical traduce il nome storico vacanza in spot", () => {
   assert.equal(canonical("vacanza"), "spot");
-  assert.equal(canonical("cinefighi"), "cinefighi");
+  assert.equal(canonical("cinetracker"), "cinetracker");
 });
 
 test("truncate appiattisce su una riga e taglia alla lunghezza chiesta", () => {
@@ -26,8 +26,8 @@ test("QA: raggruppa i progetti mobile/desktop nella stessa app", () => {
           {
             title: "home",
             tests: [
-              { projectName: "cinefighi-mobile", status: "expected", results: [{}] },
-              { projectName: "cinefighi-desktop", status: "expected", results: [{}] },
+              { projectName: "cinetracker-mobile", status: "expected", results: [{}] },
+              { projectName: "cinetracker-desktop", status: "expected", results: [{}] },
             ],
           },
         ],
@@ -35,9 +35,9 @@ test("QA: raggruppa i progetti mobile/desktop nella stessa app", () => {
     ],
   });
 
-  assert.deepEqual(Object.keys(report.apps), ["cinefighi"]);
-  assert.equal(report.apps.cinefighi.metrics.passed, 2);
-  assert.equal(report.apps.cinefighi.result, "PASS");
+  assert.deepEqual(Object.keys(report.apps), ["cinetracker"]);
+  assert.equal(report.apps.cinetracker.metrics.passed, 2);
+  assert.equal(report.apps.cinetracker.result, "PASS");
   assert.equal(report.generatedAt, "2026-09-18T19:26:02.827Z");
 });
 
@@ -51,7 +51,7 @@ test("QA: un test fallito rende l'app FAIL e ripulisce i codici colore ANSI", ()
             title: "voto salvato",
             tests: [
               {
-                projectName: "cinefighi-desktop",
+                projectName: "cinetracker-desktop",
                 status: "unexpected",
                 results: [{ errors: [{ message: "expected 200 got \u001b[31m500\u001b[39m\n  at vote.spec.ts:12" }] }],
               },
@@ -62,7 +62,7 @@ test("QA: un test fallito rende l'app FAIL e ripulisce i codici colore ANSI", ()
     ],
   });
 
-  const app = report.apps.cinefighi;
+  const app = report.apps.cinetracker;
   assert.equal(app.result, "FAIL");
   assert.equal(app.problems.length, 1);
   assert.equal(app.problems[0].severity, "HIGH");
@@ -111,17 +111,17 @@ test("Data Health: i conteggi diventano metriche di prodotto", () => {
   const report = AGENTS["data-health"].read({
     generatedAt: "x",
     apps: {
-      cinefighi: {
-        label: "CineFighi",
+      cinetracker: {
+        label: "CineTracker",
         uptime: { ok: true },
-        data: { counts: { users: 7, titles: 565, votes: 961 }, issues: [] },
+        data: { counts: { titles: 565, votes: 961 }, issues: [] },
         result: "PASS",
       },
     },
   });
 
-  assert.deepEqual(report.apps.cinefighi.metrics, { users: 7, titles: 565, votes: 961 });
-  assert.equal(report.apps.cinefighi.problems.length, 0);
+  assert.deepEqual(report.apps.cinetracker.metrics, { titles: 565, votes: 961 });
+  assert.equal(report.apps.cinetracker.problems.length, 0);
 });
 
 test("API Doctor: un INFRA_ERROR pesa meno di un endpoint che risponde male", () => {
@@ -156,21 +156,11 @@ test("Security: usa una chiave a parte, non è una delle quattro app", () => {
   assert.equal(report.apps["qa-agent"].problems.length, 0);
 });
 
-test("Scale: un run in errore resta pubblicato, con il motivo", () => {
-  const report = AGENTS.scale.read({
-    generatedAt: "x",
-    apps: { cinefighi: { label: "CineFighi", error: "browser crashed", result: "FAIL" } },
-  });
-
-  assert.equal(report.apps.cinefighi.result, "FAIL");
-  assert.match(report.apps.cinefighi.problems[0].message, /browser crashed/);
-});
-
 test("merge: un run parziale non cancella le app che non ha controllato", () => {
   const previous = {
     agent: "data-health",
     apps: {
-      cinefighi: { result: "PASS", runAt: "2026-09-01T00:00:00.000Z" },
+      cinetracker: { result: "PASS", runAt: "2026-09-01T00:00:00.000Z" },
       spot: { result: "FAIL", runAt: "2026-09-01T00:00:00.000Z" },
     },
   };
@@ -179,13 +169,13 @@ test("merge: un run parziale non cancella le app che non ha controllato", () => 
     agent: "data-health",
     label: "Data Health Agent",
     previous,
-    report: { generatedAt: "2026-09-20T08:00:00.000Z", apps: { cinefighi: { result: "WARN", problems: [] } } },
+    report: { generatedAt: "2026-09-20T08:00:00.000Z", apps: { cinetracker: { result: "WARN", problems: [] } } },
     runUrl: "https://example.test/run/1",
   });
 
-  assert.equal(merged.apps.cinefighi.result, "WARN");
-  assert.equal(merged.apps.cinefighi.runAt, "2026-09-20T08:00:00.000Z");
-  assert.equal(merged.apps.cinefighi.runUrl, "https://example.test/run/1");
+  assert.equal(merged.apps.cinetracker.result, "WARN");
+  assert.equal(merged.apps.cinetracker.runAt, "2026-09-20T08:00:00.000Z");
+  assert.equal(merged.apps.cinetracker.runUrl, "https://example.test/run/1");
   // Spot non era in questo run: resta com'era, con la SUA data — è proprio
   // quel "vecchio" che a valle diventa la segnalazione di controllo scaduto.
   assert.equal(merged.apps.spot.result, "FAIL");

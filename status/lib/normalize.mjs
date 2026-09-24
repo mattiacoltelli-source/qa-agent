@@ -35,7 +35,7 @@ export function truncate(text, max = 200) {
 // oppure null se il report non contiene niente di pubblicabile.
 
 function readQa(data) {
-  // Playwright raggruppa per progetto (cinefighi-mobile, cinefighi-desktop,
+  // Playwright raggruppa per progetto (cinetracker-mobile, cinetracker-desktop,
   // …): qui si torna alla app, che è come l'utente pensa al risultato.
   const byApp = new Map();
 
@@ -165,34 +165,6 @@ function readApiDoctor(data) {
   return Object.keys(apps).length ? { generatedAt: data.generatedAt, apps } : null;
 }
 
-function readScale(data) {
-  const app = data.apps?.cinefighi;
-  if (!app) return null;
-
-  const failed = (app.checks ?? []).filter((c) => !c.ok);
-  return {
-    generatedAt: data.generatedAt,
-    apps: {
-      cinefighi: app.error
-        ? {
-            result: app.result,
-            summary: "Prova di scala non eseguita",
-            metrics: {},
-            problems: [{ severity: "MEDIUM", message: truncate(app.error, 160) }],
-          }
-        : {
-            result: app.result,
-            summary: `${app.targetCount} titoli · Home ${app.metrics?.homeReadyMs}ms`,
-            metrics: { targetCount: app.targetCount, ...(app.metrics ?? {}) },
-            problems: failed.map((c) => ({
-              severity: "MEDIUM",
-              message: `Sopra soglia a ${app.targetCount} titoli: ${truncate(c.name ?? c.metric, 120)}`,
-            })),
-          },
-    },
-  };
-}
-
 function readSecurity(data) {
   const app = data.apps?.["qa-agent"];
   if (!app) return null;
@@ -202,9 +174,9 @@ function readSecurity(data) {
   return {
     generatedAt: data.generatedAt,
     apps: {
-      // Non è una delle quattro app: riguarda la toolchain di qa-agent
+      // Non è una delle tre app: riguarda la toolchain di qa-agent
       // stesso. Chiave a parte, così chi legge non la confonde con un
-      // problema di CineFighi o di Spot.
+      // problema di CineTracker o di Spot.
       "qa-agent": app.error
         ? {
             result: app.result,
@@ -227,14 +199,13 @@ export const AGENTS = {
   "data-health": { label: "Data Health Agent", read: readDataHealth },
   performance: { label: "Performance Agent", read: readPerformance },
   "api-doctor": { label: "API Doctor Agent", read: readApiDoctor },
-  scale: { label: "Scale Agent", read: readScale },
   security: { label: "Security Agent", read: readSecurity },
 };
 
 /**
  * Fonde il report di questo run con lo stato già pubblicato.
  *
- * Merge e non sovrascrittura: un run parziale (es. "solo cinefighi")
+ * Merge e non sovrascrittura: un run parziale (es. "solo cinetracker")
  * aggiorna la voce di quell'app e lascia intatte le altre, ciascuna con il
  * proprio `runAt`. Sovrascrivere il file intero farebbe sparire le app non
  * incluse nel run, e chi legge le vedrebbe come "mai controllate" — cioè

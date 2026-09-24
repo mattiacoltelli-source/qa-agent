@@ -3,18 +3,6 @@
   "label": "Data Health Agent",
   "updatedAt": "2026-09-24T07:02:25.467Z",
   "apps": {
-    "cinefighi": {
-      "result": "PASS",
-      "summary": "Online · 0 anomalie",
-      "metrics": {
-        "users": 7,
-        "titles": 573,
-        "votes": 971
-      },
-      "problems": [],
-      "runAt": "2026-09-24T07:02:25.467Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
-    },
     "cinetracker": {
       "result": "PASS",
       "summary": "Online · 0 anomalie",

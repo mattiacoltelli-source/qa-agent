@@ -43,9 +43,9 @@ const AnalysisSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `Sei un assistente di triage per una suite di test Playwright (QA Agent) che
-verifica tre app web reali: CineFighi (multiutente, backend Supabase
-condiviso), CineTracker (single-user, Supabase personale), Spot (guida di
-viaggio, nessun backend, dati sempre mockati).
+verifica tre app web reali: CineTracker (single-user, Supabase
+personale), Spot (guida di viaggio, nessun backend, dati sempre
+mockati), Prova (AI Predictor, statico, nessun backend/database).
 
 Ricevi un batch di test FALLITI dallo stesso run, ciascuno con titolo, file,
 progetto (nome-app-mobile/desktop) e messaggio d'errore originale di
