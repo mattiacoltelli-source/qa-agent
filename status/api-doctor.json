@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-09-23T07:09:56.484Z",
+  "updatedAt": "2026-09-24T07:04:42.782Z",
   "apps": {
     "cinefighi": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:09:56.484Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:04:42.782Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "cinetracker": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:09:56.484Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:04:42.782Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "spot": {
       "result": "PASS",
@@ -33,8 +33,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-23T07:09:56.484Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:04:42.782Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     },
     "prova": {
       "result": "INFRA_ERROR",
@@ -49,8 +49,8 @@
           "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed"
         }
       ],
-      "runAt": "2026-09-23T07:09:56.484Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
+      "runAt": "2026-09-24T07:04:42.782Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
     }
   }
 }
