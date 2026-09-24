@@ -9,7 +9,6 @@ on:
         default: "tutte"
         options:
           - tutte
-          - cinefighi
           - cinetracker
           - spot
   # Permette a Controllo Completo (full-check.yml) di richiamare questo

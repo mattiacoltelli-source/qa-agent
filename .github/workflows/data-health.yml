@@ -2,13 +2,12 @@ name: Data Health Agent
 
 # Unico agente dei quattro con anche un trigger automatico (schedule),
 # eccezione deliberata al "nessun run automatico" degli altri tre — vedi
-# FAQ.md "Il workflow non parte da solo, vero?". Motivo: CineFighi e
-# CineTracker usano Supabase free tier, che mette in pausa un progetto dopo
-# 7 giorni senza richieste API — se non si tocca l'app per una settimana
-# (es. vacanza), il progetto si sospende da solo. Questo agente è a sola
-# lettura e fa comunque query REST autenticate reali su entrambi i
-# progetti (health/projects/cinefighi.mjs, cinetracker.mjs), quindi il giro
-# schedulato tiene "svegli" i due Supabase senza bisogno di aprire le app.
+# FAQ.md "Il workflow non parte da solo, vero?". Motivo: CineTracker usa
+# Supabase free tier, che mette in pausa un progetto dopo 7 giorni senza
+# richieste API — se non si tocca l'app per una settimana (es. vacanza), il
+# progetto si sospende da solo. Questo agente è a sola lettura e fa comunque
+# query REST autenticate reali (health/projects/cinetracker.mjs), quindi il
+# giro schedulato tiene "sveglio" Supabase senza bisogno di aprire l'app.
 #
 # Ogni 6 giorni (mai 7, per lasciare un giorno di margine su eventuali
 # ritardi del cron di GitHub Actions), alle 03:00 UTC — le 4 del mattino
@@ -31,7 +30,6 @@ on:
         default: "tutte"
         options:
           - tutte
-          - cinefighi
           - cinetracker
           - spot
   # Permette a Controllo Completo (full-check.yml) di richiamare questo
@@ -79,14 +77,11 @@ jobs:
 
       # Rete di sicurezza indipendente da quella di tests.yml (che gira
       # sempre a fine run QA, ma solo se il job/runner non muore prima):
-      # rimuove eventuali residui di "_QA_Agent_" ancora presenti — lo
-      # step sopra li ha appena segnalati (vedi stale_qa_agent_residue in
-      # health/projects/cinefighi.mjs) SE più vecchi di qualche ora, quindi
-      # va DOPO i controlli, non prima, altrimenti la segnalazione andrebbe
-      # persa. Sicuro anche se non c'è nulla da pulire (idempotente) e
-      # sicuro a quest'ora: 03:00 UTC è già scelto apposta per non
-      # incrociare mai un test @write manuale, vedi il commento in cima al
-      # file.
+      # rimuove eventuali voti CineTracker rimasti marcati da un test
+      # @write il cui try/finally non fosse arrivato in fondo. Sicuro anche
+      # se non c'è nulla da pulire (idempotente) e sicuro a quest'ora:
+      # 03:00 UTC è già scelto apposta per non incrociare mai un test
+      # @write manuale, vedi il commento in cima al file.
       - name: Ripulisci eventuali residui @write rimasti indietro
         if: always()
         run: node scripts/cleanup-write-residue.mjs

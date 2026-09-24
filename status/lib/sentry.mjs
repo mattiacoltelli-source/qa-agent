@@ -11,7 +11,6 @@
 // Sono diversi perché i progetti Sentry seguono il nome del repo
 // (`cos90`) mentre il contratto segue il nome dell'app (`cinetracker`).
 export const PROGETTI = {
-  cinefighi: "cinefighi",
   cos90: "cinetracker",
   spot: "spot",
   predict: "prova",

@@ -6,7 +6,7 @@ file JSON committato nel repo: `status/<agente>.json`.
 Serve a una cosa sola: rendere leggibile l'esito **senza token e senza
 scadenza**. Gli artifact di GitHub Actions (`reports/*.json`) richiedono
 autenticazione e spariscono dopo 14/30 giorni; `history/data/*.jsonl` esiste
-solo per quattro agenti su sei e serve a confrontare due run, non a dire
+solo per tre agenti su cinque e serve a confrontare due run, non a dire
 "com'è adesso". Il consumatore previsto è la dashboard **App Control
 Center** (repo `Default`), che è una pagina statica senza backend e legge
 questi file via `raw.githubusercontent.com`.
@@ -23,10 +23,10 @@ di chi il controllo l'ha fatto davvero.
   "label": "Data Health Agent",
   "updatedAt": "2026-09-18T19:26:02.827Z", // ultimo run che ha toccato questo file
   "apps": {
-    "cinefighi": {
+    "cinetracker": {
       "result": "PASS",                     // PASS | WARN | FAIL | INFRA_ERROR
       "summary": "Online · 0 anomalie",     // una riga, già leggibile
-      "metrics": { "users": 7, "titles": 565, "votes": 961 },
+      "metrics": { "titles": 565, "votes": 961 },
       "problems": [                          // al massimo 5, già in italiano
         { "severity": "HIGH", "message": "Sito irraggiungibile: HTTP 503" }
       ],
@@ -37,16 +37,16 @@ di chi il controllo l'ha fatto davvero.
 }
 ```
 
-Chiavi app canoniche: `cinefighi`, `cinetracker`, `spot`, `prova`. Dentro il
+Chiavi app canoniche: `cinetracker`, `spot`, `prova`. Dentro il
 repo Spot è storicamente `vacanza` (cartella `apps/vacanza`): la traduzione
 avviene una volta sola in `lib/normalize.mjs`, il contratto pubblico non la
 eredita. Il Security Agent usa la chiave `qa-agent`: riguarda la toolchain,
-non una delle quattro app.
+non una delle tre app.
 
 ## `runAt` per app, non solo per file
 
-Un run parziale ("controlla solo cinefighi") **aggiorna solo quell'app** e
-lascia le altre com'erano, ciascuna con la propria data. Sovrascrivere il
+Un run parziale ("controlla solo cinetracker") **aggiorna solo quell'app**
+e lascia le altre com'erano, ciascuna con la propria data. Sovrascrivere il
 file intero le farebbe sparire, e chi legge le vedrebbe come "mai
 controllate" invece che "controllate una settimana fa".
 
@@ -58,7 +58,7 @@ quando un report manca: si preferisce non scrivere nulla.
 ## `sentry.json`: l'unico che non viene da un agente
 
 Stesso formato, fonte diversa: le issue aperte su Sentry nelle ultime 24
-ore per tutte e cinque le app (le quattro monitorate più il Control Center
+ore per tutte e quattro le app (le tre monitorate più il Control Center
 stesso). Lo scrive `sentry-status.mjs`, in un job a parte di
 `full-check.yml` che gira sempre — anche quando qualche agente fallisce,
 perché è lì che gli errori degli utenti servono di più.
@@ -92,7 +92,7 @@ dashboard sarebbe permanentemente rossa e smetteresti di guardarla.
 ```
 build-status.mjs        solo I/O: legge reports/, fonde, scrive status/<agente>.json
 sentry-status.mjs       solo I/O: interroga Sentry, scrive status/sentry.json
-lib/normalize.mjs       logica pura: sei lettori (uno per agente) + merge
+lib/normalize.mjs       logica pura: cinque lettori (uno per agente) + merge
 lib/normalize.test.mjs  test della logica pura (node --test, nessuna rete)
 lib/sentry.mjs          logica pura: issue Sentry -> forma comune
 lib/sentry.test.mjs     test della logica pura

@@ -4,16 +4,12 @@ Suite di test Playwright per le app personali: **CineTracker** (repo
 `Cos90`, cinema single-user), **Spot** (guida di viaggio Ionio in barca a
 vela) e **Prova** (AI Predictor, esperimento predittivo sui mercati).
 
-> **CineFighi è sospesa dal 2026-09-23.** Nessun test gira più contro
-> l'app del gruppo: era l'unica suite che scrivesse in un database usato
-> da persone vere (creava l'utente `_QA_Agent_` prima di ogni run). I
-> test in `apps/cinefighi/` non sono stati toccati e si riattivano
-> rimettendo i due `projects` in `playwright.config.ts`. Anche lo **Scale
-> Agent** è fuori dalla catena automatica, perché riguarda solo CineFighi
-> — resta lanciabile a mano. Continuano invece a girare su CineFighi i
-> controlli di **sola lettura**: uptime e integrità dati (Data Health),
-> Lighthouse, API esterne, errori Sentry. Repository separato, dedicato solo
-al testing — non entra in nessuna delle app in produzione.
+> **CineFighi è stata rimossa completamente da questo repository
+> (2026-09-24).** Non è più solo sospesa: test, fixture, endpoint,
+> script e ogni riferimento sono stati cancellati — incluso lo **Scale
+> Agent**, che riguardava solo CineFighi ed è stato rimosso per intero.
+> Repository separato, dedicato solo al testing — non entra in nessuna
+> delle app in produzione.
 
 **Uso quotidiano**: si lancia da GitHub Actions (tab **Actions** → "Run
 workflow"), non serve nulla installato — vedi **[FAQ.md](FAQ.md)** per la
@@ -21,24 +17,20 @@ guida pratica (dove trovare l'esito, come testare una sola app, cosa sono i
 test `@write`, ecc.). Il resto di questo file è la documentazione tecnica
 del repository.
 
-Nello stesso repository ci sono anche cinque moduli indipendenti in più:
+Nello stesso repository ci sono anche quattro moduli indipendenti in più:
 
 - **Data Health Agent**: non testa il comportamento delle app (quello lo fa
   il QA Agent), controlla che siano raggiungibili e che i dati su Supabase
   siano integri (righe orfane, duplicati). Vedi
   **[health/README.md](health/README.md)**.
 - **Performance Agent**: punteggi Lighthouse (performance, accessibilità,
-  best practices, SEO) sulle tre app, incluso Spot. Vedi
+  best practices, SEO) sulle app, incluso Spot. Vedi
   **[perf/README.md](perf/README.md)**.
 - **API Doctor Agent**: controlla che le API esterne da cui le app
-  dipendono (TMDB per CineFighi/CineTracker, meteo/mare/alba-tramonto per
+  dipendono (TMDB per CineTracker, meteo/mare/alba-tramonto per
   Spot, Yahoo Finance/SEC EDGAR/GDELT per Prova — prezzi e storico, inclusi
   i ticker Tokyo e l'indice ^SOX dei Trend strutturali) rispondano, e nella
   forma attesa. Vedi **[api-doctor/README.md](api-doctor/README.md)**.
-- **Scale Agent**: testa la Home/Libreria/Statistiche di CineFighi con
-  molti più titoli di quelli reali (mockati, mai scritti su Supabase), per
-  scoprire prima chi lo dice il gruppo se qualcosa rallenta troppo. Vedi
-  **[scale/README.md](scale/README.md)**.
 - **Security Agent**: `npm audit` sulle dipendenze di qa-agent stesso.
   Vedi **[security/README.md](security/README.md)**.
 
@@ -55,7 +47,7 @@ una pagina pubblica non potrebbe stare. Richiede il secret
 pubblicato.
 
 Tutti con workflow separato, lanciabile da telefono come il QA Agent,
-stessa logica AI-solo-se-serve. Data Health, Performance, Scale e Security
+stessa logica AI-solo-se-serve. Data Health, Performance e Security
 tengono anche uno storico compatto dei propri run (nessun database — solo
 un file JSONL per agente in `history/data/`, committato nel repo dal
 workflow stesso) per segnalare quando qualcosa peggiora rispetto
@@ -63,26 +55,25 @@ all'ultima volta, non solo rispetto a una soglia fissa. Vedi
 **[history/lib/record.mjs](history/lib/record.mjs)** per il meccanismo
 condiviso.
 
-Un settimo workflow, **"Controllo Completo"**
-(`.github/workflows/full-check.yml`), lancia tutti e sei gli agenti (QA
-Agent, Data Health Agent, Performance Agent, API Doctor Agent, Scale
-Agent, Security Agent) in sequenza con un solo bottone — i workflow
-restano comunque richiamabili anche singolarmente come prima.
+Un sesto workflow, **"Controllo Completo"**
+(`.github/workflows/full-check.yml`), lancia tutti e cinque gli agenti (QA
+Agent, Data Health Agent, Performance Agent, API Doctor Agent, Security
+Agent) in sequenza con un solo bottone — i workflow restano comunque
+richiamabili anche singolarmente come prima.
 
 ## Struttura
 
 ```
 core/                    utility generiche (rete, viewport, storage) — non sanno nulla di una app specifica
 apps/
-  cinefighi/
+  cinetracker/
     fixtures/
-      selectors.ts       i selettori fragili o condivisi, in un posto solo
-      cinefighi-page.ts  helper specifici di CineFighi
-    tests/smoke/         test (*.spec.ts sola lettura, *.write.spec.ts scrittura, gate @write)
-    README.md            modello di sicurezza dati, env var, backlog
-  cinetracker/            (stessa struttura, per il repo Cos90)
-  vacanza/                (stessa struttura, per il repo Spot)
-  prova/                  (stessa struttura, per il repo Prova/AI Predictor)
+      selectors.ts        i selettori fragili o condivisi, in un posto solo
+      cinetracker-page.ts helper specifici di CineTracker
+    tests/smoke/          test (*.spec.ts sola lettura, *.write.spec.ts scrittura, gate @write)
+    README.md             modello di sicurezza dati, env var, backlog
+  vacanza/                 (stessa struttura, per il repo Spot)
+  prova/                   (stessa struttura, per il repo Prova/AI Predictor)
 playwright.config.ts      un project mobile + uno desktop per app, baseURL da env var
 ```
 
@@ -99,9 +90,9 @@ cambia, si aggiorna **una riga lì** invece di cercare lo stesso selettore
 in una dozzina di file.
 
 Gli `id` usati una volta sola restano inline nel test che li usa: sono già
-leggibili così, e il JavaScript dell'app dipende da loro (`#detailSaveVoteBtn`
-compare sei volte in CineFighi), quindi non possono derivare di nascosto —
-rinominarli romperebbe l'app prima dei test.
+leggibili così, e il JavaScript dell'app dipende da loro, quindi non
+possono derivare di nascosto — rinominarli romperebbe l'app prima dei
+test.
 
 Resta un terzo punto di attrito, più subdolo: gli assert sul **contenuto**
 (`toHaveText("Salva voto")`, `hasText: "Errore nel salvare il voto"`). Si
@@ -116,7 +107,6 @@ npm install
 npx playwright install --with-deps chromium
 
 npm test                  # tutta la suite, sola lettura (default)
-npm run test:cinefighi    # solo CineFighi (mobile + desktop)
 npm run test:cinetracker  # solo CineTracker
 npm run test:vacanza      # solo Spot
 npm run test:prova        # solo Prova (AI Predictor)
@@ -126,8 +116,7 @@ npm run report             # apre l'ultimo report HTML
 ```
 
 I test girano contro gli URL live GitHub Pages delle app (override con
-`CINEFIGHI_BASE_URL` / `CINETRACKER_BASE_URL` / `VACANZA_BASE_URL` /
-`PROVA_BASE_URL`), sia in
+`CINETRACKER_BASE_URL` / `VACANZA_BASE_URL` / `PROVA_BASE_URL`), sia in
 viewport mobile che desktop (le app sono PWA usate principalmente da
 telefono). Pensati per girare in GitHub Actions
 (`.github/workflows/tests.yml`): report salvati come JSON (`reports/results.json`)
@@ -136,10 +125,6 @@ da una dashboard statica in un secondo momento, non per un DB dedicato.
 
 ## Modello di sicurezza dei dati (leggi prima di eseguire `test:write`)
 
-- **CineFighi**: Supabase condiviso dal gruppo. Le credenziali sono
-  hardcoded nel bundle dell'app — non esiste un backend di test separato.
-  I test di scrittura usano sempre l'utente dedicato `_QA_Agent_` e puliscono
-  ogni titolo aggiunto in un blocco `finally`. Dettagli: `apps/cinefighi/README.md`.
 - **CineTracker**: Supabase personale (single-user). I test di scrittura
   toccano la libreria vera dell'utente, con lo stesso pattern di cleanup.
   Dettagli: `apps/cinetracker/README.md`.

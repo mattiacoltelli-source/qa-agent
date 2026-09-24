@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Storico del Data Health Agent: per CineFighi e CineTracker (le uniche due
+// Storico del Data Health Agent: per CineTracker (l'unica app
 // con un backend da contare — Spot ha solo localStorage, niente
-// checkData), confronta i conteggi di oggi (utenti/titoli/voti) con
+// checkData), confronta i conteggi di oggi (titoli/voti) con
 // l'ultimo run registrato PER QUELLA APP, scrive reports/health-trend.json
 // (letto da write-summary.mjs) e accoda le voci di oggi a
 // history/data/data-health.jsonl.

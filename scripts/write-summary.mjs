@@ -38,7 +38,7 @@ function main() {
   const allTests = collectTests(data.suites || []);
   const aiByKey = loadAiAnalysis();
 
-  // Raggruppa per app (CineFighi/CineTracker/Spot), non per progetto
+  // Raggruppa per app (CineTracker/Spot/Prova), non per progetto
   // mobile/desktop separato — combacia con come l'utente pensa alle app.
   const byApp = new Map();
   for (const { spec, test } of allTests) {

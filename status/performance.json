@@ -3,19 +3,6 @@
   "label": "Performance Agent",
   "updatedAt": "2026-09-24T07:03:52.757Z",
   "apps": {
-    "cinefighi": {
-      "result": "PASS",
-      "summary": "Perf 92 · A11y 92",
-      "metrics": {
-        "performance": 92,
-        "accessibility": 92,
-        "best-practices": 96,
-        "seo": 90
-      },
-      "problems": [],
-      "runAt": "2026-09-24T07:03:52.757Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
-    },
     "cinetracker": {
       "result": "PASS",
       "summary": "Perf 75 · A11y 90",

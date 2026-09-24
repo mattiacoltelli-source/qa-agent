@@ -11,11 +11,10 @@
 // resto del motore.
 
 import fs from "node:fs";
-import * as cinefighi from "./projects/cinefighi.mjs";
 import * as cinetracker from "./projects/cinetracker.mjs";
 import * as vacanza from "./projects/vacanza.mjs";
 
-const PROJECTS = { cinefighi, cinetracker, vacanza };
+const PROJECTS = { cinetracker, vacanza };
 // "spot" è il nome che conosce l'utente (vedi tests.yml del QA Agent),
 // "vacanza" resta il nome storico interno della cartella/progetto.
 const ALIASES = { spot: "vacanza" };

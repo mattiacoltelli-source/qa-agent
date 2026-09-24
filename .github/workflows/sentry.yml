@@ -1,7 +1,7 @@
 name: Errori (Sentry)
 
-# Non è un agente come gli altri cinque: non esegue controlli, legge le
-# issue che Sentry ha già raccolto dalle cinque app nelle ultime 24 ore e
+# Non è un agente come gli altri quattro: non esegue controlli, legge le
+# issue che Sentry ha già raccolto dalle quattro app nelle ultime 24 ore e
 # le pubblica in status/sentry.json, nello stesso formato degli altri.
 #
 # Perché gira qui e non nella dashboard: leggere le issue richiede un token

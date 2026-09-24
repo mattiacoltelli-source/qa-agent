@@ -17,7 +17,7 @@
 // Il giudizio resta dell'agente, qui si traduce soltanto.
 //
 // Uso: node status/build-status.mjs <agente>
-//   agente ∈ qa | data-health | performance | api-doctor | scale | security
+//   agente ∈ qa | data-health | performance | api-doctor | security
 //
 // Solo I/O: la logica sta in status/lib/normalize.mjs (funzioni pure,
 // testate in status/lib/normalize.test.mjs) — stessa divisione già in uso
@@ -36,7 +36,6 @@ const REPORT_PATHS = {
   "data-health": "reports/health-results.json",
   performance: "reports/perf-results.json",
   "api-doctor": "reports/api-doctor-results.json",
-  scale: "reports/scale-results.json",
   security: "reports/security-results.json",
 };
 

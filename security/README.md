@@ -1,9 +1,9 @@
 # Security Agent
 
-Sesto modulo indipendente nello stesso repository, insieme a QA Agent,
-Data Health Agent, Performance Agent, API Doctor Agent e Scale Agent.
+Quinto modulo indipendente nello stesso repository, insieme a QA Agent,
+Data Health Agent, Performance Agent e API Doctor Agent.
 Controlla le **dipendenze npm di `qa-agent` stesso** (`npm audit`) — non
-delle tre app web (CineFighi, CineTracker, Spot), che non hanno un
+delle app web (CineTracker, Spot), che non hanno un
 `package.json` proprio: vendorizzano gli SDK come file JS già pronti (es.
 `supabase-sdk.js`), senza un numero di versione affidabile da leggere per
 un controllo di vulnerabilità sensato.
@@ -29,7 +29,7 @@ repository.
 
 ## Soglie
 
-A differenza di Performance/Scale Agent, qui non c'è nulla da tarare sui
+A differenza del Performance Agent, qui non c'è nulla da tarare sui
 dati osservati: `npm audit` classifica già ogni vulnerabilità in una
 scala fissa a 5 livelli (critical/high/moderate/low/info). La scelta è
 solo su quale livello far scattare cosa — vedi
@@ -61,7 +61,7 @@ percentuale (i conteggi sono quasi sempre vicini allo zero, dove 0→1 è
 sono aumentati rispetto all'ultima volta. Ogni run accoda una riga
 compatta a `history/data/security.jsonl` (committata direttamente nel repo
 dal workflow — vedi `history/lib/record.mjs` per il meccanismo condiviso a
-tutti e quattro gli agenti che ne dispongono). Nessun database: solo un
+tutti e tre gli agenti che ne dispongono). Nessun database: solo un
 file JSONL in Git, letto/scritto in modo arithmetic-only (nessuna IA
 coinvolta). Non fa mai fallire il run.
 

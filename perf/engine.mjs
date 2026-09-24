@@ -19,12 +19,11 @@ import * as chromeLauncher from "chrome-launcher";
 import lighthouse from "lighthouse";
 import { chromium } from "playwright-core";
 
-import * as cinefighi from "../health/projects/cinefighi.mjs";
 import * as cinetracker from "../health/projects/cinetracker.mjs";
 import * as vacanza from "../health/projects/vacanza.mjs";
 import { THRESHOLDS } from "./thresholds.mjs";
 
-const PROJECTS = { cinefighi, cinetracker, vacanza };
+const PROJECTS = { cinetracker, vacanza };
 const ALIASES = { spot: "vacanza" };
 
 const OUTPUT_PATH = "reports/perf-results.json";

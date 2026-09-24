@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 // AI Incident Analyzer: a differenza degli analyze.mjs dei singoli agenti
 // (health/analyze.mjs, perf/analyze.mjs, api-doctor/analyze.mjs,
-// scale/analyze.mjs, security/analyze.mjs, scripts/analyze-failures.mjs —
-// ognuno interpreta SOLO i propri dati), questo legge i sei report insieme
-// e cerca una correlazione tra loro: es. QA e API Doctor falliscono ma
-// Data Health è pulito → il problema è probabilmente nell'API esterna, non
-// nel database. Nessuno dei sei agenti, da solo, può vedere questo tipo di
-// segnale incrociato. Legge anche i trend già calcolati da
-// performance/scale/security (confronto col LORO run precedente, vedi
-// TREND_PATHS sotto) per distinguere un problema isolato di oggi da un
-// peggioramento già in corso da più run — un'altra correlazione che nessun
-// singolo agente vede, perché ognuno confronta solo col proprio passato,
-// mai con gli altri cinque segnali dello stesso momento.
+// security/analyze.mjs, scripts/analyze-failures.mjs — ognuno interpreta
+// SOLO i propri dati), questo legge i cinque report insieme e cerca una
+// correlazione tra loro: es. QA e API Doctor falliscono ma Data Health è
+// pulito → il problema è probabilmente nell'API esterna, non nel database.
+// Nessuno dei cinque agenti, da solo, può vedere questo tipo di segnale
+// incrociato. Legge anche i trend già calcolati da performance/security
+// (confronto col LORO run precedente, vedi TREND_PATHS sotto) per
+// distinguere un problema isolato di oggi da un peggioramento già in corso
+// da più run — un'altra correlazione che nessun singolo agente vede, perché
+// ognuno confronta solo col proprio passato, mai con gli altri quattro
+// segnali dello stesso momento.
 //
 // Chiamato solo dal job `notify` di full-check.yml, solo quando almeno un
 // agente è fallito (vedi la condizione `if` del job). Zero chiamate se,
-// nonostante questo, tutti e sei i report risultano PASS (difesa in
+// nonostante questo, tutti e cinque i report risultano PASS (difesa in
 // più, stesso principio "costo zero quando non serve" degli altri
 // analyze.mjs). Nessun errore qui blocca il run: se manca la chiave o la
 // chiamata fallisce, si registra un avviso e si esce senza rompere la
@@ -37,18 +37,16 @@ const PATHS = {
   health: "reports/health-results.json",
   performance: "reports/perf-results.json",
   apiDoctor: "reports/api-doctor-results.json",
-  scale: "reports/scale-results.json",
   security: "reports/security-results.json",
 };
 
-// Scritti da perf/history.mjs, scale/history.mjs, security/history.mjs
-// (confronto col run precedente PER quell'agente), caricati nello stesso
-// artifact dei rispettivi *-results.json — vedi il commento gemello in
-// performance.yml/scale.yml/security.yml. health/api-doctor/qa non hanno
-// un equivalente: non tracciano uno storico proprio oggi.
+// Scritti da perf/history.mjs, security/history.mjs (confronto col run
+// precedente PER quell'agente), caricati nello stesso artifact dei
+// rispettivi *-results.json — vedi il commento gemello in
+// performance.yml/security.yml. health/api-doctor/qa non hanno un
+// equivalente: non tracciano uno storico proprio oggi.
 const TREND_PATHS = {
   performance: "reports/perf-trend.json",
-  scale: "reports/scale-trend.json",
   security: "reports/security-trend.json",
 };
 const ANALYSIS_OUTPUT_PATH = "reports/incident-analysis.json";
@@ -84,33 +82,26 @@ const IncidentSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `Sei un assistente di incident response per un sistema di monitoraggio
-composto da sei agenti indipendenti, eseguiti in sequenza:
+composto da cinque agenti indipendenti, eseguiti in sequenza:
 - qa: Playwright, simula utenti reali (flussi, offline, errori JS) su
-  CineFighi, CineTracker e Spot
-- health: integrità dati e raggiungibilità di Supabase, sulle stesse tre app
+  CineTracker e Spot
+- health: integrità dati e raggiungibilità di Supabase, sulle stesse due app
 - performance: Lighthouse (performance, accessibilità, SEO, best practices),
-  sulle stesse tre app
+  sulle stesse due app
 - apiDoctor: raggiungibilità e correttezza delle API esterne (TMDB, meteo),
-  sulle stesse tre app
-- scale: SOLO CineFighi — testa se il rendering client-side regge quando la
-  libreria condivisa cresce (simula "titoli reali oggi + un extra", di
-  default 1000 ma scelto al lancio del workflow, mai scritti sul database
-  vero); un FAIL qui è un problema di scalabilità del client, non di rete
-  o di dati — non correlarlo automaticamente con
-  api-doctor o health a meno che i dati non lo suggeriscano davvero
-- security: NON riguarda nessuna delle tre app — controlla le dipendenze
-  npm del tool stesso che esegue tutti questi agenti (npm audit); un FAIL
-  qui è una vulnerabilità nella toolchain CI (accesso a segreti reali:
-  chiave Anthropic, token Telegram, push su GitHub), non un problema delle
-  app monitorate — non correlarlo mai con gli altri cinque segnali, è per
-  costruzione un segnale a sé
+  sulle stesse due app
+- security: NON riguarda nessuna delle app monitorate — controlla le
+  dipendenze npm del tool stesso che esegue tutti questi agenti (npm
+  audit); un FAIL qui è una vulnerabilità nella toolchain CI (accesso a
+  segreti reali: chiave Anthropic, token Telegram, push su GitHub), non un
+  problema delle app monitorate — non correlarlo mai con gli altri quattro
+  segnali, è per costruzione un segnale a sé
 
-Ricevi lo stato di tutte e tre le app per ognuno degli agenti in questo
-run (scale solo per CineFighi, security non è per-app) — non solo quelli
-falliti: un agente "PASS" è un segnale importante quanto uno "FAIL",
-perché aiuta a escludere delle cause. Il tuo compito è correlare i sei
-segnali per capire cosa è successo davvero, non ripetere quello che ogni
-agente ha già detto per conto suo.
+Ricevi lo stato di tutte le app per ognuno degli agenti in questo run
+(security non è per-app) — non solo quelli falliti: un agente "PASS" è un
+segnale importante quanto uno "FAIL", perché aiuta a escludere delle cause.
+Il tuo compito è correlare i cinque segnali per capire cosa è successo
+davvero, non ripetere quello che ogni agente ha già detto per conto suo.
 
 Esempio del tipo di ragionamento richiesto: se "qa" fallisce con un errore
 HTTP 500 su un'azione, "apiDoctor" segnala un tasso di errore alto sulla
@@ -119,20 +110,20 @@ l'API esterna, non il database, anche se il sintomo iniziale (il test QA)
 sembrava un problema dell'app stessa.
 
 Potresti ricevere anche un campo "trends" (assente se non c'è nulla di
-notabile): performance/scale/security confrontati col LORO run precedente,
-non con questo run stesso. Usalo per distinguere un problema isolato di
-oggi da un peggioramento già in corso da più run — es. un calo Lighthouse
-isolato di 6 punti è un conto, lo stesso calo se "trends.performance"
-mostra già un delta negativo sul run prima è un peggioramento continuo,
-severity più alta a parità di sintomo. Nessun trend per un agente non
-significa "tutto stabile": significa solo che quell'agente non ha avuto un
+notabile): performance/security confrontati col LORO run precedente, non
+con questo run stesso. Usalo per distinguere un problema isolato di oggi da
+un peggioramento già in corso da più run — es. un calo Lighthouse isolato
+di 6 punti è un conto, lo stesso calo se "trends.performance" mostra già un
+delta negativo sul run prima è un peggioramento continuo, severity più
+alta a parità di sintomo. Nessun trend per un agente non significa "tutto
+stabile": significa solo che quell'agente non ha avuto un
 calo/peggioramento sopra la sua soglia rispetto al run precedente — non
 c'è dato per dire se PRIMA di quello fosse già instabile.
 
 Rispondi in italiano, breve (il risultato finisce in un messaggio Telegram):
 una frase di riepilogo, una severity, una causa probabile basata SOLO sui
 dati forniti (non inventare dettagli), 2-4 cose concrete da controllare per
-prime. Se i sei segnali non bastano per una diagnosi chiara, dillo
+prime. Se i cinque segnali non bastano per una diagnosi chiara, dillo
 onestamente con una confidence bassa invece di inventare una causa
 plausibile ma non supportata dai dati.`;
 
@@ -170,12 +161,11 @@ function summarizeQA(data) {
   return byApp;
 }
 
-// I sei summarizer sopra non condividono una forma unica: qa ritorna la
+// I cinque summarizer sopra non condividono una forma unica: qa ritorna la
 // stringa "PASS" o un oggetto per-app SOLO quando ci sono fallimenti;
-// health/performance/apiDoctor/scale/security ritornano SEMPRE un oggetto
-// per-app (scale con la sola chiave "cinefighi", security con la sola
-// chiave "qa-agent"), dove ogni valore è "PASS" o un dettaglio. null
-// significa report assente.
+// health/performance/apiDoctor/security ritornano SEMPRE un oggetto per-app
+// (security con la sola chiave "qa-agent"), dove ogni valore è "PASS" o un
+// dettaglio. null significa report assente.
 function isAgentAllPass(summary) {
   if (summary === null || summary === "PASS") return true;
   if (typeof summary === "object") return Object.values(summary).every((v) => v === "PASS");
@@ -191,7 +181,6 @@ function buildPayload() {
   const healthData = readJson(PATHS.health);
   const perfData = readJson(PATHS.performance);
   const apiDoctorData = readJson(PATHS.apiDoctor);
-  const scaleData = readJson(PATHS.scale);
   const securityData = readJson(PATHS.security);
 
   const qa = summarizeQA(qaData);
@@ -210,35 +199,25 @@ function buildPayload() {
       .filter((c) => c.kind === "INFRA_ERROR")
       .map((c) => ({ name: c.name, endpoint: c.endpoint, reason: c.reason })),
   }));
-  const scale = summarizeAgentApps(scaleData, (a) =>
-    a.error
-      ? { error: a.error }
-      : {
-          realCount: a.realCount,
-          targetCount: a.targetCount,
-          failedChecks: (a.checks || []).filter((c) => c.status !== "PASS"),
-        }
-  );
   const security = summarizeAgentApps(securityData, (a) =>
     a.error ? { error: a.error } : { counts: a.counts, vulnerabilities: a.vulnerabilities ?? [] }
   );
 
   const trends = buildTrends();
 
-  return { qa, health, performance, apiDoctor, scale, security, trends };
+  return { qa, health, performance, apiDoctor, security, trends };
 }
 
 // Trend = confronto col run precedente PER QUELL'AGENTE (non con questo
 // run stesso): un calo/peggioramento qui distingue "prima volta che
 // succede oggi" da "sta peggiorando da più run" — un segnale che nessuno
-// dei sei report da solo può dare, perché ognuno vede solo l'istante
-// attuale. Solo per gli agenti che hanno uno storico (performance, scale,
+// dei cinque report da solo può dare, perché ognuno vede solo l'istante
+// attuale. Solo per gli agenti che hanno uno storico (performance,
 // security): health/api-doctor/qa non ne tengono uno oggi. omit* tiene il
 // payload compatto quando non c'è nulla di notabile da segnalare, invece
 // di forzare Claude a leggere "nessun calo" per ogni singola app.
 function buildTrends() {
   const perfTrend = readJson(TREND_PATHS.performance);
-  const scaleTrend = readJson(TREND_PATHS.scale);
   const securityTrend = readJson(TREND_PATHS.security);
 
   const out = {};
@@ -246,10 +225,6 @@ function buildTrends() {
   if (perfTrend) {
     const withDrops = Object.entries(perfTrend).filter(([, t]) => t.drops?.length > 0);
     if (withDrops.length > 0) out.performance = Object.fromEntries(withDrops);
-  }
-
-  if (scaleTrend?.deltas?.length > 0) {
-    out.scale = scaleTrend;
   }
 
   if (securityTrend?.worsened) {
@@ -277,10 +252,8 @@ function writeSummaryText(result) {
 async function main() {
   const payload = buildPayload();
 
-  if (
-    !anyFailure(payload.qa, payload.health, payload.performance, payload.apiDoctor, payload.scale, payload.security)
-  ) {
-    console.log("Nessun FAIL in nessuno dei sei report: nessuna chiamata a Claude (costo zero).");
+  if (!anyFailure(payload.qa, payload.health, payload.performance, payload.apiDoctor, payload.security)) {
+    console.log("Nessun FAIL in nessuno dei cinque report: nessuna chiamata a Claude (costo zero).");
     return;
   }
 
@@ -306,7 +279,7 @@ async function analyze(payload) {
     messages: [
       {
         role: "user",
-        content: `Stato dei sei agenti in questo run:\n\n${JSON.stringify(payload, null, 2)}`,
+        content: `Stato dei cinque agenti in questo run:\n\n${JSON.stringify(payload, null, 2)}`,
       },
     ],
     output_config: { format: zodOutputFormat(IncidentSchema) },

@@ -48,9 +48,9 @@ test("appendEntry: ogni run produce una riga JSONL indipendente (non un array)",
 
 test("readLastEntry con filter: trova l'ultima riga di una specifica app, non l'ultima riga del file", () => {
   withTempCwd(() => {
-    appendEntry("performance", { app: "cinefighi", performance: 96 });
+    appendEntry("performance", { app: "cinetracker", performance: 96 });
     appendEntry("performance", { app: "spot", performance: 79 });
-    appendEntry("performance", { app: "cinefighi", performance: 94 });
+    appendEntry("performance", { app: "cinetracker", performance: 94 });
     const last = readLastEntry("performance", (e) => e.app === "spot");
     assert.deepEqual(last, { app: "spot", performance: 79 });
   });

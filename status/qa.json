@@ -3,19 +3,6 @@
   "label": "QA Agent",
   "updatedAt": "2026-09-24T06:57:50.513Z",
   "apps": {
-    "cinefighi": {
-      "result": "PASS",
-      "summary": "98 passati · 0 falliti",
-      "metrics": {
-        "passed": 98,
-        "failed": 0,
-        "flaky": 0,
-        "skipped": 16
-      },
-      "problems": [],
-      "runAt": "2026-09-23T07:00:36.579Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35829425757"
-    },
     "cinetracker": {
       "result": "PASS",
       "summary": "52 passati · 0 falliti",

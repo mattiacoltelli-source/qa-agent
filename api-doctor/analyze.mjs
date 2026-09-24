@@ -28,9 +28,9 @@ const AnalysisSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `Sei un assistente di triage per un controllo automatico delle API esterne
-usate da tre app web reali: CineFighi e CineTracker (entrambe TMDB, con
-chiavi API diverse tra loro) e Spot (Open-Meteo, Open-Meteo Marine,
-sunrise-sunset.org — nessuna chiave).
+usate da tre app web reali: CineTracker (TMDB), Spot (Open-Meteo,
+Open-Meteo Marine, sunrise-sunset.org — nessuna chiave) e Prova (Yahoo
+Finance, SEC EDGAR, GDELT — nessuna chiave).
 
 Ricevi, per ogni endpoint in FAIL, endpoint (con eventuale api_key già
 oscurata), metodo, status HTTP, il motivo del fallimento già determinato

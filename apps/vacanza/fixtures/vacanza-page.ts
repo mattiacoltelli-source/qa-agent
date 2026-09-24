@@ -9,8 +9,7 @@ import { S } from "./selectors.ts";
 
 export type VacanzaPage = "home" | "top" | "map" | "spots" | "detail";
 
-/** Naviga sull'app partendo da uno stato di dispositivo pulito (vedi
- * commento gemello in apps/cinefighi/fixtures/cinefighi-page.ts). Importante
+/** Naviga sull'app partendo da uno stato di dispositivo pulito. Importante
  * qui in particolare: preferiti/itinerario/visitati sono SOLO localStorage,
  * quindi senza questo reset i test si contaminerebbero a vicenda. */
 export async function gotoFresh(page: Page): Promise<void> {

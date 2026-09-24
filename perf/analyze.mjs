@@ -29,8 +29,8 @@ const AnalysisSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `Sei un assistente di triage per un controllo automatico di performance
-(Performance Agent, basato su Google Lighthouse) su tre PWA reali:
-CineFighi, CineTracker, Spot — usate principalmente da telefono.
+(Performance Agent, basato su Google Lighthouse) su due PWA reali:
+CineTracker, Spot — usate principalmente da telefono.
 
 Ricevi, per ogni app in WARN o FAIL, i punteggi Lighthouse (0-100) per
 performance/accessibility/best-practices/seo, le soglie usate (permissive

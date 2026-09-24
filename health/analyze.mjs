@@ -20,7 +20,7 @@ const MODEL = "claude-sonnet-5";
 const AnalysisSchema = z.object({
   analyses: z.array(
     z.object({
-      app: z.string().describe("Chiave dell'app (es. 'cinefighi'), la stessa presente in apps nel report"),
+      app: z.string().describe("Chiave dell'app (es. 'cinetracker'), la stessa presente in apps nel report"),
       probable_cause: z.string().describe("Causa probabile in 1-2 frasi, in italiano"),
       severity: z.enum(["LOW", "MEDIUM", "HIGH"]),
       where_to_investigate: z.string().describe("Un suggerimento pratico e breve su dove guardare, in italiano"),
@@ -29,9 +29,8 @@ const AnalysisSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `Sei un assistente di triage per un controllo automatico di salute dati
-(Data Health Agent) su due app web reali con backend Supabase: CineFighi
-(multiutente, tabelle users/titles/votes) e CineTracker (single-user,
-tabella Coltel).
+(Data Health Agent) su un'app web reale con backend Supabase: CineTracker
+(single-user, tabella Coltel).
 
 Ricevi, per ogni app in WARN o FAIL, i conteggi delle righe e un elenco di
 anomalie già rilevate deterministicamente da codice (non da te): voti o

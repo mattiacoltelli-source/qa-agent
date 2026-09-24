@@ -8,8 +8,7 @@ import type { Page, Locator } from "@playwright/test";
 import { clearBrowserStorage } from "../../../core/storage.ts";
 import { S } from "./selectors.ts";
 
-/** Naviga sull'app partendo da uno stato di dispositivo pulito (vedi
- * commento gemello in apps/cinefighi/fixtures/cinefighi-page.ts). */
+/** Naviga sull'app partendo da uno stato di dispositivo pulito. */
 export async function gotoFresh(page: Page): Promise<void> {
   await page.goto(".");
   await clearBrowserStorage(page);
@@ -57,8 +56,7 @@ export async function search(page: Page, query: string): Promise<void> {
  * "Inception" può benissimo essere già stato votato in passato): in quel
  * caso la card non ha .action-seen/.action-watch, solo un tag "Già in
  * libreria" (vedi ui.js::renderSearchResults), e un click sull'azione
- * resterebbe in attesa per sempre. Stesso identico problema e stessa
- * soluzione già usata in apps/cinefighi/fixtures/cinefighi-page.ts. */
+ * resterebbe in attesa per sempre. */
 export function firstAddableSearchCard(page: Page): Locator {
   return page
     .locator(S.resultsPosterCard)

@@ -3,24 +3,6 @@
   "label": "Errori (Sentry)",
   "updatedAt": "2026-09-24T07:05:21.003Z",
   "apps": {
-    "cinefighi": {
-      "result": "WARN",
-      "summary": "1 errore · 3 eventi in 24h",
-      "metrics": {
-        "issues": 1,
-        "eventi": 3,
-        "utenti": 0
-      },
-      "problems": [
-        {
-          "severity": "MEDIUM",
-          "message": "ReferenceError: currentUser is not defined — init(app) (3 volte)",
-          "url": "https://mattia-e5.sentry.io/issues/148911998/"
-        }
-      ],
-      "runAt": "2026-09-24T07:05:21.003Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/35967021184"
-    },
     "cinetracker": {
       "result": "PASS",
       "summary": "Nessun errore in 24h",
