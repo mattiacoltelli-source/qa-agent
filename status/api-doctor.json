@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-09-25T06:57:39.402Z",
+  "updatedAt": "2026-09-25T16:46:09.582Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -35,11 +35,11 @@
       "problems": [
         {
           "severity": "LOW",
-          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed"
+          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT)"
         }
       ],
-      "runAt": "2026-09-25T06:57:39.402Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36104778729"
+      "runAt": "2026-09-25T16:46:09.582Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36162724469"
     }
   }
 }
