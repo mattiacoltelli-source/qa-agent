@@ -133,15 +133,17 @@ export async function checks() {
           : null,
   });
 
-  // retryOnRateLimit: GDELT limita per IP e i runner GitHub hanno IP
-  // condivisi, quindi il 429 qui è tipicamente momentaneo e non una nostra
-  // quota finita (non c'è chiave). Senza retry bastava quel picco per
-  // mandare una notifica di fallimento: è successo in due run consecutivi.
-  // Se il limite non si libera nei tentativi, il 429 resta e il check
-  // resta FAIL — un'indisponibilità vera continua a vedersi.
+  // retryWhenRefused: GDELT limita per IP e i runner GitHub hanno IP
+  // condivisi, quindi il rifiuto qui è tipicamente momentaneo e non una
+  // nostra quota finita (non c'è chiave). Arriva in tre forme diverse — 429,
+  // 503 del gateway, o la connessione che cade senza risposta — e finché il
+  // retry copriva il solo 429 le altre due passavano, lasciando Prova in
+  // INFRA_ERROR in 8 run su 10 fra il 18 e il 25 settembre.
+  // Se il rifiuto non si libera nei tentativi l'esito resta quello vero e il
+  // check resta rosso — un'indisponibilità vera continua a vedersi.
   const gdelt = await fetchJson(
     `https://api.gdeltproject.org/api/v2/doc/doc?query=${TICKER}&mode=artlist&format=json&maxrecords=5&timespan=7d`,
-    { retryOnRateLimit: true }
+    { retryWhenRefused: true }
   );
   results.push({
     name: `News (GDELT, ${TICKER})`,

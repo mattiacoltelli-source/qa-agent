@@ -17,7 +17,7 @@
 // come INFRA_ERROR — se diventasse permanente lo si vedrebbe run dopo run —
 // ma non fa fallire il job né parte una notifica per qualcosa su cui non
 // possiamo intervenire. I check che passano per lib/http.mjs con
-// `retryOnRateLimit` arrivano qui solo se il 429 è sopravvissuto ai
+// `retryWhenRefused` arrivano qui solo se il rifiuto è sopravvissuto ai
 // tentativi, quindi questa non è una scorciatoia per saltare il retry.
 const RATE_LIMITED = 429;
 

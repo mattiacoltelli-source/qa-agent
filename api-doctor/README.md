@@ -80,6 +80,13 @@ esporta `{ label, checks() }`, poi aggiungere una riga in `PROJECTS` in
   vero produrrebbe falsi allarmi e farebbe finire per ignorare le notifiche
   reali. Resta comunque visibile nel riepilogo di questo run.
 
+Un check contro una fonte che limita per ip può chiedere in più il retry
+paziente (`retryWhenRefused: true`, oggi solo GDELT): due tentativi
+distanziati 5s e 10s quando l'host si rifiuta di servirci *in quel momento*
+— 429, 503, o la connessione che cade senza risposta. Non cambia l'esito di
+niente, cambia solo quante volte si chiede prima di scriverlo: se il rifiuto
+sopravvive ai tentativi il check resta rosso com'era.
+
 Non c'è uno stato WARN qui: un'API esterna o risponde correttamente o no —
 INFRA_ERROR non è una via di mezzo, è un tipo di problema diverso (del
 runner, non dell'API).
