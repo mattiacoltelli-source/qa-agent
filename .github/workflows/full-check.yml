@@ -71,11 +71,30 @@ on:
         type: boolean
         default: false
   schedule:
-    # Ogni notte alle 02:00 UTC: le 4 del mattino in Italia con l'ora legale
+    # Ogni notte alle 02:11 UTC: le 4 del mattino in Italia con l'ora legale
     # (CEST, da fine marzo a fine ottobre), le 3 con l'ora solare — il cron
     # di GitHub Actions è sempre in UTC e non segue il cambio d'ora, quindi
     # un orario solo è impossibile. Entrambi vanno bene per lo scopo: notte
     # fonda, nessuna sovrapposizione con un test @write lanciato a mano.
+    #
+    # Il minuto 11 non è un capriccio. Sui runner gratuiti GitHub fa partire
+    # i job schedulati quando ha capacità, e la coda è più lunga all'inizio
+    # di ogni ora, dove sta la grande maggioranza dei cron del mondo. Con
+    # "0 2" questo giro è partito fra le 06:51 e le 07:25 UTC tutti i giorni
+    # fra il 19 e il 25 settembre 2026: cinque ore di ritardo sistematico,
+    # non un caso isolato. Spostarsi fuori dal minuto 0 è l'unica leva che
+    # abbiamo — non è documentata come garanzia e va verificata sui prossimi
+    # giri, non data per scontata.
+    #
+    # Il ritardo non rompe niente di per sé (le soglie della dashboard
+    # guardano l'età dell'esito, non l'orologio), ma sposta il giro dalla
+    # notte alla mattina, cioè proprio dentro la finestra in cui si potrebbe
+    # star lanciando un test @write a mano — che è la ragione per cui
+    # l'orario notturno era stato scelto.
+    #
+    # App Control Center mostra "prossimo giro previsto" sommando a questo
+    # cron il ritardo tipico osservato (FULL_CHECK in Default/config.js): se
+    # il minuto dispari funziona, quel numero va riportato a 0.
     #
     # Prima girava due volte a settimana (lunedì e giovedì). Il passaggio a
     # giornaliero non serve ad avere più dati: serve a rendere affidabili le
@@ -88,7 +107,7 @@ on:
     # proprio giro ogni 6 giorni: tenere sveglio Supabase free tier, che
     # sospende un progetto dopo 7 giorni senza richieste API. Quel cron
     # separato resta come rete di sicurezza se questo venisse disattivato.
-    - cron: "0 2 * * *"
+    - cron: "11 2 * * *"
 
 # I permessi di un workflow chiamante sono un tetto massimo per quelli
 # richiamati con `uses:` — senza questo, lo step "Salva lo storico" di

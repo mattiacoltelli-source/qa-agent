@@ -10,11 +10,16 @@ name: Data Health Agent
 # giro schedulato tiene "sveglio" Supabase senza bisogno di aprire l'app.
 #
 # Ogni 6 giorni (mai 7, per lasciare un giorno di margine su eventuali
-# ritardi del cron di GitHub Actions), alle 03:00 UTC — le 4 del mattino
+# ritardi del cron di GitHub Actions), alle 03:23 UTC — le 4 del mattino
 # ora italiana in inverno (CET), le 5 in ora legale (CEST): un orario in
 # cui è improbabile stare lanciando a mano un test @write, per evitare che
 # Data Health legga dati a metà scrittura e segnali un falso allarme (vedi
 # nota più sotto e health/README.md).
+#
+# Il minuto 23 al posto di 0 per la stessa ragione spiegata in full-check.yml:
+# con "0 3" questo giro è partito fra le 07:46 e le 09:16 UTC in cinque delle
+# ultime sei occorrenze — cinque o sei ore dopo, cioè in pieno giorno invece
+# che di notte. Vale la pena provare, non è una garanzia.
 #
 # Il job `notify` in fondo manda un messaggio Telegram se questo run
 # schedulato trova un FAIL vero (vedi health/engine.mjs — WARN non basta,
@@ -41,7 +46,7 @@ on:
         type: string
         default: "tutte"
   schedule:
-    - cron: "0 3 */6 * *"
+    - cron: "23 3 */6 * *"
 
 jobs:
   health:

@@ -16,7 +16,7 @@ leggere quello stato transitorio e segnalarlo come un'anomalia — un falso
 allarme, non un bug reale. Aspetta che l'altro run sia finito.
 
 **Unico agente con un run automatico**: a differenza degli altri tre, gira
-anche da solo ogni 6 giorni alle 03:00 UTC (`schedule` in
+anche da solo ogni 6 giorni alle 03:23 UTC (`schedule` in
 `.github/workflows/data-health.yml`) — orario scelto apposta per essere
 notte fonda anche in Italia, per ridurre la probabilità di sovrapporsi a
 un test `@write` lanciato a mano. Motivo: CineTracker è su Supabase free
