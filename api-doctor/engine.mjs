@@ -38,6 +38,9 @@ async function checkProject(name, project) {
     ok: c.ok,
     infra: !!c.networkError,
     kind: classify(c),
+    // Misurato e riportato, ma fuori dal rollup e dall'exit code: vedi
+    // rollupApp in lib/classify.mjs.
+    bestEffort: !!c.bestEffort,
     durationMs: c.durationMs,
     reason: c.reason,
     bodySnippet: c.ok ? null : c.bodySnippet, // il corpo grezzo serve solo per diagnosticare un fallimento
@@ -66,7 +69,7 @@ async function main() {
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), apps }, null, 2));
 
   const totalChecks = Object.values(apps).reduce((n, a) => n + a.checks.length, 0);
-  const failedChecks = Object.values(apps).reduce((n, a) => n + a.checks.filter((c) => c.kind === "FAIL").length, 0);
+  const failedChecks = Object.values(apps).reduce((n, a) => n + a.checks.filter((c) => c.kind === "FAIL" && !c.bestEffort).length, 0);
   const infraChecks = Object.values(apps).reduce((n, a) => n + a.checks.filter((c) => c.kind === "INFRA_ERROR").length, 0);
   console.log(`API Doctor: ${totalChecks} endpoint controllati — ${failedChecks} FAIL, ${infraChecks} INFRA_ERROR.`);
 

@@ -133,20 +133,34 @@ export async function checks() {
           : null,
   });
 
-  // retryWhenRefused: GDELT limita per IP e i runner GitHub hanno IP
-  // condivisi, quindi il rifiuto qui è tipicamente momentaneo e non una
-  // nostra quota finita (non c'è chiave). Arriva in tre forme diverse — 429,
-  // 503 del gateway, o la connessione che cade senza risposta — e finché il
-  // retry copriva il solo 429 le altre due passavano, lasciando Prova in
-  // INFRA_ERROR in 8 run su 10 fra il 18 e il 25 settembre.
-  // Se il rifiuto non si libera nei tentativi l'esito resta quello vero e il
-  // check resta rosso — un'indisponibilità vera continua a vedersi.
+  // bestEffort: questo check da un runner GitHub non può passare, e la causa
+  // è fuori dal nostro controllo. GDELT limita a UNA richiesta ogni 5 secondi
+  // PER IP (lo dice il corpo del suo 429: "Please limit requests to one every
+  // 5 seconds"), gli ip dei runner sono condivisi con chiunque altro, e
+  // quando la quota è già esaurita GDELT non risponde nemmeno 429: lascia
+  // cadere la connessione. Dal runner si vede come
+  // `fetch failed (UND_ERR_CONNECT_TIMEOUT)`, mentre da un ip pulito la
+  // stessa richiesta nello stesso momento torna 429 con quel testo — due
+  // facce dello stesso limite.
+  //
+  // Niente retry, quindi: contro un blocco per ip non serve, e costava ~40s
+  // di job a vuoto (misurato sul run 36162724469: sei tentativi, tutti in
+  // connect timeout). E fuori dal rollup: era l'unica ragione per cui Prova
+  // risultava INFRA_ERROR in 8 run su 10 fra il 18 e il 25 settembre, cioè
+  // un allarme fisso su cui non c'è niente da correggere. Il check resta e
+  // continua a comparire nel report — se GDELT torna raggiungibile si vede.
+  //
+  // Vale la pena tenerlo anche così perché in Prova GDELT è l'ULTIMO anello
+  // della catena news (Finnhub -> Alpha Vantage -> GDELT, vedi
+  // src/data_sources/news.py): ci si arriva solo se le due fonti a chiave
+  // hanno già fallito, quindi la sua indisponibilità non è un problema
+  // dell'app oggi.
   const gdelt = await fetchJson(
-    `https://api.gdeltproject.org/api/v2/doc/doc?query=${TICKER}&mode=artlist&format=json&maxrecords=5&timespan=7d`,
-    { retryWhenRefused: true }
+    `https://api.gdeltproject.org/api/v2/doc/doc?query=${TICKER}&mode=artlist&format=json&maxrecords=5&timespan=7d`
   );
   results.push({
     name: `News (GDELT, ${TICKER})`,
+    bestEffort: true,
     ...gdelt,
     ok: !gdelt.networkError && gdelt.ok && Array.isArray(gdelt.body?.articles),
     reason: gdelt.networkError

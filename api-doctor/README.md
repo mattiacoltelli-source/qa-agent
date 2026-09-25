@@ -80,12 +80,32 @@ esporta `{ label, checks() }`, poi aggiungere una riga in `PROJECTS` in
   vero produrrebbe falsi allarmi e farebbe finire per ignorare le notifiche
   reali. Resta comunque visibile nel riepilogo di questo run.
 
-Un check contro una fonte che limita per ip può chiedere in più il retry
-paziente (`retryWhenRefused: true`, oggi solo GDELT): due tentativi
-distanziati 5s e 10s quando l'host si rifiuta di servirci *in quel momento*
-— 429, 503, o la connessione che cade senza risposta. Non cambia l'esito di
-niente, cambia solo quante volte si chiede prima di scriverlo: se il rifiuto
-sopravvive ai tentativi il check resta rosso com'era.
+Un check contro una fonte che a volte rifiuta di servirci *in quel momento*
+può chiedere in più il retry paziente (`retryWhenRefused: true`): due
+tentativi distanziati 5s e 10s su 429, 503 o connessione caduta senza
+risposta. Non cambia l'esito di niente, cambia solo quante volte si chiede
+prima di scriverlo — se il rifiuto sopravvive ai tentativi il check resta
+rosso com'era. Oggi nessun check lo usa (vedi sotto).
+
+### best effort: misurato, ma fuori dallo stato
+
+Un check può dichiararsi `bestEffort: true` (oggi solo **News (GDELT)** in
+`endpoints/prova.mjs`): viene eseguito e compare nel report come ogni altro,
+ma **non concorre al rollup dell'app** né all'exit code del job.
+
+Serve per una fonte che da un runner GitHub non può passare per ragioni
+fuori dal nostro controllo. GDELT limita a **una richiesta ogni 5 secondi
+per ip**, gli ip dei runner sono condivisi, e a quota esaurita non risponde
+nemmeno 429: lascia cadere la connessione (`UND_ERR_CONNECT_TIMEOUT`). Dal
+18 al 25 settembre 2026 questo da solo ha tenuto Prova in INFRA_ERROR in 8
+run su 10 — un allarme fisso su cui non c'era niente da correggere, cioè
+esattamente il rumore che il resto del modulo è fatto per evitare.
+
+Non è un modo per far sparire i problemi: un check normale continua a
+decidere lo stato, un `bestEffort` rotto non ne copre nessuno, e il suo
+esito resta scritto nel report e nel riquadro di `status/`, marcato
+`[best effort: non incide sullo stato]`. Se GDELT torna raggiungibile, si
+vede subito.
 
 Non c'è uno stato WARN qui: un'API esterna o risponde correttamente o no —
 INFRA_ERROR non è una via di mezzo, è un tipo di problema diverso (del

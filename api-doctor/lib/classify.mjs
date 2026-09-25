@@ -27,11 +27,23 @@ export function classify(c) {
   return c.status === RATE_LIMITED ? "INFRA_ERROR" : "FAIL";
 }
 
-// Un FAIL vero in qualunque check vince sempre (fa fallire il job); un
-// INFRA_ERROR puro (nessun FAIL vero) non fa fallire nulla — vedi il
+// Un check `bestEffort` viene misurato e riportato, ma non concorre allo
+// stato dell'app. Serve per una fonte che da un runner GitHub non può
+// passare per ragioni fuori dal nostro controllo: GDELT (vedi
+// endpoints/prova.mjs) limita a una richiesta ogni 5 secondi PER IP e gli
+// ip dei runner sono condivisi, quindi la quota è già esaurita da altri
+// quando tocca a noi e il blocco arriva a livello di connessione. Tenerlo
+// nel rollup significava Prova gialla ogni notte per qualcosa su cui non
+// c'è niente da correggere — cioè il rumore che l'intero modulo è fatto
+// per evitare. Fuori dal rollup l'informazione resta visibile nel report:
+// se un giorno GDELT torna raggiungibile, si vede.
+//
+// Un FAIL vero in qualunque altro check vince sempre (fa fallire il job);
+// un INFRA_ERROR puro (nessun FAIL vero) non fa fallire nulla — vedi il
 // commento in cima a engine.mjs per il perché.
 export function rollupApp(classifiedChecks) {
-  const hasFail = classifiedChecks.some((c) => c.kind === "FAIL");
-  const hasInfra = classifiedChecks.some((c) => c.kind === "INFRA_ERROR");
+  const decisivi = classifiedChecks.filter((c) => !c.bestEffort);
+  const hasFail = decisivi.some((c) => c.kind === "FAIL");
+  const hasInfra = decisivi.some((c) => c.kind === "INFRA_ERROR");
   return hasFail ? "FAIL" : hasInfra ? "INFRA_ERROR" : "PASS";
 }

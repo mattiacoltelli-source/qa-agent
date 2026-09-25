@@ -155,10 +155,16 @@ function readApiDoctor(data) {
       metrics: { total: checks.length, failed: broken.length },
       // Un INFRA_ERROR è la richiesta che non è mai arrivata a destinazione:
       // non dice nulla sull'API, quindi non merita la stessa severità di un
-      // endpoint che risponde male davvero.
+      // endpoint che risponde male davvero. Un check `bestEffort` scende un
+      // gradino più giù e lo dice: è misurato ma non concorre allo stato
+      // dell'app (vedi rollupApp in api-doctor/lib/classify.mjs), quindi
+      // senza quella nota chi legge il riquadro vedrebbe un problema
+      // elencato sotto un'app PASS e lo prenderebbe per un'incoerenza.
       problems: broken.slice(0, 5).map((c) => ({
-        severity: c.kind === "INFRA_ERROR" ? "LOW" : "HIGH",
-        message: `${c.name}: ${c.kind}${c.status ? ` (HTTP ${c.status})` : ""} — ${truncate(c.reason, 120)}`,
+        severity: c.bestEffort ? "LOW" : c.kind === "INFRA_ERROR" ? "LOW" : "HIGH",
+        message:
+          `${c.name}: ${c.kind}${c.status ? ` (HTTP ${c.status})` : ""} — ${truncate(c.reason, 120)}` +
+          (c.bestEffort ? " [best effort: non incide sullo stato]" : ""),
       })),
     };
   }

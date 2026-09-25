@@ -43,3 +43,24 @@ test("rollupApp: un FAIL vero vince sempre, anche insieme a un INFRA_ERROR", () 
 test("rollupApp: lista vuota è PASS", () => {
   assert.equal(rollupApp([]), "PASS");
 });
+
+// bestEffort — un check che da CI non può passare per ragioni fuori dal
+// nostro controllo (GDELT, vedi endpoints/prova.mjs) resta misurato ma non
+// decide lo stato dell'app.
+
+test("rollupApp: un check bestEffort rotto non sporca lo stato dell'app", () => {
+  assert.equal(rollupApp([{ kind: "PASS" }, { kind: "INFRA_ERROR", bestEffort: true }]), "PASS");
+  assert.equal(rollupApp([{ kind: "PASS" }, { kind: "FAIL", bestEffort: true }]), "PASS");
+});
+
+// Il rischio di questa scorciatoia è nasconderci dietro qualcos'altro: un
+// problema vero su un check normale deve continuare a vincere, e un check
+// bestEffort che passa non deve "assolvere" nessuno.
+test("rollupApp: bestEffort non copre un problema vero di un altro check", () => {
+  assert.equal(rollupApp([{ kind: "FAIL" }, { kind: "PASS", bestEffort: true }]), "FAIL");
+  assert.equal(rollupApp([{ kind: "INFRA_ERROR" }, { kind: "PASS", bestEffort: true }]), "INFRA_ERROR");
+});
+
+test("rollupApp: solo check bestEffort, tutti rotti, resta PASS", () => {
+  assert.equal(rollupApp([{ kind: "FAIL", bestEffort: true }]), "PASS");
+});
