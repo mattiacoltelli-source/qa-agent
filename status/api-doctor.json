@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-09-25T16:52:29.392Z",
+  "updatedAt": "2026-09-26T07:39:15.423Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-25T16:52:29.392Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36163484231"
+      "runAt": "2026-09-26T07:39:15.423Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36227097724"
     },
     "spot": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-25T16:52:29.392Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36163484231"
+      "runAt": "2026-09-26T07:39:15.423Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36227097724"
     },
     "prova": {
       "result": "PASS",
@@ -38,8 +38,8 @@
           "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429 [best effort: non incide sullo stato]"
         }
       ],
-      "runAt": "2026-09-25T16:52:29.392Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36163484231"
+      "runAt": "2026-09-26T07:39:15.423Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36227097724"
     }
   }
 }
