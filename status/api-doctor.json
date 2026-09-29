@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-09-28T08:44:04.484Z",
+  "updatedAt": "2026-09-29T08:27:28.098Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-28T08:44:04.484Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36398405488"
+      "runAt": "2026-09-29T08:27:28.098Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36542132964"
     },
     "spot": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-28T08:44:04.484Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36398405488"
+      "runAt": "2026-09-29T08:27:28.098Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36542132964"
     },
     "prova": {
       "result": "PASS",
@@ -33,8 +33,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-09-28T08:44:04.484Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36398405488"
+      "runAt": "2026-09-29T08:27:28.098Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36542132964"
     }
   }
 }
