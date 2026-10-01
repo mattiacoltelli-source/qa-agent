@@ -1,7 +1,7 @@
 {
   "agent": "qa",
   "label": "QA Agent",
-  "updatedAt": "2026-10-01T18:40:16.596Z",
+  "updatedAt": "2026-10-01T18:57:56.090Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -30,26 +30,17 @@
       "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     },
     "prova": {
-      "result": "FAIL",
-      "summary": "80 passati · 2 falliti",
+      "result": "PASS",
+      "summary": "136 passati · 0 falliti",
       "metrics": {
-        "passed": 80,
-        "failed": 2,
+        "passed": 136,
+        "failed": 0,
         "flaky": 0,
-        "skipped": 0
+        "skipped": 2
       },
-      "problems": [
-        {
-          "severity": "HIGH",
-          "message": "Test fallito: filtro asset: un bottone per asset, uno solo attivo, cambia la card in vista — Error: expect(locator).toHaveCount(expected) failed Locator: locator('#asset-filter .horizon-filter-btn') Expected: 3 Received: 4 Timeout: 5000ms Call log: - Ex…"
-        },
-        {
-          "severity": "HIGH",
-          "message": "Test fallito: filtro asset: un bottone per asset, uno solo attivo, cambia la card in vista — Error: expect(locator).toHaveCount(expected) failed Locator: locator('#asset-filter .horizon-filter-btn') Expected: 3 Received: 4 Timeout: 5000ms Call log: - Ex…"
-        }
-      ],
-      "runAt": "2026-10-01T18:40:16.596Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
+      "problems": [],
+      "runAt": "2026-10-01T18:57:56.090Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36910676681"
     }
   }
 }
