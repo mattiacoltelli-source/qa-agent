@@ -1,20 +1,20 @@
 {
   "agent": "qa",
   "label": "QA Agent",
-  "updatedAt": "2026-10-01T17:14:46.544Z",
+  "updatedAt": "2026-10-01T18:40:16.596Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
-      "summary": "76 passati · 0 falliti",
+      "summary": "76 passati · 0 falliti · 1 flaky",
       "metrics": {
         "passed": 76,
         "failed": 0,
-        "flaky": 0,
+        "flaky": 1,
         "skipped": 22
       },
       "problems": [],
-      "runAt": "2026-10-01T17:14:46.544Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36897869316"
+      "runAt": "2026-10-01T18:40:16.596Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     },
     "spot": {
       "result": "PASS",
@@ -26,21 +26,30 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-10-01T08:46:19.479Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36838344864"
+      "runAt": "2026-10-01T18:40:16.596Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     },
     "prova": {
-      "result": "PASS",
-      "summary": "82 passati · 0 falliti",
+      "result": "FAIL",
+      "summary": "80 passati · 2 falliti",
       "metrics": {
-        "passed": 82,
-        "failed": 0,
+        "passed": 80,
+        "failed": 2,
         "flaky": 0,
         "skipped": 0
       },
-      "problems": [],
-      "runAt": "2026-10-01T08:46:19.479Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36838344864"
+      "problems": [
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: filtro asset: un bottone per asset, uno solo attivo, cambia la card in vista — Error: expect(locator).toHaveCount(expected) failed Locator: locator('#asset-filter .horizon-filter-btn') Expected: 3 Received: 4 Timeout: 5000ms Call log: - Ex…"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: filtro asset: un bottone per asset, uno solo attivo, cambia la card in vista — Error: expect(locator).toHaveCount(expected) failed Locator: locator('#asset-filter .horizon-filter-btn') Expected: 3 Received: 4 Timeout: 5000ms Call log: - Ex…"
+        }
+      ],
+      "runAt": "2026-10-01T18:40:16.596Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     }
   }
 }
