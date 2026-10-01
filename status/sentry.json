@@ -1,7 +1,7 @@
 {
   "agent": "sentry",
   "label": "Errori (Sentry)",
-  "updatedAt": "2026-10-01T08:53:48.537Z",
+  "updatedAt": "2026-10-01T18:55:23.802Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-10-01T08:53:48.537Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36838344864"
+      "runAt": "2026-10-01T18:55:23.802Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     },
     "spot": {
       "result": "PASS",
@@ -22,19 +22,31 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-10-01T08:53:48.537Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36838344864"
+      "runAt": "2026-10-01T18:55:23.802Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     },
     "prova": {
-      "result": "PASS",
-      "summary": "Nessun errore in 24h",
+      "result": "WARN",
+      "summary": "2 errori · 16 eventi in 24h",
       "metrics": {
-        "issues": 0,
-        "eventi": 0
+        "issues": 2,
+        "eventi": 16,
+        "utenti": 0
       },
-      "problems": [],
-      "runAt": "2026-10-01T08:53:48.537Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36838344864"
+      "problems": [
+        {
+          "severity": "MEDIUM",
+          "message": "TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator)) — ?(Prova/) (15 volte)",
+          "url": "https://mattia-e5.sentry.io/issues/150777876/"
+        },
+        {
+          "severity": "MEDIUM",
+          "message": "TypeError: Cannot read properties of undefined (reading 'value') — marketRegimeLines(<unknown module>) (1 volta)",
+          "url": "https://mattia-e5.sentry.io/issues/150779589/"
+        }
+      ],
+      "runAt": "2026-10-01T18:55:23.802Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     },
     "control-center": {
       "result": "PASS",
@@ -44,8 +56,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-10-01T08:53:48.537Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36838344864"
+      "runAt": "2026-10-01T18:55:23.802Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
     }
   }
 }
