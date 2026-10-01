@@ -1,7 +1,7 @@
 {
   "agent": "qa",
   "label": "QA Agent",
-  "updatedAt": "2026-10-01T18:57:56.090Z",
+  "updatedAt": "2026-10-01T22:20:41.398Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -31,16 +31,16 @@
     },
     "prova": {
       "result": "PASS",
-      "summary": "136 passati · 0 falliti",
+      "summary": "148 passati · 0 falliti",
       "metrics": {
-        "passed": 136,
+        "passed": 148,
         "failed": 0,
         "flaky": 0,
         "skipped": 2
       },
       "problems": [],
-      "runAt": "2026-10-01T18:57:56.090Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36910676681"
+      "runAt": "2026-10-01T22:20:41.398Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36934405368"
     }
   }
 }
