@@ -90,6 +90,15 @@ veri (almeno una riga, oppure il messaggio di tabella vuota). Il difetto
 c'era già con tre asset e con quattro si aggrava, perché c'è un file in più
 da scaricare.
 
+Stessa famiglia di problema nei test che scelgono un ramo con
+`if (await x.isVisible())` (nota «dati mancanti», prezzo, istantanea): leggono
+l'elemento mentre è ancora vuoto, prendono il ramo «nascosto» e poi lo vedono
+comparire. Si usa `waitForAssetData()`, che aspetta la scomparsa delle righe
+scheletro (`.skeleton-bar`). **Non** si può usare il badge «Accuratezza: …»
+come prova che i dati sono arrivati: lo scheletro lo contiene già
+(«Accuratezza: 0.0%»), quindi un test che lo prendesse per segnale passerebbe
+subito, prima del caricamento.
+
 ## Id stabili sui contenitori dei grafici
 
 I `<canvas>` di Chart.js vengono sostituiti (non solo nascosti) da un div
@@ -208,6 +217,9 @@ canvas direttamente.
   la nota di confronto in fondo (opzionale: senza, nessun paragrafo vuoto), il
   ripiego sul vecchio formato a paragrafo unico, e l'elenco dei titoli con
   `NVT` mostrato come "nVent Electric"
+- **File dati mancante (404) o non leggibile (5xx)**: un 404 è «nessuna
+  valutazione/predizione ancora», un 500/503 resta «dati non raggiungibili»;
+  un file mancante di un asset non tocca le tabelle degli altri
 - Filtro orizzonte sul **contenuto** della tabella con la cronologia a
   cadenze diverse (una sola 7g fra molte 1g) e con un orizzonte senza righe
 - Riga "Probabilità: UP/DOWN/FLAT" nel dettaglio previsione (`3a962b3`,
@@ -215,20 +227,27 @@ canvas direttamente.
   quella modifica), formato e plausibilità (0-100%, le tre percentuali
   sommano a ~100) — mai un valore fisso
 
-## Comportamento noto dell'app (non un difetto dei test)
+## Un file dati mancante non è un guasto
 
 Un asset appena aggiunto non ha ancora esiti valutati, quindi nemmeno
-`data/<asset>/outcomes.jsonl`. `parseJsonl()` in `index.html` tratta **ogni**
-risposta non ok come `ok:false`, un 404 compreso, e la tabella "Ultimi
-Risultati Valutati" scrive "Dati non raggiungibili al momento. Riprova più
-tardi." — un messaggio di errore per quella che è un'assenza normale. Visto su
-AMD il 2026-10-01 (file 404, card in produzione col messaggio d'errore).
+`data/<asset>/outcomes.jsonl`: il server risponde 404. Fino al 2026-10-01
+`parseJsonl()` in `index.html` trattava ogni risposta non ok come errore e la
+card di AMD scriveva «Dati non raggiungibili al momento. Riprova più tardi.» —
+un messaggio d'errore per un'assenza normale. Corretto in Prova `ee30ee7`: un
+**404 è una lista vuota** («Nessuna valutazione ancora.» / «Nessuna predizione
+registrata.»), mentre 5xx e rete caduta restano «dati non raggiungibili».
 
-I test non lo irrigidiscono né lo mascherano: `outcomesFileMissing()` chiede il
-file direttamente. 404 → il test si salta dichiarando il motivo; il file c'è ma
-la pagina non lo legge → è un'interruzione vera e il test **fallisce**. Il caso
-si esaurisce da solo quando la pipeline crea il primo esito. Lato app la
-correzione sarebbe distinguere il 404 (`ok:true, data:[]`) dagli altri errori.
+`missing-data-files.spec.ts` fissa la distinzione **in entrambe le direzioni**,
+con dati finti per un solo file di un solo asset: il 404 non è un errore, e il
+500/503 non diventa «nessun dato». La seconda metà conta quanto la prima:
+senza, la strada più facile per «sistemare» il messaggio sarebbe dire sempre
+«nessun dato», e un'interruzione vera passerebbe inosservata.
+
+Il test degli esiti per asset (`prediction-details.spec.ts`) è rigido di
+conseguenza: se il messaggio d'errore tornasse su un asset senza esiti, il test
+**fallisce**. Per qualche ora, tra la scoperta e la correzione, aveva un ramo che
+saltava quel caso dichiarandone il motivo; è stato tolto proprio perché, a
+difetto corretto, avrebbe nascosto una regressione invece di segnalarla.
 
 ## Backlog (non ancora coperto)
 

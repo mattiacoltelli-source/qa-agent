@@ -4,6 +4,7 @@ import {
   assetCard,
   assetFilterButton,
   selectAsset,
+  waitForAssetData,
   dataStatusNote,
   assetPriceLabel,
   snapshotStatus,
@@ -42,6 +43,9 @@ test.describe("AI Predictor — caricamento dashboard", () => {
       await selectAsset(page, asset);
       const card = assetCard(page, asset);
       await expect(card).toBeVisible();
+      // Prima i dati, poi il badge: "Accuratezza: 0.0%" e' gia' nello
+      // scheletro, da solo non prova che la card si sia popolata.
+      await waitForAssetData(page, asset);
       await expect(card.locator(S.badgeAccuracy)).toContainText("Accuratezza:");
     }
   });
@@ -102,8 +106,10 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     await selectAsset(page, "AMD");
     const card = assetCard(page, "AMD");
 
-    // Il badge compare solo dopo l'arrivo dei dati (renderAssetData): e' il
-    // segnale che la card non e' rimasta sullo scheletro.
+    // La card non e' rimasta sullo scheletro: le righe segnaposto sono state
+    // sostituite. (Il badge "Accuratezza:" non basta come prova: c'e' gia'
+    // nello scheletro.)
+    await waitForAssetData(page, "AMD");
     await expect(card.locator(S.badgeAccuracy)).toContainText("Accuratezza:");
     // Il grafico accuratezza e' sempre visibile: canvas con dati, oppure il
     // messaggio "nessun dato" — mai niente (vedi asset-charts.spec.ts).
@@ -145,6 +151,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     await gotoFresh(page);
     for (const asset of ASSETS) {
       await selectAsset(page, asset);
+      await waitForAssetData(page, asset);
       const note = dataStatusNote(page, asset);
       if (await note.isVisible()) {
         await expect(note.locator(S.iconSvg)).toBeVisible();
@@ -161,6 +168,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     await gotoFresh(page);
     for (const asset of ASSETS) {
       await selectAsset(page, asset);
+      await waitForAssetData(page, asset);
       const price = assetPriceLabel(page, asset);
       const text = await price.textContent();
       if (text) {
@@ -175,6 +183,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     await gotoFresh(page);
     for (const asset of ASSETS) {
       await selectAsset(page, asset);
+      await waitForAssetData(page, asset);
       const status = snapshotStatus(page, asset);
       if (await status.isVisible()) {
         await expect(status).toContainText(/Ora \(\d{2}:\d{2}\)/);

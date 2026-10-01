@@ -223,27 +223,33 @@ export async function openAssetTable(
   await expandCollapsible(assetCard(page, asset), COLLAPSIBLE_TITLE[kind]);
 }
 
-/** Il messaggio che la tabella mostra quando il file dei dati non risponde
- * (parseJsonl() in index.html restituisce ok:false su QUALUNQUE risposta non
- * ok, un 404 compreso). */
-export const MSG_DATI_NON_RAGGIUNGIBILI = "Dati non raggiungibili al momento";
-
-/** True se il file degli esiti di un asset non esiste ancora (404).
+/** Aspetta che la card di un asset abbia ricevuto i suoi dati.
  *
- * Serve a distinguere due situazioni che la pagina mostra IDENTICHE: un asset
- * appena aggiunto, senza nessun esito valutato e quindi senza outcomes.jsonl
- * (AMD, 2026-10-01), e una vera interruzione dei dati. In entrambi i casi la
- * card dice "Dati non raggiungibili al momento. Riprova piu' tardi." — per
- * il primo e' fuorviante, e' un'assenza normale e non un guasto — ma
- * solo nel secondo c'e' qualcosa che questi test devono far notare.
- * Chiedere il file direttamente toglie l'ambiguita' senza scrivere nel test
- * il nome di un asset: il caso "nuovo" si esaurisce da solo quando la
- * pipeline crea il primo esito. */
-export async function outcomesFileMissing(page: Page, asset: ProvaAsset): Promise<boolean> {
-  const url = new URL(`data/${asset.toLowerCase()}/outcomes.jsonl`, page.url()).toString();
-  const res = await page.request.get(url, { headers: { "cache-control": "no-store" } });
-  return res.status() === 404;
+ * Il segnale e' la scomparsa delle righe scheletro (.skeleton-bar): le
+ * tabelle partono con tre righe segnaposto e renderAssetData() le sostituisce
+ * in blocco con le righe vere o con il messaggio di tabella vuota — e nella
+ * stessa chiamata sincrona imposta anche prezzo, istantanea e nota "dati
+ * mancanti". Quando le barre non ci sono piu', tutto il resto e' al suo posto.
+ *
+ * NON si puo' usare il badge "Accuratezza: ..." per questo: lo scheletro lo
+ * contiene gia' ("Accuratezza: 0.0%"), quindi un test che lo prendesse per
+ * segnale di "dati arrivati" passerebbe subito, prima del caricamento. E
+ * senza questa attesa i test che scelgono un ramo con `if (await
+ * x.isVisible())` leggono l'elemento mentre e' ancora vuoto, prendono il
+ * ramo "nascosto" e poi lo vedono comparire: "Expected hidden, Received
+ * visible", a intermittenza, piu' spesso quanti piu' asset ci sono da
+ * attraversare. */
+export async function waitForAssetData(page: Page, asset: ProvaAsset): Promise<void> {
+  await expect(
+    assetCard(page, asset).locator(".skeleton-bar"),
+    `${asset}: la card e' ancora sullo scheletro, i dati non sono arrivati`
+  ).toHaveCount(0, { timeout: 20_000 });
 }
+
+/** Il messaggio che la tabella mostra quando il file dei dati non e'
+ * leggibile: rete caduta, 5xx, 403. Un 404 NON lo mostra piu' dal
+ * 2026-10-01 (Prova ee30ee7): e' una lista vuota, vedi missing-data-files.spec.ts. */
+export const MSG_DATI_NON_RAGGIUNGIBILI = "Dati non raggiungibili al momento";
 
 /** Quante righe ha la tabella di un asset, DOPO che i dati sono arrivati.
  *
@@ -273,8 +279,9 @@ export async function settledRowCount(
         const text = (await assetCard(page, asset).textContent()) ?? "";
         // Anche "dati non raggiungibili" e' un esito: la tabella ha finito
         // di caricarsi, solo che non c'e' niente da mostrare. Se sia un
-        // guasto o un file non ancora creato lo decide chi legge il
-        // risultato (vedi outcomesFileMissing()), non l'attesa.
+        // guasto lo decide chi legge il risultato, non l'attesa: un test che
+        // si aspetta le righe o "nessun dato" fallira' con un messaggio
+        // chiaro invece di restare in timeout.
         return text.includes(emptyText) || text.includes(MSG_DATI_NON_RAGGIUNGIBILI);
       },
       { timeout: 20_000, message: `${asset}: ne' righe ne' messaggio di tabella vuota (${kind})` }
@@ -536,5 +543,20 @@ export async function mockSectorSummary(page: Page, records: unknown[]): Promise
       contentType: "text/plain",
       body: records.map((r) => JSON.stringify(r)).join("\n") + "\n",
     })
+  );
+}
+
+/** Fa rispondere uno dei due file JSONL di un asset con lo status dato e
+ * lascia vero l'altro. Serve a provare cosa fa la pagina quando UN file manca
+ * (404, asset appena aggiunto) o non risponde (5xx) senza toccare gli altri
+ * asset, che restano dati veri. */
+export async function mockDataFileStatus(
+  page: Page,
+  asset: ProvaAsset,
+  file: "predictions" | "outcomes",
+  status: number
+): Promise<void> {
+  await page.route(new RegExp(`/data/${asset.toLowerCase()}/${file}\\.jsonl`), (route) =>
+    route.fulfill({ status, contentType: "text/plain", body: status === 404 ? "Not Found" : "errore finto" })
   );
 }
