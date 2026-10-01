@@ -13,7 +13,13 @@ import { expect } from "@playwright/test";
 import type { Page, Locator } from "@playwright/test";
 import { S } from "./selectors.ts";
 
-export const ASSETS = ["NVDA", "MSFT", "AAPL"] as const;
+// AMD e' il quarto asset Tech dal 2026-10-01 (Prova 561233a): volatilita'
+// quasi doppia del resto del paniere (ATR% ~4.2 contro ~2.0-2.3), stesso
+// benchmark di settore di NVDA (SMH). Tutti i test per-asset iterano su
+// questa lista, quindi aggiungere un asset qui basta a coprirlo ovunque —
+// e a rompere, di proposito, ogni asserzione che avesse un conteggio
+// scritto a mano.
+export const ASSETS = ["NVDA", "MSFT", "AAPL", "AMD"] as const;
 export type ProvaAsset = (typeof ASSETS)[number];
 
 /** Naviga sulla dashboard e aspetta che le card asset siano nel DOM.
@@ -24,7 +30,7 @@ export type ProvaAsset = (typeof ASSETS)[number];
  *
  * Attenzione: la pagina si apre SEMPRE sulla pagina "Tech" con il filtro
  * asset su ASSETS[0] (NVDA), quindi solo la sua card è visibile — le altre
- * due sono nel DOM ma con display:none (vedi applyAssetFilter() in
+ * sono nel DOM ma con display:none (vedi applyAssetFilter() in
  * Prova/index.html). Per lavorare su un altro asset serve selectAsset(). */
 export async function gotoFresh(page: Page): Promise<void> {
   await page.goto(".");
@@ -40,8 +46,7 @@ export function assetCard(page: Page, asset: ProvaAsset): Locator {
 }
 
 /** Bottone del filtro asset in cima alla pagina Tech: mostra una sola card
- * alla volta (con 3 titoli le card impilate erano una lista troppo lunga
- * su mobile). Il primo asset di ASSETS è attivo al caricamento. */
+ * alla volta (le card impilate erano una lista troppo lunga su mobile). Il primo asset di ASSETS è attivo al caricamento. */
 export function assetFilterButton(page: Page, asset: ProvaAsset): Locator {
   return page.locator(`#asset-filter .horizon-filter-btn[data-asset="${asset}"]`);
 }
@@ -120,7 +125,7 @@ export function outcomeDetailRow(page: Page, asset: ProvaAsset, index: number): 
 export type ProvaHorizonFilter = "all" | "1d" | "7d" | "1m";
 
 /** Bottone del filtro orizzonte (Tutti/1g/7g/1m) in cima alla pagina,
- * sopra le card asset — un filtro solo, condiviso da tutte e tre. */
+ * sopra le card asset — un filtro solo, condiviso da tutte le card. */
 export function horizonFilterButton(page: Page, horizon: ProvaHorizonFilter): Locator {
   return page.locator(`.horizon-filter-btn[data-horizon="${horizon}"]`);
 }
@@ -218,6 +223,66 @@ export async function openAssetTable(
   await expandCollapsible(assetCard(page, asset), COLLAPSIBLE_TITLE[kind]);
 }
 
+/** Il messaggio che la tabella mostra quando il file dei dati non risponde
+ * (parseJsonl() in index.html restituisce ok:false su QUALUNQUE risposta non
+ * ok, un 404 compreso). */
+export const MSG_DATI_NON_RAGGIUNGIBILI = "Dati non raggiungibili al momento";
+
+/** True se il file degli esiti di un asset non esiste ancora (404).
+ *
+ * Serve a distinguere due situazioni che la pagina mostra IDENTICHE: un asset
+ * appena aggiunto, senza nessun esito valutato e quindi senza outcomes.jsonl
+ * (AMD, 2026-10-01), e una vera interruzione dei dati. In entrambi i casi la
+ * card dice "Dati non raggiungibili al momento. Riprova piu' tardi." — per
+ * il primo e' fuorviante, e' un'assenza normale e non un guasto — ma
+ * solo nel secondo c'e' qualcosa che questi test devono far notare.
+ * Chiedere il file direttamente toglie l'ambiguita' senza scrivere nel test
+ * il nome di un asset: il caso "nuovo" si esaurisce da solo quando la
+ * pipeline crea il primo esito. */
+export async function outcomesFileMissing(page: Page, asset: ProvaAsset): Promise<boolean> {
+  const url = new URL(`data/${asset.toLowerCase()}/outcomes.jsonl`, page.url()).toString();
+  const res = await page.request.get(url, { headers: { "cache-control": "no-store" } });
+  return res.status() === 404;
+}
+
+/** Quante righe ha la tabella di un asset, DOPO che i dati sono arrivati.
+ *
+ * gotoFresh() garantisce solo lo scheletro: i file JSONL arrivano dopo, in
+ * modo asincrono (loadDashboardData()), e per un istante la tabella ha zero
+ * righe e nemmeno il messaggio "Nessuna predizione registrata." — contare
+ * subito legge uno zero che non vuol dire "nessun dato". Misurato su una
+ * connessione lenta: le righe di NVDA compaiono circa 1.5 secondi dopo lo
+ * scheletro. Chi leggeva `rows.count()` subito e poi, su zero, si aspettava
+ * il messaggio di tabella vuota, falliva a intermittenza — e con un quarto
+ * asset da scaricare l'attesa si allunga ancora.
+ *
+ * Il segnale di "ho finito" e' uno dei due esiti veri: almeno una riga, oppure
+ * il messaggio di tabella vuota (che un asset appena aggiunto, come AMD, puo'
+ * mostrare davvero per gli esiti). */
+export async function settledRowCount(
+  page: Page,
+  asset: ProvaAsset,
+  kind: ProvaTableKind
+): Promise<number> {
+  const rows = kind === "outcomes" ? outcomeRows(page, asset) : predictionRows(page, asset);
+  const emptyText = kind === "outcomes" ? "Nessuna valutazione ancora." : "Nessuna predizione registrata.";
+  await expect
+    .poll(
+      async () => {
+        if ((await rows.count()) > 0) return true;
+        const text = (await assetCard(page, asset).textContent()) ?? "";
+        // Anche "dati non raggiungibili" e' un esito: la tabella ha finito
+        // di caricarsi, solo che non c'e' niente da mostrare. Se sia un
+        // guasto o un file non ancora creato lo decide chi legge il
+        // risultato (vedi outcomesFileMissing()), non l'attesa.
+        return text.includes(emptyText) || text.includes(MSG_DATI_NON_RAGGIUNGIBILI);
+      },
+      { timeout: 20_000, message: `${asset}: ne' righe ne' messaggio di tabella vuota (${kind})` }
+    )
+    .toBe(true);
+  return rows.count();
+}
+
 /** Numero massimo di righe mostrate prima di "Mostra tutto" (ROW_LIMIT in
  * Prova/index.html). */
 export const ROW_LIMIT = 6;
@@ -299,7 +364,7 @@ export function roboticsBody(page: Page, key: ProvaRoboticsKey): Locator {
 // contenuti diversi dietro un toggle interno (#report-type-filter, come
 // #robotics-asset-filter ma su .report-section a livello pagina invece che
 // .asset-card per-asset):
-// - "Paniere" (default): sintesi mensile che confronta i 4 titoli di Trend
+// - "Paniere" (default): sintesi mensile che confronta i 5 titoli di Trend
 //   strutturali tra loro — un solo blocco, non per-asset (loadSectorSummary()).
 // - "S&P 500"/"Nasdaq": la STESSA lettura di ciclo di Trend strutturali
 //   (renderRoboticsAssetCard riusata com'è, stesso schema trend.jsonl sotto
@@ -356,7 +421,7 @@ export async function selectReport(page: Page, key: ProvaReportType): Promise<vo
 }
 
 /** Corpo della sintesi mensile di paniere (loadSectorSummary()): un solo
- * blocco condiviso da tutti e 4 i titoli di Trend strutturali, non per-asset. */
+ * blocco condiviso da tutti e 5 i titoli di Trend strutturali, non per-asset. */
 export function sectorSummaryBody(page: Page): Locator {
   return page.locator("#sector-summary-body");
 }
@@ -373,4 +438,103 @@ export function reportIndexDirection(page: Page, key: "SPY" | "QQQ"): Locator {
 }
 export function reportIndexBody(page: Page, key: "SPY" | "QQQ"): Locator {
   return page.locator(`#robotics-body-${key}`);
+}
+
+// ─── DATI FINTI (solo dove serve un caso che i dati veri non garantiscono) ──
+// Il principio di questa suite resta "dati reali, forma e comportamento"
+// (vedi README). Qui si fa un'eccezione, e per una ragione precisa: certi
+// casi dipendono dall'ETA' o dalla FORMA dei dati, e quelli veri cambiano
+// ogni giorno — una previsione "vecchia, senza regime di mercato" esiste
+// finche' non esce dalle ultime sei righe, una sintesi paniere "nel vecchio
+// formato" non esiste affatto. Per provarli in modo deterministico si
+// risponde noi ai file statici.
+//
+// Nessun rischio per i dati: Prova non ha backend ne' scritture, e la
+// pagina legge soltanto questi file. L'intercettazione vale per il solo
+// contesto del test.
+
+export type FakeRegime = {
+  spy_return_1d_pct?: number;
+  spy_return_5d_pct?: number;
+  spy_return_20d_pct?: number;
+  qqq_return_1d_pct?: number;
+  qqq_return_5d_pct?: number;
+  qqq_return_20d_pct?: number;
+  vix?: { value: number; percentile: number; date?: string };
+  risk_mode?: string;
+};
+
+export type FakePredictionOpts = {
+  asset: ProvaAsset;
+  /** Distingue le righe: finisce nell'id e nella motivazione. */
+  n: number;
+  horizon?: "1d" | "7d" | "1m";
+  /** ISO. Le righe piu' recenti stanno in alto nella tabella. */
+  generatedAt: string;
+  /** Assente = previsione generata prima del 2026-09-23, senza regime. */
+  regime?: FakeRegime;
+};
+
+/** Una previsione nella forma che la pagina legge, con soli i campi che
+ * il rendering usa. I nomi e i tipi vengono da una riga vera di
+ * data/<asset>/predictions.jsonl. */
+export function fakePrediction(o: FakePredictionOpts) {
+  const horizon = o.horizon ?? "1d";
+  return {
+    asset: o.asset,
+    id: `fake-${o.asset}-${horizon}-${o.n}`,
+    generated_at: o.generatedAt,
+    target_at: new Date(Date.parse(o.generatedAt) + 86_400_000).toISOString(),
+    horizon,
+    predicted_class: "UP",
+    confidence: 60,
+    reasoning_short: `Motivazione finta numero ${o.n}`,
+    price_at_generation: 100,
+    volatility_threshold_pct: 2,
+    probability_up: 0.5,
+    probability_down: 0.2,
+    probability_flat: 0.3,
+    inputs_summary: {
+      news_count: 3,
+      macro_keys: ["cpi"],
+      fundamentals_source: "sec_edgar",
+      insider_summary: { buy_transactions: 0, sell_transactions: 1, net_shares: -10, lookback_days: 30 },
+      analyst_outlook: { eps_estimate_average: "1.0", eps_estimate_analyst_count: "10", fiscal_quarter_ending: "2026-12-31" },
+      technicals: {},
+      ...(o.regime ? { market_regime: o.regime } : {}),
+    },
+  };
+}
+
+/** Risponde ai due file di un asset con le righe date; gli esiti restano
+ * vuoti (file presente, nessuna riga) cosi' la tabella esiti mostra il suo
+ * stato "Nessuna valutazione ancora." invece di dipendere da dati veri. */
+export async function mockAssetData(
+  page: Page,
+  asset: ProvaAsset,
+  predictions: ReturnType<typeof fakePrediction>[]
+): Promise<void> {
+  const a = asset.toLowerCase();
+  await page.route(new RegExp(`/data/${a}/predictions\\.jsonl`), (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "text/plain",
+      body: predictions.map((p) => JSON.stringify(p)).join("\n") + "\n",
+    })
+  );
+  await page.route(new RegExp(`/data/${a}/outcomes\\.jsonl`), (route) =>
+    route.fulfill({ status: 200, contentType: "text/plain", body: "" })
+  );
+}
+
+/** Risponde a data/robotics/sector_summary.jsonl (la sintesi del Paniere)
+ * con le righe date. Una riga per sintesi: la pagina legge l'ultima. */
+export async function mockSectorSummary(page: Page, records: unknown[]): Promise<void> {
+  await page.route(/\/data\/robotics\/sector_summary\.jsonl/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "text/plain",
+      body: records.map((r) => JSON.stringify(r)).join("\n") + "\n",
+    })
+  );
 }

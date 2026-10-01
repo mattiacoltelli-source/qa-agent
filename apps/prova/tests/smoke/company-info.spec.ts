@@ -39,6 +39,34 @@ test.describe("AI Predictor — tendina \"Info azienda\" per card", () => {
     }
   });
 
+  test("AMD (quarto asset Tech, dal 2026-10-01): i dati statici sono quelli verificati a mano", async ({
+    page,
+  }) => {
+    // COMPANY_INFO.AMD in index.html e' testo scritto a mano, non generato:
+    // come per gli altri asset e' la sola parte della dashboard dove ha
+    // senso asserire il contenuto esatto. Il test sopra verifica che la
+    // tendina esista e abbia le quattro etichette; questo verifica che
+    // dentro ci sia AMD e non, per esempio, il blocco di un altro asset
+    // rimasto per un copia-incolla.
+    await gotoFresh(page);
+    await selectAsset(page, "AMD");
+    const panel = companyInfoPanel(assetCard(page, "AMD"));
+    await panel.locator(S.summary).click();
+
+    const body = panel.locator(S.infoPanelBody);
+    await expect(body).toContainText("Advanced Micro Devices, Inc.");
+    await expect(body).toContainText("Santa Clara, California, USA");
+    await expect(body).toContainText("1969");
+    await expect(body).toContainText("Semiconduttori");
+    await expect(body).toContainText("NASDAQ");
+    // Il copia-incolla da NVDA (stessa sede, stesso settore) lascerebbe
+    // passare tutto sopra: il nome e l'anno sono cio' che li distingue. Non
+    // si cerca "NVIDIA" da sola: la descrizione di AMD la cita
+    // legittimamente come concorrente.
+    await expect(body).not.toContainText("NVIDIA Corporation");
+    await expect(body).not.toContainText("1993");
+  });
+
   test("Trend strutturali: la tendina include i fondamentali dallo snapshot, o dice perché no", async ({
     page,
   }) => {

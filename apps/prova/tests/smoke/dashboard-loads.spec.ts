@@ -17,9 +17,9 @@ import { S } from "../../fixtures/selectors.ts";
 // previsione reale sia stata generata, non un contenuto specifico.
 //
 // Da settembre 2026 la pagina Tech mostra UNA card alla volta (filtro asset
-// in cima, default ASSETS[0]): le altre due restano nel DOM con
+// in cima, default ASSETS[0]): le altre restano nel DOM con
 // display:none. Ogni test che legge qualcosa dentro una card passa quindi
-// per selectAsset() — senza, tutte le asserzioni su MSFT/AAPL girerebbero
+// per selectAsset() — senza, tutte le asserzioni su MSFT/AAPL/AMD girerebbero
 // su elementi invisibili (o andrebbero in timeout sui click).
 test.describe("AI Predictor — caricamento dashboard", () => {
   test("header, statistiche riassuntive e una card asset alla volta", async ({ page }) => {
@@ -65,6 +65,51 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     await expect(assetCard(page, ASSETS[0])).toBeHidden();
   });
 
+  test("il paniere Tech ha quattro asset, con AMD per ultimo: un bottone e una card ciascuno", async ({
+    page,
+  }) => {
+    // Dalla modifica del 2026-10-01 (Prova 561233a). Gli altri test leggono
+    // ASSETS.length e quindi si adattano da soli a qualunque numero: questo
+    // fissa il numero e l'ordine reali, cosi' che un asset tolto o aggiunto
+    // senza volerlo non passi inosservato.
+    await gotoFresh(page);
+
+    await expect(page.locator(S.assetFilterHorizonBtn)).toHaveCount(4);
+    await expect(page.locator(S.assetFilterHorizonBtn)).toHaveText(["NVDA", "MSFT", "AAPL", "AMD"]);
+    await expect(page.locator("#assets-grid .asset-card")).toHaveCount(4);
+
+    // La card di AMD esiste, e' l'ultima, e partendo da NVDA resta nascosta
+    // finche' non la si sceglie dal filtro.
+    await expect(assetCard(page, "AMD")).toBeHidden();
+    await assetFilterButton(page, "AMD").click();
+    await expect(assetFilterButton(page, "AMD")).toHaveClass(/active/);
+    await expect(assetCard(page, "AMD")).toBeVisible();
+    await expect(assetCard(page, "NVDA")).toBeHidden();
+    await expect(assetCard(page, "AMD").locator(S.badgeAccuracy)).toContainText("Accuratezza:");
+  });
+
+  test("AMD appena aggiunto: la card si carica anche senza esiti valutati e senza istantanea prezzo", async ({
+    page,
+  }) => {
+    // Un asset nuovo ha le previsioni ma non ancora gli esiti (gli
+    // orizzonti non sono scaduti) ne' data/amd/snapshot.json: sono stati
+    // legittimi, non errori di caricamento. Il caso rilevante e' che la
+    // card di AMD NON resti bloccata sullo scheletro e che il suo grafico
+    // accuratezza mostri il messaggio "nessun dato" invece di un canvas
+    // vuoto. Se AMD ha gia' esiti veri, il ramo "con dati" e' coperto dagli
+    // altri test e questo si limita a non fallire.
+    await gotoFresh(page);
+    await selectAsset(page, "AMD");
+    const card = assetCard(page, "AMD");
+
+    // Il badge compare solo dopo l'arrivo dei dati (renderAssetData): e' il
+    // segnale che la card non e' rimasta sullo scheletro.
+    await expect(card.locator(S.badgeAccuracy)).toContainText("Accuratezza:");
+    // Il grafico accuratezza e' sempre visibile: canvas con dati, oppure il
+    // messaggio "nessun dato" — mai niente (vedi asset-charts.spec.ts).
+    await expect(card.locator("#accuracy-wrap-AMD").locator(S.canvasChartEmpty)).toHaveCount(1);
+  });
+
   test("il banner di aggiornamento PWA resta nascosto quando non c'è una versione in attesa", async ({
     page,
   }) => {
@@ -78,8 +123,20 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     page,
   }) => {
     await gotoFresh(page);
-    await expect(page.locator("#assets-grid")).not.toContainText("SPY");
+    // Si guarda il PANIERE (filtro e titoli delle card), non tutto il testo
+    // della griglia: da quando il dettaglio di una previsione include il
+    // blocco "regime di mercato" ("S&P 500 (SPY)", "Nasdaq 100 (QQQ)"), la
+    // sigla SPY compare legittimamente dentro una card aperta, come
+    // benchmark e non come asset. Che questo non sia un asset lo verifica
+    // market-regime.spec.ts dopo aver aperto un dettaglio.
     await expect(page.locator("#asset-filter")).not.toContainText("SPY");
+    // Le card sono esattamente quelle del paniere, nell'ordine di ASSETS:
+    // il titolo contiene anche il prezzo ("NVDA$228.38"), quindi si legge
+    // l'attributo data-asset invece del testo.
+    const cardAssets = await page
+      .locator("#assets-grid .asset-card")
+      .evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.asset));
+    expect(cardAssets).toEqual([...ASSETS]);
   });
 
   test("nota \"dati mancanti\": se visibile segnala cosa mancava nell'ultimo segnale, altrimenti resta nascosta", async ({

@@ -1,8 +1,13 @@
 # AI Predictor / esperimento predittivo sui mercati (repo `Prova`) — test Playwright
 
 Dashboard statica (GitHub Pages) di un agente che genera previsioni AI reali
-su NVDA, MSFT e AAPL (1 giorno, 7 giorni, 1 mese), le salva in modo
-immutabile e ne misura l'accuratezza nel tempo. **Nessun backend e nessuna
+su NVDA, MSFT, AAPL e AMD (1 giorno, 7 giorni, 1 mese), le salva in modo
+immutabile e ne misura l'accuratezza nel tempo. **AMD è il quarto asset dal
+2026-10-01** (volatilità quasi doppia del resto del paniere, stesso
+benchmark di settore di NVDA). **Cadenza dal 2026-09-30**: solo 1g resta
+giornaliero, 7g gira una volta a settimana e 1m due — quindi una cronologia
+"tipica" è fatta di tante righe 1g con ogni tanto una 7g o una 1m, non di tre
+righe al giorno. **Nessun backend e nessuna
 scrittura**: la pagina legge solo file statici del proprio repo
 (`data/<asset>/predictions.jsonl`, `outcomes.jsonl`, `pending.json`)
 generati da una pipeline Python schedulata con GitHub Actions — le
@@ -48,6 +53,43 @@ nuovi esiti quando un orizzonte scade). I test verificano quindi
   corretto ("Nessuna predizione registrata." / "Nessuna valutazione
   ancora.").
 
+## Un'eccezione: dati finti, dove i dati veri non bastano
+
+Il principio sopra vale per quasi tutto. Fa eccezione ciò che dipende
+dall'**età o dalla forma** dei dati, perché i dati veri cambiano ogni giorno
+e il caso potrebbe non essere più raggiungibile — con un test che passerebbe
+in silenzio senza verificare più niente. In quel caso si risponde noi al file
+statico (`mockAssetData()`, `mockSectorSummary()` in `fixtures/prova-page.ts`,
+con `fakePrediction()` per costruire le righe):
+
+- una previsione **senza** il blocco "regime di mercato" (le generate prima
+  del 2026-09-23) accanto a una **con** — `market-regime.spec.ts`;
+- la sintesi del Paniere nel vecchio formato a paragrafo unico e in quello a
+  due settori con o senza nota di confronto — `report-page.spec.ts`;
+- una cronologia a cadenze diverse (tante 1g, una 7g, una 1m) per il filtro
+  orizzonte — `horizon-filter.spec.ts`.
+
+Nessun rischio per i dati: Prova non ha backend né scritture, e
+l'intercettazione vale per il solo contesto del test. Ogni test che usa dati
+finti ha comunque un gemello su dati veri che ne verifica la **forma** (es.
+"se c'è il blocco regime, ha formato e intervalli plausibili"): un campo
+rinominato lato Python romperebbe la pagina senza che nessun dato finto se ne
+accorga. I test che usano dati finti sono stati controllati anche al
+contrario: contro una copia di Prova con il difetto introdotto apposta devono
+diventare rossi, altrimenti non provano niente.
+
+## Attendere i dati prima di contare
+
+`gotoFresh()` garantisce solo lo scheletro della pagina: i file JSONL
+arrivano dopo, in modo asincrono, e per un istante una tabella ha zero righe
+**e nemmeno** il messaggio di tabella vuota. Contare subito con
+`rows.count()` legge uno zero che non vuol dire "nessun dato". Misurato: le
+righe di NVDA compaiono circa 1,5 secondi dopo lo scheletro su una
+connessione lenta. Si usa `settledRowCount()`, che aspetta uno dei due esiti
+veri (almeno una riga, oppure il messaggio di tabella vuota). Il difetto
+c'era già con tre asset e con quattro si aggrava, perché c'è un file in più
+da scaricare.
+
 ## Id stabili sui contenitori dei grafici
 
 I `<canvas>` di Chart.js vengono sostituiti (non solo nascosti) da un div
@@ -76,7 +118,10 @@ canvas direttamente.
   `a83696d`/`cbbd155` (2026-09-18) SPY e Nasdaq (QQQ) sono reali di nuovo,
   ma solo come indici di riferimento nella pagina **Report** (sotto), mai
   nel filtro asset di Tech o nel paniere di Trend strutturali
-- Banner di aggiornamento PWA nascosto di default
+- Banner di aggiornamento PWA nascosto di default. Il test **non contiene
+  nessuna versione del service worker** (verificato: Prova passa da `v26` a
+  `v28` senza che niente qui debba cambiare) e non va scritto in modo da
+  contenerla: il bump a ogni modifica la renderebbe falsa subito
 - Pannello "che dati analizza l'AI": chiuso di default, si apre al click sul
   summary (regressione mirata: un `<button>` annidato dentro `<summary>`
   aveva rotto il click diretto), contiene tutte le fonti dati
@@ -143,19 +188,56 @@ canvas direttamente.
     codice
   - Pannello "Come funziona questa pagina?" proprio, distinto da quello di
     Trend strutturali
+- **Quarto asset Tech, AMD** (`561233a`): quattro bottoni nel filtro nell'ordine
+  NVDA/MSFT/AAPL/AMD, quattro card, la sua tendina "Info azienda" coi dati
+  statici verificati (nome, sede, 1969, settore) senza il copia-incolla di
+  NVDA, e lo stato di un asset **appena aggiunto**: previsioni ma nessun esito
+  valutato (gli orizzonti non sono scaduti) e nessuna istantanea prezzo — la
+  card deve caricarsi comunque, con "Nessuna valutazione ancora."
+- Pannello info Tech: dichiara la **cadenza** per orizzonte (1g ogni giorno di
+  borsa, 7g 1 volta a settimana, 1m 2 volte a settimana) e **non** promette più
+  tutti e tre ogni giorno; dice quale benchmark di settore usa quale asset
+  (SMH per NVDA/AMD, XLK per MSFT/AAPL)
+- Blocco **"regime di mercato"** nel dettaglio previsione (dal 2026-09-23):
+  rendimenti SPY/QQQ a 1/5/20 giorni, VIX con percentile, modalità
+  (risk-on/neutro/risk-off). Presente solo sulle previsioni recenti: le vecchie
+  non si rompono e non lasciano righe vuote (`<br><br>`), anche dietro "Mostra
+  tutto"; un regime parziale (senza VIX, o senza SPY/QQQ) non stampa
+  "undefined". Su dati veri: formato e intervalli plausibili (percentile 0-100)
+- Sintesi del **Paniere**, ridisegnata: un titolo e un paragrafo per settore,
+  la nota di confronto in fondo (opzionale: senza, nessun paragrafo vuoto), il
+  ripiego sul vecchio formato a paragrafo unico, e l'elenco dei titoli con
+  `NVT` mostrato come "nVent Electric"
+- Filtro orizzonte sul **contenuto** della tabella con la cronologia a
+  cadenze diverse (una sola 7g fra molte 1g) e con un orizzonte senza righe
 - Riga "Probabilità: UP/DOWN/FLAT" nel dettaglio previsione (`3a962b3`,
   2026-09-18): quando presente (assente sulle previsioni salvate prima di
   quella modifica), formato e plausibilità (0-100%, le tre percentuali
   sommano a ~100) — mai un valore fisso
+
+## Comportamento noto dell'app (non un difetto dei test)
+
+Un asset appena aggiunto non ha ancora esiti valutati, quindi nemmeno
+`data/<asset>/outcomes.jsonl`. `parseJsonl()` in `index.html` tratta **ogni**
+risposta non ok come `ok:false`, un 404 compreso, e la tabella "Ultimi
+Risultati Valutati" scrive "Dati non raggiungibili al momento. Riprova più
+tardi." — un messaggio di errore per quella che è un'assenza normale. Visto su
+AMD il 2026-10-01 (file 404, card in produzione col messaggio d'errore).
+
+I test non lo irrigidiscono né lo mascherano: `outcomesFileMissing()` chiede il
+file direttamente. 404 → il test si salta dichiarando il motivo; il file c'è ma
+la pagina non lo legge → è un'interruzione vera e il test **fallisce**. Il caso
+si esaurisce da solo quando la pipeline crea il primo esito. Lato app la
+correzione sarebbe distinguere il 404 (`ok:true, data:[]`) dagli altri errori.
 
 ## Backlog (non ancora coperto)
 
 - Verifica che il pulsante "🔄 Aggiorna" nell'header ricarichi la pagina
 - Contenuto del manifest.json (nome, icone, `display: standalone`)
 - Un secondo browser tab/reload non duplica i chart instance (memory leak)
-- Filtro per orizzonte: che cambiandolo ricalcoli davvero i grafici e le
-  tabelle sottostanti (oggi si verifica solo lo stato attivo dei bottoni e
-  il suffisso sull'etichetta accuratezza, non il contenuto di grafici/righe)
+- Filtro per orizzonte: che cambiandolo ricalcoli davvero i **grafici** (le
+  tabelle sono coperte, con dati finti; il suffisso sull'etichetta
+  accuratezza anche — restano fuori solo i grafici)
 - Range di prezzo FLAT: che i due valori $X/$Y nel messaggio siano
   numericamente coerenti con `price_at_generation` e
   `volatility_threshold_pct` del record (oggi si verifica solo il formato

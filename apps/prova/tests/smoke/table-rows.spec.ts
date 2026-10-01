@@ -5,6 +5,7 @@ import {
   predictionRows,
   outcomeRows,
   showAllButton,
+  settledRowCount,
   ROW_LIMIT,
   ASSETS,
 } from "../../fixtures/prova-page.ts";
@@ -28,7 +29,8 @@ test.describe("AI Predictor — tabelle: limite righe e \"Mostra tutto\"", () =>
       await openAssetTable(page, asset, kind);
 
       const rows = rowsOf(page, asset);
-      const initial = await rows.count();
+      // Dopo l'arrivo dei dati, non subito: vedi settledRowCount().
+      const initial = await settledRowCount(page, asset, kind);
       expect(initial).toBeLessThanOrEqual(ROW_LIMIT);
 
       const btn = showAllButton(page, asset, kind);
@@ -72,7 +74,7 @@ test.describe("AI Predictor — tabelle: limite righe e \"Mostra tutto\"", () =>
       test.skip(true, `${asset}: una delle due tabelle non supera ${ROW_LIMIT} righe oggi`);
     }
 
-    const outcomesBefore = await outcomeRows(page, asset).count();
+    const outcomesBefore = await settledRowCount(page, asset, "outcomes");
     await predBtn.click();
     await expect(predBtn).toHaveText("Mostra solo le recenti");
     await expect(outBtn).toContainText("Mostra tutto");

@@ -13,6 +13,7 @@ import {
   reportIndexPrice,
   reportIndexDirection,
   reportIndexBody,
+  mockSectorSummary,
   collapsibleContent,
   expandCollapsible,
   REPORT_TYPES,
@@ -123,6 +124,118 @@ test.describe("AI Predictor — pagina Report", () => {
     }
 
     await expect(body).toContainText("Basato sulle ultime letture disponibili di:");
+  });
+
+  // La sintesi del Paniere ridisegnata (Prova 3c1403e): due sezioni per
+  // settore e una nota di confronto in fondo, al posto di un unico paragrafo
+  // misto. Il test sopra, con dati veri, e' volutamente permissivo — la nota
+  // di confronto il modello puo' ometterla e un giorno la sintesi potrebbe
+  // essere nel vecchio formato — quindi la FORMA del rendering si prova qui,
+  // dove ogni caso e' sempre quello. Vedi i commenti sui dati finti in
+  // fixtures/prova-page.ts.
+  const SINTESI_BASE = {
+    id: "fake-sintesi",
+    generated_at: "2026-09-18T10:00:00.000Z",
+    overall_direction: "RIALZISTA",
+    assets_snapshot: {
+      THK: { generated_at: "2026-09-10T10:00:00.000Z" },
+      HARMONIC_DRIVE: { generated_at: "2026-09-10T10:00:00.000Z" },
+      TER: { generated_at: "2026-09-11T10:00:00.000Z" },
+      VRT: { generated_at: "2026-08-20T10:00:00.000Z" },
+      NVT: { generated_at: "2026-09-18T10:00:00.000Z" },
+    },
+  };
+  const ROBOTICA = "Robotica / meccanica di precisione";
+  const DATA_CENTER = "Infrastruttura elettrica per data center AI";
+
+  test("sintesi con due settori e nota di confronto: un titolo e un paragrafo per settore, la nota in fondo", async ({
+    page,
+  }) => {
+    await mockSectorSummary(page, [
+      {
+        ...SINTESI_BASE,
+        sector_narratives: {
+          [ROBOTICA]: "Narrativa finta del settore robotica.",
+          [DATA_CENTER]: "Narrativa finta del settore data center.",
+        },
+        cross_sector_note: "Nota finta di confronto fra i due settori.",
+      },
+    ]);
+    await gotoFresh(page);
+    await openReportPage(page);
+    const body = sectorSummaryBody(page);
+    await expect(body).toContainText("RIALZISTA");
+
+    // Due sezioni distinte, nell'ordine in cui arrivano, ciascuna col suo
+    // titolo e il suo testo: non un blocco unico con i nomi dentro.
+    const paragrafi = body.locator("p");
+    await expect(paragrafi).toHaveCount(3);
+    await expect(paragrafi.nth(0)).toHaveText("Narrativa finta del settore robotica.");
+    await expect(paragrafi.nth(1)).toHaveText("Narrativa finta del settore data center.");
+    await expect(body.getByText(ROBOTICA, { exact: true })).toBeVisible();
+    await expect(body.getByText(DATA_CENTER, { exact: true })).toBeVisible();
+
+    // La nota di confronto viene DOPO entrambe le sezioni, ed e' l'ultimo
+    // paragrafo: "in fondo" e' la parte che la distingue da un terzo settore.
+    await expect(paragrafi.nth(2)).toHaveText("Nota finta di confronto fra i due settori.");
+    const ordine = await body.evaluate((el) => {
+      const t = el.textContent ?? "";
+      return [t.indexOf("Robotica / meccanica"), t.indexOf("Infrastruttura elettrica"), t.indexOf("Nota finta di confronto")];
+    });
+    expect(ordine.every((i) => i >= 0)).toBe(true);
+    expect([...ordine].sort((a, b) => a - b)).toEqual(ordine);
+
+    // Nessun paragrafo unico misto: il testo dei due settori non e' fuso.
+    await expect(paragrafi.nth(0)).not.toContainText("data center");
+  });
+
+  test("senza nota di confronto: restano le due sezioni, nessun paragrafo vuoto in fondo", async ({ page }) => {
+    // La nota e' opzionale (il modello puo' ometterla): l'assenza non deve
+    // lasciare un buco ne' un secondo paragrafo vuoto.
+    await mockSectorSummary(page, [
+      {
+        ...SINTESI_BASE,
+        sector_narratives: { [ROBOTICA]: "Solo robotica.", [DATA_CENTER]: "Solo data center." },
+      },
+    ]);
+    await gotoFresh(page);
+    await openReportPage(page);
+    const paragrafi = sectorSummaryBody(page).locator("p");
+    await expect(paragrafi).toHaveCount(2);
+    for (const i of [0, 1]) await expect(paragrafi.nth(i)).not.toBeEmpty();
+  });
+
+  test("sintesi nel vecchio formato (un solo paragrafo): resta leggibile, senza titoli di settore", async ({
+    page,
+  }) => {
+    // Una sintesi generata prima del 2026-09-18 non ha sector_narratives:
+    // la pagina ripiega su sector_narrative invece di mostrare un buco.
+    await mockSectorSummary(page, [{ ...SINTESI_BASE, sector_narrative: "Vecchio paragrafo unico misto." }]);
+    await gotoFresh(page);
+    await openReportPage(page);
+    const body = sectorSummaryBody(page);
+    await expect(body.locator("p")).toHaveCount(1);
+    await expect(body.locator("p")).toHaveText("Vecchio paragrafo unico misto.");
+    await expect(body).not.toContainText(ROBOTICA);
+    await expect(body).not.toContainText(DATA_CENTER);
+  });
+
+  test("elenco dei titoli su cui si basa: tutti e cinque, con NVT mostrato come 'nVent Electric'", async ({
+    page,
+  }) => {
+    // NVT e' il quinto titolo del paniere (2026-09-18) e la sua etichetta
+    // viene dalla tabella ROBOTICS_ASSETS della pagina, non dal ticker.
+    await mockSectorSummary(page, [
+      { ...SINTESI_BASE, sector_narratives: { [ROBOTICA]: "a", [DATA_CENTER]: "b" } },
+    ]);
+    await gotoFresh(page);
+    await openReportPage(page);
+    const body = sectorSummaryBody(page);
+    await expect(body).toContainText("Basato sulle ultime letture disponibili di:");
+    for (const nome of ["THK", "Harmonic Drive Systems", "Teradyne", "Vertiv", "nVent Electric"]) {
+      await expect(body).toContainText(nome);
+    }
+    await expect(body).not.toContainText("NVT");
   });
 
   for (const key of ["SPY", "QQQ"] as const) {
