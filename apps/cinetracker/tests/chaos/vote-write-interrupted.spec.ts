@@ -4,6 +4,7 @@ import {
   search,
   firstAddableSearchCard,
   addSearchResultAs,
+  fillComment,
   removeCurrentDetail,
 } from "../../fixtures/cinetracker-page.ts";
 import { abortRoute } from "../../../../core/network.ts";
@@ -55,7 +56,7 @@ test.describe("CineTracker — salvataggio voto con Supabase irraggiungibile @wr
       await abortRoute(page, /quwkqaovjxczuahjcmmh\.supabase\.co/);
 
       await page.locator(S.detailVoteInput).fill("8,5");
-      await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+      await fillComment(page, CINETRACKER_MARKER);
       await page.locator(S.detailSaveNoteBtn).click();
 
       // Non "ottimistico con rollback" come CineFighi: qui il successo è
@@ -63,7 +64,10 @@ test.describe("CineTracker — salvataggio voto con Supabase irraggiungibile @wr
       await expect(
         page.locator(S.toastSuccess, { hasText: "Voto e commento salvati" })
       ).toBeVisible();
-      await expect(page.locator(S.detailVoteInput)).toHaveValue("8,5");
+      // Dalle PR #15/#16 su Cos90 dopo il salvataggio la card passa in
+      // riepilogo: il voto si legge li', non piu' nel campo di testo (che a
+      // quel punto non e' nemmeno a schermo) — vedi smoke/vote-card.spec.ts.
+      await expect(page.locator(S.detailVoteSummaryNum)).toHaveText("8,5");
 
       // Reload con Supabase ANCORA irraggiungibile: se il voto fosse solo
       // in memoria (non davvero in localStorage), sparirebbe qui.
@@ -75,8 +79,8 @@ test.describe("CineTracker — salvataggio voto con Supabase irraggiungibile @wr
       await expect(card2.locator(S.shelfCardVote)).toHaveText("★ 8,5");
       await card2.click();
       await expect(page.locator(S.screenDetail)).toBeVisible();
-      await expect(page.locator(S.detailVoteInput)).toHaveValue("8,5");
-      await expect(page.locator(S.detailCommentInput)).toHaveValue(CINETRACKER_MARKER);
+      await expect(page.locator(S.detailVoteSummaryNum)).toHaveText("8,5");
+      await expect(page.locator(S.detailVoteSummaryComment)).toContainText(CINETRACKER_MARKER);
 
       // Ripristiniamo la rete prima della pulizia, così la rimozione qui
       // sotto sincronizza davvero su Supabase invece di affidarsi solo alla

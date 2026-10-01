@@ -73,6 +73,13 @@ test.describe("CineTracker — Statistiche", () => {
   test("card numeriche e vista Bolle (default) per genere", async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
 
+    // La PR #15 su Cos90 ha reso queste card piu' compatte (gap, corpo del
+    // numero, etichetta): tutto CSS, nessun id e nessun valore cambiato. Qui
+    // si controlla che siano rimaste tutte e quattro — una card persa in un
+    // ritocco di stile e' il modo in cui un cambiamento "solo visivo" si
+    // porta via un'informazione. Le misure in pixel restano fuori: sono la
+    // cosa che cambia a ogni ritocco senza che nulla sia rotto.
+    await expect(page.locator(S.statCard)).toHaveCount(4);
     await expect(page.locator("#statSeen")).toHaveText("5");
     await expect(page.locator("#statWatch")).toHaveText("1");
     await expect(page.locator("#statMovies")).toHaveText("3");

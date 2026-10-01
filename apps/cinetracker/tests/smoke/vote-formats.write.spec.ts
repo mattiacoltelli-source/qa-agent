@@ -4,6 +4,8 @@ import {
   search,
   firstAddableSearchCard,
   addSearchResultAs,
+  fillComment,
+  openVoteEditor,
   removeCurrentDetail,
 } from "../../fixtures/cinetracker-page.ts";
 import { CINETRACKER_MARKER } from "../../../../scripts/cleanup-write-residue.mjs";
@@ -19,6 +21,14 @@ import { S } from "../../fixtures/selectors.ts";
 // digitato ("7+", "8-", "7,5"...) è normalizzato da sanitizeVoteInput() e
 // salvato come LABEL testuale — non come numero — quindi il valore visto
 // dopo il salvataggio deve corrispondere esattamente, non essere convertito.
+//
+// Dalle PR #15/#16 su Cos90 la card del voto ha tre stati (vedi
+// smoke/vote-card.spec.ts): il campo commento parte nascosto e si apre col
+// link "+ Aggiungi un commento", e dopo un salvataggio la card passa in
+// RIEPILOGO, chiudendo l'editor. Per questo qui si passa da fillComment() e
+// openVoteEditor() invece di scrivere dritti nei campi, e il voto salvato si
+// legge in #detailVoteSummaryNum: e' quello che vede davvero chi usa l'app,
+// il campo di testo a quel punto non e' nemmeno a schermo.
 //
 // Ogni salvataggio scrive anche CINETRACKER_MARKER nel commento: è la rete
 // di sicurezza indipendente dal browser (scripts/cleanup-write-residue.mjs,
@@ -58,9 +68,9 @@ test.describe("CineTracker — formati voto @write", () => {
 
       try {
         await page.locator(S.detailVoteInput).fill(input);
-        await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+        await fillComment(page, CINETRACKER_MARKER);
         await page.locator(S.detailSaveNoteBtn).click();
-        await expect(page.locator(S.detailVoteInput)).toHaveValue(expectedLabel);
+        await expect(page.locator(S.detailVoteSummaryNum)).toHaveText(expectedLabel);
       } finally {
         await removeCurrentDetail(page);
         await expect(page.locator(S.screenHome)).toBeVisible();
@@ -79,9 +89,9 @@ test.describe("CineTracker — formati voto @write", () => {
 
     try {
       await page.locator(S.detailVoteInput).fill("15");
-      await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+      await fillComment(page, CINETRACKER_MARKER);
       await page.locator(S.detailSaveNoteBtn).click();
-      await expect(page.locator(S.detailVoteInput)).toHaveValue("10");
+      await expect(page.locator(S.detailVoteSummaryNum)).toHaveText("10");
     } finally {
       await removeCurrentDetail(page);
       await expect(page.locator(S.screenHome)).toBeVisible();
@@ -99,10 +109,13 @@ test.describe("CineTracker — formati voto @write", () => {
 
     try {
       await page.locator(S.detailVoteInput).fill("7,5");
-      await page.locator(S.detailCommentInput).fill(CINETRACKER_MARKER);
+      await fillComment(page, CINETRACKER_MARKER);
       await page.locator(S.detailSaveNoteBtn).click();
-      await expect(page.locator(S.detailVoteInput)).toHaveValue("7,5");
+      await expect(page.locator(S.detailVoteSummaryNum)).toHaveText("7,5");
 
+      // Il voto e' salvato, quindi la card e' in riepilogo: per riscrivere
+      // nel campo serve prima "Modifica".
+      await openVoteEditor(page);
       await page.locator(S.detailVoteInput).fill("abc");
       await page.locator(S.detailSaveNoteBtn).click();
       // validateVote() respinge l'input e la funzione ritorna prima di

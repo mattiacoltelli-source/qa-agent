@@ -80,3 +80,136 @@ export async function removeCurrentDetail(page: Page): Promise<void> {
   await page.locator(S.detailRemoveBtn).click();
   await page.locator(S.confirmYesBtn).click();
 }
+
+// ─── Libreria finta ──────────────────────────────────────────────────────
+// CineTracker e' "local-first": storage.js::loadDB legge subito la cache in
+// localStorage e sincronizza Supabase in background. Seedando la cache e
+// bloccando Supabase si controlla con precisione la libreria mostrata senza
+// mai toccare l'archivio personale reale ne' dipendere dalla rete.
+//
+// Il blocco di Supabase qui NON e' un dettaglio di comodo, e' la sicurezza:
+// la cache seedata contiene titoli finti, e _pushToSupabase() fa mirror sync
+// (cancella da remoto le righe assenti in `db`). Se una scrittura passasse
+// davvero, cancellerebbe la libreria vera. Per questo blockSupabase()
+// intercetta OGNI metodo e restituisce una guardia che il test usa per
+// verificare, alla fine, che nemmeno una richiesta sia arrivata a
+// destinazione: un route che per qualunque motivo non avesse agganciato si
+// vedrebbe lì invece di passare in silenzio.
+
+export const FAKE_DB_CACHE_KEY = "cineTrackerDBCache";
+
+export type FakeItem = {
+  id: number;
+  media_type: "movie" | "tv";
+  title: string;
+  vote?: string;
+  comment?: string;
+};
+
+/** La chiave con cui l'app identifica un titolo nelle liste
+ * (ui.js: data-key="${media_type}_${id}"). */
+export function fakeKey(item: FakeItem): string {
+  return `${item.media_type}_${item.id}`;
+}
+
+/** Un item di libreria finto, con gli id fuori scala (9xxxxx) gia' usati
+ * dagli altri test mockati: non collidono con nessun id TMDB reale. */
+export function fakeItem(item: FakeItem) {
+  return {
+    id: item.id,
+    tmdb_id: item.id,
+    media_type: item.media_type,
+    title: item.title,
+    year: "2024",
+    poster_path: "",
+    backdrop_path: "",
+    overview: "Trama finta per i test.",
+    genre_names: ["Drama"],
+    director: "",
+    vote: item.vote ?? "",
+    comment: item.comment ?? "",
+  };
+}
+
+export type SupabaseGuard = { assertNessunaScrittura: () => void };
+
+/** Blocca ogni traffico verso Supabase e tiene il conto di quanto passa. */
+export async function blockSupabase(page: Page): Promise<SupabaseGuard> {
+  const passate: string[] = [];
+  page.on("response", (res) => {
+    if (/supabase\.co/.test(res.url())) passate.push(`${res.request().method()} ${res.url()}`);
+  });
+  await page.route(/supabase\.co/, (route) => route.abort("failed"));
+  return {
+    assertNessunaScrittura() {
+      if (passate.length) {
+        throw new Error(
+          `Una richiesta a Supabase e' arrivata a destinazione nonostante il blocco: ${passate.join(", ")}`
+        );
+      }
+    },
+  };
+}
+
+/** Avvia l'app con una libreria finta gia' in cache e Supabase bloccato.
+ *
+ * La cache viene scritta con addInitScript, cioe' PRIMA degli script della
+ * pagina, invece del giro goto -> clear -> seed -> reload usato da
+ * gotoFresh(): cosi' l'app parte una volta sola e vede subito la libreria
+ * giusta. Due caricamenti completi al posto di uno raddoppiavano il tempo e
+ * l'esposizione alla rete, e su una suite intera bastava a far scadere ogni
+ * tanto l'attesa di `app--ready` — con un fallimento che somigliava a un
+ * bug dell'app invece che a un caricamento lento.
+ *
+ * E' sicuro qui al contrario che per clearBrowserStorage(): questo script
+ * scrive sempre lo stesso valore noto, quindi rigirare a ogni navigazione
+ * non puo' cancellare stato che un test voleva conservare. */
+export async function gotoFreshWithLibrary(
+  page: Page,
+  db: { seen: unknown[]; watchlist: unknown[] }
+): Promise<SupabaseGuard> {
+  const guard = await blockSupabase(page);
+  // I font esterni non servono a nessuna asserzione e rallentano il load.
+  await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
+
+  const cache = JSON.stringify({ version: 1, data: db });
+  await page.addInitScript(
+    ([key, value]) => {
+      try {
+        window.localStorage.clear();
+        window.localStorage.setItem(key, value);
+      } catch {
+        /* storage non disponibile: il test fallira' piu' avanti, con un
+           messaggio piu' utile di un'eccezione qui */
+      }
+    },
+    [FAKE_DB_CACHE_KEY, cache] as const
+  );
+
+  await page.goto(".");
+  await page.locator(S.appReady).waitFor({ state: "attached", timeout: 20_000 });
+  return guard;
+}
+
+// ─── Card "Il tuo voto" ──────────────────────────────────────────────────
+// Da PR #15/#16 su Cos90 la card ha tre stati (app.js::applyVoteState): un
+// titolo visto e votato mostra il RIEPILOGO e tiene l'editor nascosto, per
+// cui scrivere nel campo voto richiede prima un passaggio da "Modifica".
+// Senza questi due helper ogni test dovrebbe ricordarsene da solo.
+
+/** Porta la card in modifica se e' in riepilogo; se l'editor e' gia' aperto
+ * (titolo non votato o non ancora visto) non fa nulla. */
+export async function openVoteEditor(page: Page): Promise<void> {
+  const editBtn = page.locator(S.detailVoteEditBtn);
+  if (await editBtn.isVisible()) await editBtn.click();
+  await page.locator(S.detailVoteInput).waitFor({ state: "visible", timeout: 5_000 });
+}
+
+/** Scrive un commento aprendo prima il campo, che resta nascosto finche'
+ * non c'e' un commento salvato (app.js::setDetailComment). */
+export async function fillComment(page: Page, text: string): Promise<void> {
+  await openVoteEditor(page);
+  const toggle = page.locator(S.detailCommentToggle);
+  if (await toggle.isVisible()) await toggle.click();
+  await page.locator(S.detailCommentInput).fill(text);
+}

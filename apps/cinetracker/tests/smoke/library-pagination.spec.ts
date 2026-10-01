@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { clearBrowserStorage, seedLocalStorage } from "../../../../core/storage.ts";
-import { abortRoute } from "../../../../core/network.ts";
+import { gotoFreshWithLibrary } from "../../fixtures/cinetracker-page.ts";
 import { S } from "../../fixtures/selectors.ts";
 
 // Verifica il caricamento progressivo di "Vedi tutto" (app.js::doRenderLibrary/
@@ -27,19 +26,12 @@ const SEEN = [
   ...Array.from({ length: 200 }, (_, i) => fakeItem(900000 + i, "movie")),
   ...Array.from({ length: 50 }, (_, i) => fakeItem(901000 + i, "tv"))
 ];
-const CACHE = JSON.stringify({ version: 1, data: { seen: SEEN, watchlist: [] } });
-
+// L'avvio con libreria finta e Supabase bloccato sta nella fixture
+// (gotoFreshWithLibrary), dove lo usano anche vote-card e detail-scroll: il
+// blocco della rete non e' comodita' ma sicurezza, e va scritto una volta
+// sola — vedi il commento accanto a blockSupabase().
 async function gotoFreshWithMockedLibrary(page: import("@playwright/test").Page): Promise<void> {
-  // Bloccata del tutto per evitare che il sync in background sovrascriva la
-  // cache locale mockata con l'archivio reale dell'utente.
-  await abortRoute(page, /supabase\.co/);
-  await page.route(/fonts\.googleapis\.com/, (route) => route.abort());
-
-  await page.goto(".");
-  await clearBrowserStorage(page);
-  await seedLocalStorage(page, "cineTrackerDBCache", CACHE);
-  await page.reload();
-  await page.locator(S.appReady).waitFor({ state: "attached", timeout: 10_000 });
+  await gotoFreshWithLibrary(page, { seen: SEEN, watchlist: [] });
 }
 
 test.describe("CineTracker — caricamento progressivo di \"Vedi tutto\"", () => {
