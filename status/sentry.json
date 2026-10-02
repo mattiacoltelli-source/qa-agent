@@ -1,7 +1,7 @@
 {
   "agent": "sentry",
   "label": "Errori (Sentry)",
-  "updatedAt": "2026-10-01T18:55:23.802Z",
+  "updatedAt": "2026-10-02T08:33:55.993Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-10-01T18:55:23.802Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
+      "runAt": "2026-10-02T08:33:55.993Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36983776452"
     },
     "spot": {
       "result": "PASS",
@@ -22,21 +22,21 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-10-01T18:55:23.802Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
+      "runAt": "2026-10-02T08:33:55.993Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36983776452"
     },
     "prova": {
       "result": "WARN",
-      "summary": "2 errori · 16 eventi in 24h",
+      "summary": "2 errori · 23 eventi in 24h",
       "metrics": {
         "issues": 2,
-        "eventi": 16,
+        "eventi": 23,
         "utenti": 0
       },
       "problems": [
         {
           "severity": "MEDIUM",
-          "message": "TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator)) — ?(Prova/) (15 volte)",
+          "message": "TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator)) — ?(Prova/) (22 volte)",
           "url": "https://mattia-e5.sentry.io/issues/150777876/"
         },
         {
@@ -45,8 +45,8 @@
           "url": "https://mattia-e5.sentry.io/issues/150779589/"
         }
       ],
-      "runAt": "2026-10-01T18:55:23.802Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
+      "runAt": "2026-10-02T08:33:55.993Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36983776452"
     },
     "control-center": {
       "result": "PASS",
@@ -56,8 +56,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-10-01T18:55:23.802Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36908456971"
+      "runAt": "2026-10-02T08:33:55.993Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/36983776452"
     }
   }
 }
