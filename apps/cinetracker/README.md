@@ -71,6 +71,11 @@ hardcoded nel bundle JS, come in CineFighi.
   tre mocka la libreria: stessa scelta di leggere lo storico voti REALE
   (single-user, vedi sopra), verificando che l'app gestisca bene entrambi
   gli stati possibili invece di assumerne uno
+- Watchlist e visti **in ordine cronologico, più recenti per primi**
+  (`0ebf3b3`, come in CineFighi): sia nelle shelf della home sia in "Vedi
+  tutto", con righe Supabase mockate deliberatamente fuori ordine per
+  dimostrare che è `sortBySavedAtDesc` (cine-core.js) a riordinare, non una
+  coincidenza dell'ordine con cui sono arrivate
 
 ## Backlog (dalla proposta originale, non ancora implementato)
 
