@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-10-05T09:01:13.896Z",
+  "updatedAt": "2026-10-06T09:00:54.009Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-10-05T09:01:13.896Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37286300540"
+      "runAt": "2026-10-06T09:00:54.009Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37439094311"
     },
     "spot": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-10-05T09:01:13.896Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37286300540"
+      "runAt": "2026-10-06T09:00:54.009Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37439094311"
     },
     "prova": {
       "result": "PASS",
@@ -35,11 +35,11 @@
       "problems": [
         {
           "severity": "LOW",
-          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT) [best effort: non incide sullo stato]"
+          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: nessuna risposta entro 15s [best effort: non incide sullo stato]"
         }
       ],
-      "runAt": "2026-10-05T09:01:13.896Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37286300540"
+      "runAt": "2026-10-06T09:00:54.009Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37439094311"
     }
   }
 }
