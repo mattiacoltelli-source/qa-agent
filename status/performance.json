@@ -1,7 +1,7 @@
 {
   "agent": "performance",
   "label": "Performance Agent",
-  "updatedAt": "2026-10-05T09:00:25.931Z",
+  "updatedAt": "2026-10-06T09:00:01.240Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -13,21 +13,21 @@
         "seo": 91
       },
       "problems": [],
-      "runAt": "2026-10-05T09:00:25.931Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37286300540"
+      "runAt": "2026-10-06T09:00:01.240Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37439094311"
     },
     "spot": {
       "result": "PASS",
-      "summary": "Perf 79 · A11y 88",
+      "summary": "Perf 80 · A11y 88",
       "metrics": {
-        "performance": 79,
+        "performance": 80,
         "accessibility": 88,
         "best-practices": 92,
         "seo": 90
       },
       "problems": [],
-      "runAt": "2026-10-05T09:00:25.931Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37286300540"
+      "runAt": "2026-10-06T09:00:01.240Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37439094311"
     }
   }
 }
