@@ -19,7 +19,13 @@ import { S } from "./selectors.ts";
 // questa lista, quindi aggiungere un asset qui basta a coprirlo ovunque —
 // e a rompere, di proposito, ogni asserzione che avesse un conteggio
 // scritto a mano.
-export const ASSETS = ["NVDA", "MSFT", "AAPL", "AMD"] as const;
+//
+// MSFT sostituito da MU (Micron) il 2026-10-07 (Prova 1e708fb): era
+// l'asset con l'accuratezza peggiore del paniere, l'utente voleva un
+// sostituto piu' simile ad AMD (volatile) che a MSFT — MU ha ATR%(14gg)
+// quasi identico ad AMD (3.98% vs 3.68%) e usa anch'esso SMH come
+// benchmark di settore (semiconduttori), non piu' XLK.
+export const ASSETS = ["NVDA", "AAPL", "AMD", "MU"] as const;
 export type ProvaAsset = (typeof ASSETS)[number];
 
 /** Naviga sulla dashboard e aspetta che le card asset siano nel DOM.

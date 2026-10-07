@@ -82,18 +82,19 @@ test.describe("AI Predictor — pannello info: cadenza e benchmark", () => {
     expect(text).not.toMatch(/1 mese \(ogni giorno/);
   });
 
-  test("il benchmark di settore dice quale asset usa quale: SMH per NVDA e AMD, XLK per MSFT e AAPL", async ({
+  test("il benchmark di settore dice quale asset usa quale: SMH per NVDA/AMD/MU, XLK per AAPL", async ({
     page,
   }) => {
-    // AMD condivide il benchmark di NVDA (src/config.py SECTOR_BENCHMARK):
-    // il testo e' scritto a mano e va aggiornato insieme alla config, quindi
-    // e' qui che si vede se ci si e' dimenticati di una delle due meta'.
+    // AMD e MU condividono il benchmark di NVDA (src/config.py
+    // SECTOR_BENCHMARK, tutti e tre semiconduttori): il testo e' scritto a
+    // mano e va aggiornato insieme alla config, quindi e' qui che si vede
+    // se ci si e' dimenticati di uno dei due gruppi.
     await gotoFresh(page);
     const panel = infoPanel(page);
     await panel.locator(S.summary).click();
     const body = panel.locator(S.infoPanelBody);
 
-    await expect(body).toContainText("SMH per NVDA/AMD");
-    await expect(body).toContainText("XLK per MSFT/AAPL");
+    await expect(body).toContainText("SMH per NVDA/AMD/MU");
+    await expect(body).toContainText("XLK per AAPL");
   });
 });

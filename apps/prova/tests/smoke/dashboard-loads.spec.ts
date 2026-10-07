@@ -20,7 +20,7 @@ import { S } from "../../fixtures/selectors.ts";
 // Da settembre 2026 la pagina Tech mostra UNA card alla volta (filtro asset
 // in cima, default ASSETS[0]): le altre restano nel DOM con
 // display:none. Ogni test che legge qualcosa dentro una card passa quindi
-// per selectAsset() — senza, tutte le asserzioni su MSFT/AAPL/AMD girerebbero
+// per selectAsset() — senza, tutte le asserzioni su AAPL/AMD/MU girerebbero
 // su elementi invisibili (o andrebbero in timeout sui click).
 test.describe("AI Predictor — caricamento dashboard", () => {
   test("header, statistiche riassuntive e una card asset alla volta", async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe("AI Predictor — caricamento dashboard", () => {
     await gotoFresh(page);
 
     await expect(page.locator(S.assetFilterHorizonBtn)).toHaveCount(4);
-    await expect(page.locator(S.assetFilterHorizonBtn)).toHaveText(["NVDA", "MSFT", "AAPL", "AMD"]);
+    await expect(page.locator(S.assetFilterHorizonBtn)).toHaveText(["NVDA", "AAPL", "AMD", "MU"]);
     await expect(page.locator("#assets-grid .asset-card")).toHaveCount(4);
 
     // La card di AMD esiste, e' l'ultima, e partendo da NVDA resta nascosta

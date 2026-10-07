@@ -1,10 +1,13 @@
 # AI Predictor / esperimento predittivo sui mercati (repo `Prova`) — test Playwright
 
 Dashboard statica (GitHub Pages) di un agente che genera previsioni AI reali
-su NVDA, MSFT, AAPL e AMD (1 giorno, 7 giorni, 1 mese), le salva in modo
+su NVDA, AAPL, AMD e MU (1 giorno, 7 giorni, 1 mese), le salva in modo
 immutabile e ne misura l'accuratezza nel tempo. **AMD è il quarto asset dal
 2026-10-01** (volatilità quasi doppia del resto del paniere, stesso
-benchmark di settore di NVDA). **Cadenza dal 2026-09-30**: solo 1g resta
+benchmark di settore di NVDA). **MSFT sostituito da MU (Micron) il
+2026-10-07**: era l'asset con l'accuratezza peggiore del paniere, ATR%(14gg)
+di MU quasi identico ad AMD, condivide con NVDA/AMD il benchmark SMH
+(semiconduttori) invece di XLK. **Cadenza dal 2026-09-30**: solo 1g resta
 giornaliero, 7g gira una volta a settimana e 1m due — quindi una cronologia
 "tipica" è fatta di tante righe 1g con ogni tanto una 7g o una 1m, non di tre
 righe al giorno. **Nessun backend e nessuna
@@ -198,15 +201,18 @@ canvas direttamente.
   - Pannello "Come funziona questa pagina?" proprio, distinto da quello di
     Trend strutturali
 - **Quarto asset Tech, AMD** (`561233a`): quattro bottoni nel filtro nell'ordine
-  NVDA/MSFT/AAPL/AMD, quattro card, la sua tendina "Info azienda" coi dati
+  NVDA/AAPL/AMD/MU, quattro card, la sua tendina "Info azienda" coi dati
   statici verificati (nome, sede, 1969, settore) senza il copia-incolla di
   NVDA, e lo stato di un asset **appena aggiunto**: previsioni ma nessun esito
   valutato (gli orizzonti non sono scaduti) e nessuna istantanea prezzo — la
   card deve caricarsi comunque, con "Nessuna valutazione ancora."
+- **MSFT sostituito da MU (Micron)** (`1e708fb`, 2026-10-07): stesso filtro,
+  ora NVDA/AAPL/AMD/MU, tendina "Info azienda" di MU verificata coi suoi dati
+  statici (Boise, 1978, Semiconduttori)
 - Pannello info Tech: dichiara la **cadenza** per orizzonte (1g ogni giorno di
   borsa, 7g 1 volta a settimana, 1m 2 volte a settimana) e **non** promette più
   tutti e tre ogni giorno; dice quale benchmark di settore usa quale asset
-  (SMH per NVDA/AMD, XLK per MSFT/AAPL)
+  (SMH per NVDA/AMD/MU, XLK per AAPL)
 - Blocco **"regime di mercato"** nel dettaglio previsione (dal 2026-09-23):
   rendimenti SPY/QQQ a 1/5/20 giorni, VIX con percentile, modalità
   (risk-on/neutro/risk-off). Presente solo sulle previsioni recenti: le vecchie
