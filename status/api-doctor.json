@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-10-08T08:59:45.621Z",
+  "updatedAt": "2026-10-09T09:02:49.412Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-10-08T08:59:45.621Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37752463749"
+      "runAt": "2026-10-09T09:02:49.412Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37907776434"
     },
     "spot": {
       "result": "PASS",
@@ -22,19 +22,24 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-10-08T08:59:45.621Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37752463749"
+      "runAt": "2026-10-09T09:02:49.412Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37907776434"
     },
     "prova": {
       "result": "PASS",
-      "summary": "6/6 endpoint ok",
+      "summary": "5/6 endpoint ok",
       "metrics": {
         "total": 6,
-        "failed": 0
+        "failed": 1
       },
-      "problems": [],
-      "runAt": "2026-10-08T08:59:45.621Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37752463749"
+      "problems": [
+        {
+          "severity": "LOW",
+          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: nessuna risposta entro 15s [best effort: non incide sullo stato]"
+        }
+      ],
+      "runAt": "2026-10-09T09:02:49.412Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/37907776434"
     }
   }
 }
