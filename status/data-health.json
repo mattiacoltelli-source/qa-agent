@@ -1,25 +1,25 @@
 {
   "agent": "data-health",
   "label": "Data Health Agent",
-  "updatedAt": "2026-10-18T07:17:34.134Z",
+  "updatedAt": "2026-10-19T07:47:02.539Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
       "summary": "Online · 0 anomalie",
       "metrics": {
-        "entries": 393
+        "entries": 395
       },
       "problems": [],
-      "runAt": "2026-10-18T07:17:34.134Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/39106670374"
+      "runAt": "2026-10-19T07:47:02.539Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/39217442197"
     },
     "spot": {
       "result": "PASS",
       "summary": "Online · 0 anomalie",
       "metrics": {},
       "problems": [],
-      "runAt": "2026-10-18T07:17:34.134Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/39106670374"
+      "runAt": "2026-10-19T07:47:02.539Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/39217442197"
     }
   }
 }
