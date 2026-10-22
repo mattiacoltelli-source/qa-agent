@@ -54,8 +54,9 @@ hardcoded nel bundle JS, come in CineFighi.
   (`@write`)
 - Statistiche: card numeriche, media voto per genere in entrambe le viste
   Barre/Bolle (16896c1/d048d72, di default "Bolle" — `#genreViewToggle`),
-  podio/classifica Film e Serie TV separati, espansione "Mostra tutti/meno"
-  oltre i primi 4 sotto il podio (`eb56964`)
+  classifica con un toggle unico Film/Serie TV che ridisegna lo stesso
+  podio/lista (`8a947ec`, prima erano due pannelli separati), espansione
+  "Mostra tutti/meno" oltre i primi 4 sotto il podio (`eb56964`)
 - Statistiche, **sei generi al massimo** (`03eb233`, griglia a nido d'ape su
   3 righe): con sette generi in libreria il meno frequente resta fuori, in
   entrambe le viste — sono gli stessi `topGenres` disegnati in due modi

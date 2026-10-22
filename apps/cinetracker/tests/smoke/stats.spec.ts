@@ -73,13 +73,14 @@ test.describe("CineTracker — Statistiche", () => {
   test("card numeriche e vista Bolle (default) per genere", async ({ page }) => {
     await gotoFreshWithMockedLibrary(page);
 
-    // La PR #15 su Cos90 ha reso queste card piu' compatte (gap, corpo del
-    // numero, etichetta): tutto CSS, nessun id e nessun valore cambiato. Qui
-    // si controlla che siano rimaste tutte e quattro — una card persa in un
-    // ritocco di stile e' il modo in cui un cambiamento "solo visivo" si
-    // porta via un'informazione. Le misure in pixel restano fuori: sono la
-    // cosa che cambia a ogni ritocco senza che nulla sia rotto.
-    await expect(page.locator(S.statCard)).toHaveCount(4);
+    // Da 8a947ec le quattro card sono diventate una striscia unica in fondo
+    // alla pagina (.stats-strip__item, non più .stat-card): tutto CSS/HTML,
+    // nessun id e nessun valore cambiato. Qui si controlla che siano rimaste
+    // tutte e quattro — una card persa in un ritocco di stile e' il modo in
+    // cui un cambiamento "solo visivo" si porta via un'informazione. Le
+    // misure in pixel restano fuori: sono la cosa che cambia a ogni ritocco
+    // senza che nulla sia rotto.
+    await expect(page.locator(S.statsStripItem)).toHaveCount(4);
     await expect(page.locator("#statSeen")).toHaveText("5");
     await expect(page.locator("#statWatch")).toHaveText("1");
     await expect(page.locator("#statMovies")).toHaveText("3");
@@ -140,44 +141,59 @@ test.describe("CineTracker — Statistiche", () => {
     await expect(page.locator(S.genreBarsBarRow)).toHaveCount(2);
   });
 
-  test("classifica Film: podio ordinato per voto, il tab Serie TV è un pannello separato", async ({
+  test("classifica: podio ordinato per voto, un toggle unico ridisegna Film/Serie TV nello stesso blocco", async ({
     page
   }) => {
+    // Da 8a947ec: non più due pannelli Film/Serie TV paralleli
+    // (#rankingPanelMovies/#rankingPanelSeries, uno nascosto con CSS), ma un
+    // solo blocco (#rankingPodium/#rankingList/#rankingExpandBtn) che
+    // renderRankingSection() ridisegna da capo a ogni click sul toggle
+    // #rankingMediaToggle — vedi app.js. Qui si verifica che il contenuto
+    // cambi davvero, non solo che un pannello si nasconda.
     await gotoFreshWithMockedLibrary(page);
 
-    // Pannello Film attivo di default: podio ordinato per voto desc, il
-    // voto mostrato è il valore grezzo salvato (item.vote), non ricalcolato.
-    await expect(page.locator("#rankingPanelMovies")).toBeVisible();
-    await expect(page.locator("#rankingPanelSeries")).toBeHidden();
-    await expect(page.locator("#top100CountBadge")).toHaveText("3");
-    const moviePodium = page.locator(S.top100PodiumPodiumCard);
+    // Film attivo di default: ranking per voto desc (Film C 9, Film A 8,
+    // Film B 6), ma da 8a947ec il podio si DISEGNA in ordine 2°-1°-3° (il
+    // 1° al centro, sollevato — vedi ui.js::podiumOrder), non più 1-2-3
+    // sinistra-destra: il DOM parte quindi dal 2° posto, non dal 1°. Il
+    // voto mostrato resta il valore grezzo salvato (item.vote).
+    await expect(page.locator(S.rankingMediaToggleBtnMovie)).toHaveClass(/active/);
+    await expect(page.locator(S.rankingMediaToggleBtnTv)).not.toHaveClass(/active/);
+    await expect(page.locator("#rankingCountBadge")).toHaveText("3");
+    const moviePodium = page.locator(S.rankingPodiumPodiumCard);
     await expect(moviePodium).toHaveCount(3);
-    await expect(moviePodium.nth(0).locator(S.podiumCardTitle)).toHaveText("Film C QA");
-    await expect(moviePodium.nth(0).locator(S.podiumCardVote)).toHaveText("★ 9");
-    await expect(moviePodium.nth(1).locator(S.podiumCardTitle)).toHaveText("Film A QA");
+    await expect(moviePodium.nth(0).locator(S.podiumCardTitle)).toHaveText("Film A QA");
+    await expect(moviePodium.nth(0).locator(".podium-card__medal")).toHaveText("🥈");
+    await expect(moviePodium.nth(1).locator(S.podiumCardTitle)).toHaveText("Film C QA");
+    await expect(moviePodium.nth(1).locator(S.podiumCardVote)).toHaveText("★ 9");
+    await expect(moviePodium.nth(1).locator(".podium-card__medal")).toHaveText("🥇");
+    await expect(moviePodium.nth(1)).toHaveClass(/podium-card--first/);
     await expect(moviePodium.nth(2).locator(S.podiumCardTitle)).toHaveText("Film B QA");
-    await expect(page.locator(S.top100ListRankRow)).toHaveCount(0);
+    await expect(moviePodium.nth(2).locator(".podium-card__medal")).toHaveText("🥉");
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(0);
     // Con solo 3 film (tutti in podio) non c'è nulla da espandere.
-    await expect(page.locator("#top100ExpandBtn")).toHaveClass(/hidden/);
+    await expect(page.locator("#rankingExpandBtn")).toHaveClass(/hidden/);
 
-    // Il tab Serie TV mostra/nasconde i due pannelli, i dati sono già
-    // calcolati per entrambi da renderRanking() — non serve ricaricare nulla.
-    await page.locator("#rankingToggleSeries").click();
-    await expect(page.locator("#rankingPanelSeries")).toBeVisible();
-    await expect(page.locator("#rankingPanelMovies")).toBeHidden();
-    await expect(page.locator("#top100SeriesCountBadge")).toHaveText("2");
-    const seriesPodium = page.locator(S.top100SeriesPodiumPodiumCard);
+    // Il tab Serie TV ricalcola e ridisegna lo stesso blocco (stesso
+    // #rankingPodium), non ne mostra uno già pronto. Con solo 2 titoli il
+    // 3° posto manca: podiumOrder scarta la posizione vuota invece di
+    // lasciare un buco, quindi il DOM ha due sole card, 2°-1°.
+    await page.locator(S.rankingMediaToggleBtnTv).click();
+    await expect(page.locator(S.rankingMediaToggleBtnTv)).toHaveClass(/active/);
+    await expect(page.locator(S.rankingMediaToggleBtnMovie)).not.toHaveClass(/active/);
+    await expect(page.locator("#rankingCountBadge")).toHaveText("2");
+    const seriesPodium = page.locator(S.rankingPodiumPodiumCard);
     await expect(seriesPodium).toHaveCount(2);
-    await expect(seriesPodium.nth(0).locator(S.podiumCardTitle)).toHaveText("Serie B QA");
-    await expect(seriesPodium.nth(0).locator(S.podiumCardVote)).toHaveText("★ 9");
-    await expect(seriesPodium.nth(1).locator(S.podiumCardTitle)).toHaveText("Serie A QA");
+    await expect(seriesPodium.nth(0).locator(S.podiumCardTitle)).toHaveText("Serie A QA");
+    await expect(seriesPodium.nth(1).locator(S.podiumCardTitle)).toHaveText("Serie B QA");
+    await expect(seriesPodium.nth(1).locator(S.podiumCardVote)).toHaveText("★ 9");
   });
 
   test('classifica: "Mostra tutti"/"Mostra meno" oltre i primi 4 sotto il podio', async ({ page }) => {
     // Dataset dedicato: 10 film con voti tutti distinti (nessuna parità,
-    // ordine deterministico). Podio = i primi 3; #top100List parte dalla
+    // ordine deterministico). Podio = i primi 3; #rankingList parte dalla
     // posizione 4 (offset fisso passato a renderRankingList, non la
-    // lunghezza reale del podio — vedi app.js::renderRanking) e mostra solo
+    // lunghezza reale del podio — vedi ui.js::renderRanking) e mostra solo
     // RANKING_LIST_INITIAL=4 righe finché non si espande (ui.js).
     const RANK_SEEN = [
       fakeItem(950001, "movie", "Rank A", "Drama", "9"),
@@ -198,13 +214,13 @@ test.describe("CineTracker — Statistiche", () => {
     await mockJson(page, /rest\/v1\/Coltel/, RANK_SEEN.map((data) => ({ list: "seen", data })));
     await gotoFresh(page);
     await openScreen(page, "stats");
-    await page.locator(S.top100PodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.rankingPodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    await expect(page.locator("#top100CountBadge")).toHaveText("10");
-    await expect(page.locator(S.top100PodiumPodiumCard)).toHaveCount(3);
+    await expect(page.locator("#rankingCountBadge")).toHaveText("10");
+    await expect(page.locator(S.rankingPodiumPodiumCard)).toHaveCount(3);
 
-    const list = page.locator(S.top100ListRankRow);
-    const expandBtn = page.locator("#top100ExpandBtn");
+    const list = page.locator(S.rankingListRankRow);
+    const expandBtn = page.locator("#rankingExpandBtn");
     await expect(list).toHaveCount(4);
     await expect(list.first().locator(S.rankRowTitle)).toHaveText("Rank D");
     await expect(list.first().locator(S.rankRowPos)).toHaveText("4");
@@ -223,11 +239,12 @@ test.describe("CineTracker — Statistiche", () => {
     await expect(list).toHaveCount(4);
     await expect(expandBtn.locator(S.rankExpandBtnLabel)).toHaveText("Mostra tutti");
 
-    // Pannello Serie TV: solo 2 titoli, tutti in podio, niente da espandere.
-    await page.locator("#rankingToggleSeries").click();
-    await expect(page.locator(S.top100SeriesPodiumPodiumCard)).toHaveCount(2);
-    await expect(page.locator(S.top100SeriesListRankRow)).toHaveCount(0);
-    await expect(page.locator("#top100SeriesExpandBtn")).toHaveClass(/hidden/);
+    // Serie TV: solo 2 titoli, tutti in podio, niente da espandere. Stesso
+    // blocco ridisegnato dal toggle, non un pannello alternativo.
+    await page.locator(S.rankingMediaToggleBtnTv).click();
+    await expect(page.locator(S.rankingPodiumPodiumCard)).toHaveCount(2);
+    await expect(page.locator(S.rankingListRankRow)).toHaveCount(0);
+    await expect(page.locator("#rankingExpandBtn")).toHaveClass(/hidden/);
   });
 });
 
@@ -265,16 +282,16 @@ test.describe("CineTracker — Statistiche — stabilità su render ripetuti", (
     // #screen-stats nascosto.
     for (let i = 0; i < 3; i++) {
       await openScreen(page, "stats");
-      await page.locator(S.top100PodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
+      await page.locator(S.rankingPodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
       await page.waitForTimeout(600);
       await openScreen(page, "home");
       await page.waitForTimeout(600);
     }
     await openScreen(page, "stats");
-    await page.locator(S.top100PodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(S.rankingPodiumPodiumCard).first().waitFor({ state: "visible", timeout: 10_000 });
 
-    const list = page.locator(S.top100ListRankRow);
-    const expandBtn = page.locator("#top100ExpandBtn");
+    const list = page.locator(S.rankingListRankRow);
+    const expandBtn = page.locator("#rankingExpandBtn");
     await expect(list).toHaveCount(4);
 
     await expandBtn.click();
