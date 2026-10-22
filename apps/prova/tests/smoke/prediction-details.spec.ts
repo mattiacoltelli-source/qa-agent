@@ -84,6 +84,18 @@ test.describe("AI Predictor — dettaglio previsioni e risultati on-tap", () => 
         expect(up + down + flat).toBeLessThanOrEqual(103);
       }
 
+      // Da 49e306b: quando esiste una previsione "ombra" di Chronos-Bolt-tiny
+      // collegata (chronos_predictions.jsonl, abbinata per prediction_id), il
+      // dettaglio mostra una riga aggiuntiva — assente per le previsioni
+      // precedenti alla feature o quando chronos_run.py ha saltato per
+      // contesto storico insufficiente, quindi verificata solo quando c'è
+      // (stesso principio della riga probabilità sopra).
+      if (detailText.includes("Chronos-Bolt-tiny")) {
+        expect(detailText).toMatch(
+          /Chronos-Bolt-tiny \(sperimentale, solo prezzi\):\s*(UP|DOWN|FLAT)/
+        );
+      }
+
       await rows.nth(0).click();
       await expect(detail).toBeHidden();
     });

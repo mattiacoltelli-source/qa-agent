@@ -10,6 +10,7 @@ import {
   fakePrediction,
   mockAssetData,
   ASSETS,
+  type FakeRegime,
 } from "../../fixtures/prova-page.ts";
 
 // Il blocco "regime di mercato" nel dettaglio di una previsione Tech
@@ -135,6 +136,37 @@ test.describe("AI Predictor — blocco \"regime di mercato\" nel dettaglio previ
     await expect(detail).not.toContainText("VIX");
     await expect(detail).not.toContainText("Modalità di mercato");
     await expect(detail).not.toContainText("undefined");
+  });
+
+  test("regime con VIX in forma vecchia (manca 'value'): nessuna riga VIX, nessun errore JS, il resto del dettaglio resta visibile", async ({
+    page,
+  }) => {
+    // Bug reale confermato da Sentry su produzione (PREDICT-2, 372b64b):
+    // marketRegimeLines() leggeva r.vix.value senza verificare che vix fosse
+    // un oggetto con quel campo. predictions.jsonl e' append-only — una voce
+    // storica con una forma diversa di market_regime.vix (qui: presente ma
+    // senza "value", non assente del tutto come nel test sopra) resta per
+    // sempre e lanciava un'eccezione che faceva sparire l'INTERO dettaglio,
+    // non solo la riga VIX. La guardia e' `r.vix && typeof r.vix.value ===
+    // 'number'`, non solo `if (r.vix)`.
+    const asset = ASSETS[0];
+    const vixMalformato = { percentile: 50, date: "2026-09-29" } as unknown as FakeRegime["vix"];
+    await mockAssetData(page, asset, [
+      fakePrediction({ asset, n: 1, generatedAt: NUOVA, regime: { ...REGIME_PIENO, vix: vixMalformato } }),
+    ]);
+    await gotoFresh(page);
+    await openAssetTable(page, asset, "predictions");
+    expect(await settledRowCount(page, asset, "predictions")).toBe(1);
+
+    await predictionRows(page, asset).nth(0).click();
+    const detail = predictionDetailRow(page, asset, 0);
+    await expect(detail).toBeVisible();
+    await expect(detail).toContainText("Motivazione del modello");
+    await expect(detail).toContainText("S&P 500 (SPY): -0.21% (1g)");
+    await expect(detail).toContainText("Modalità di mercato: risk-on");
+    await expect(detail).not.toContainText("VIX");
+    await expect(detail).not.toContainText("undefined");
+    await expect(detail).not.toContainText("NaN");
   });
 
   test("tabella mista: la previsione vecchia (senza regime) non si rompe e non lascia righe vuote, quella nuova si", async ({

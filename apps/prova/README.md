@@ -218,7 +218,13 @@ canvas direttamente.
   (risk-on/neutro/risk-off). Presente solo sulle previsioni recenti: le vecchie
   non si rompono e non lasciano righe vuote (`<br><br>`), anche dietro "Mostra
   tutto"; un regime parziale (senza VIX, o senza SPY/QQQ) non stampa
-  "undefined". Su dati veri: formato e intervalli plausibili (percentile 0-100)
+  "undefined". Su dati veri: formato e intervalli plausibili (percentile 0-100).
+  Regressione mirata su `372b64b` (bug reale visto in produzione via Sentry,
+  PREDICT-2): un VIX presente ma in forma vecchia (senza `value`) non deve
+  far sparire l'intero dettaglio, solo la riga VIX
+- Previsione **"ombra" di Chronos-Bolt-tiny** nel dettaglio (`49e306b`,
+  2026-10-14, quando il dato collegato esiste): formato della riga verificato
+  solo quando presente, come la riga Probabilità sopra
 - Sintesi del **Paniere**, ridisegnata: un titolo e un paragrafo per settore,
   la nota di confronto in fondo (opzionale: senza, nessun paragrafo vuoto), il
   ripiego sul vecchio formato a paragrafo unico, e l'elenco dei titoli con
