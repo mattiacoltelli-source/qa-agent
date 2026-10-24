@@ -1,21 +1,26 @@
 {
   "agent": "security",
   "label": "Security Agent",
-  "updatedAt": "2026-10-23T07:31:57.072Z",
+  "updatedAt": "2026-10-24T07:22:07.192Z",
   "apps": {
     "qa-agent": {
-      "result": "PASS",
-      "summary": "0 vulnerabilità (0 critical, 0 high)",
+      "result": "FAIL",
+      "summary": "3 vulnerabilità (0 critical, 3 high)",
       "metrics": {
         "critical": 0,
-        "high": 0,
+        "high": 3,
         "moderate": 0,
         "low": 0,
-        "total": 0
+        "total": 3
       },
-      "problems": [],
-      "runAt": "2026-10-23T07:31:57.072Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/39917254525"
+      "problems": [
+        {
+          "severity": "HIGH",
+          "message": "0 critical, 3 high nelle dipendenze npm"
+        }
+      ],
+      "runAt": "2026-10-24T07:22:07.192Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/40073177995"
     }
   }
 }
