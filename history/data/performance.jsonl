@@ -148,3 +148,5 @@
 {"runAt":"2026-10-23T07:30:43.298Z","app":"vacanza","label":"Spot","result":"PASS","performance":79,"accessibility":88,"best-practices":92,"seo":90}
 {"runAt":"2026-10-24T07:21:08.133Z","app":"cinetracker","label":"CineTracker","result":"PASS","performance":70,"accessibility":90,"best-practices":96,"seo":91}
 {"runAt":"2026-10-24T07:21:08.133Z","app":"vacanza","label":"Spot","result":"PASS","performance":79,"accessibility":88,"best-practices":92,"seo":90}
+{"runAt":"2026-10-25T07:40:22.851Z","app":"cinetracker","label":"CineTracker","result":"PASS","performance":78,"accessibility":90,"best-practices":96,"seo":91}
+{"runAt":"2026-10-25T07:40:22.851Z","app":"vacanza","label":"Spot","result":"PASS","performance":99,"accessibility":88,"best-practices":92,"seo":90}
