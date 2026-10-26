@@ -66,6 +66,7 @@ on:
           - cinetracker
           - spot
           - prova
+          - voicebrief
       test_notify:
         description: "Manda comunque un messaggio Telegram di prova (anche se tutto passa)"
         type: boolean

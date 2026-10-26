@@ -9,6 +9,8 @@ const VACANZA_URL =
   process.env.VACANZA_BASE_URL ?? "https://mattiacoltelli-source.github.io/Spot/";
 const PROVA_URL =
   process.env.PROVA_BASE_URL ?? "https://mattiacoltelli-source.github.io/Prova/";
+const VOICEBRIEF_URL =
+  process.env.VOICEBRIEF_BASE_URL ?? "https://mattiacoltelli-source.github.io/voicebrief/";
 
 // Per aggiungere una quarta app: creare apps/<nome>/tests, poi aggiungere
 // qui due project (mobile + desktop) che puntano al suo baseURL. Non serve
@@ -63,6 +65,16 @@ export default defineConfig({
       name: "prova-desktop",
       testDir: "./apps/prova/tests",
       use: { ...DESKTOP_CONTEXT, baseURL: PROVA_URL },
+    },
+    {
+      name: "voicebrief-mobile",
+      testDir: "./apps/voicebrief/tests",
+      use: { ...MOBILE_CONTEXT, baseURL: VOICEBRIEF_URL },
+    },
+    {
+      name: "voicebrief-desktop",
+      testDir: "./apps/voicebrief/tests",
+      use: { ...DESKTOP_CONTEXT, baseURL: VOICEBRIEF_URL },
     },
   ],
 });
