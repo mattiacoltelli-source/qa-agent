@@ -2,7 +2,8 @@
 
 Suite di test Playwright per le app personali: **CineTracker** (repo
 `Cos90`, cinema single-user), **Spot** (guida di viaggio Ionio in barca a
-vela) e **Prova** (AI Predictor, esperimento predittivo sui mercati).
+vela), **Prova** (AI Predictor, esperimento predittivo sui mercati) e
+**VoiceBrief** (PWA che trascrive e riassume i vocali di WhatsApp).
 
 > **CineFighi è stata rimossa completamente da questo repository
 > (2026-09-24).** Non è più solo sospesa: test, fixture, endpoint,
@@ -74,6 +75,7 @@ apps/
     README.md             modello di sicurezza dati, env var, backlog
   vacanza/                 (stessa struttura, per il repo Spot)
   prova/                   (stessa struttura, per il repo Prova/AI Predictor)
+  voicebrief/              (stessa struttura, per il repo voicebrief; backend sempre mockato)
 playwright.config.ts      un project mobile + uno desktop per app, baseURL da env var
 ```
 
@@ -110,13 +112,14 @@ npm test                  # tutta la suite, sola lettura (default)
 npm run test:cinetracker  # solo CineTracker
 npm run test:vacanza      # solo Spot
 npm run test:prova        # solo Prova (AI Predictor)
+npm run test:voicebrief   # solo VoiceBrief
 
 npm run test:write        # ANCHE i test che scrivono su dati reali — leggi prima i README di ogni app
 npm run report             # apre l'ultimo report HTML
 ```
 
 I test girano contro gli URL live GitHub Pages delle app (override con
-`CINETRACKER_BASE_URL` / `VACANZA_BASE_URL` / `PROVA_BASE_URL`), sia in
+`CINETRACKER_BASE_URL` / `VACANZA_BASE_URL` / `PROVA_BASE_URL` / `VOICEBRIEF_BASE_URL`), sia in
 viewport mobile che desktop (le app sono PWA usate principalmente da
 telefono). Pensati per girare in GitHub Actions
 (`.github/workflows/tests.yml`): report salvati come JSON (`reports/results.json`)

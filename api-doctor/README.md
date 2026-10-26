@@ -56,6 +56,7 @@ api-doctor/
   endpoints/
     cinetracker.mjs            3 check TMDB, chiave di CineTracker
     spot.mjs                    3 check meteo/mare/alba-tramonto, nessuna chiave
+    voicebrief.mjs              3 check a costo zero: preflight CORS, POST vuoto → bad_mode (prova anche il secret OpenAI), tempo di risposta
     prova.mjs                   6 check Yahoo Finance (prezzo + storico Tokyo/^SOX)/SEC EDGAR (x2)/GDELT, nessuna chiave
   engine.mjs                  orchestratore: gira i controlli, scrive reports/api-doctor-results.json
   analyze.mjs                  analisi Claude, SOLO sugli endpoint in FAIL
