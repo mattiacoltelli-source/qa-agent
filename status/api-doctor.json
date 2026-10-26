@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-10-26T23:11:30.801Z",
+  "updatedAt": "2026-10-26T23:17:50.437Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -35,6 +35,17 @@
       "problems": [],
       "runAt": "2026-10-26T23:11:30.801Z",
       "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/40417106061"
+    },
+    "voicebrief": {
+      "result": "PASS",
+      "summary": "3/3 endpoint ok",
+      "metrics": {
+        "total": 3,
+        "failed": 0
+      },
+      "problems": [],
+      "runAt": "2026-10-26T23:17:50.437Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/40418546327"
     }
   }
 }
