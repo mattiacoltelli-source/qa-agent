@@ -12,6 +12,7 @@ on:
           - cinetracker
           - spot
           - prova
+          - voicebrief
       run_write_tests:
         description: "Esegui anche i test @write (scrivono su Supabase/librerie reali)"
         type: boolean
@@ -65,6 +66,7 @@ jobs:
             cinetracker) PROJECTS="--project=cinetracker-mobile --project=cinetracker-desktop" ;;
             spot) PROJECTS="--project=vacanza-mobile --project=vacanza-desktop" ;;
             prova) PROJECTS="--project=prova-mobile --project=prova-desktop" ;;
+            voicebrief) PROJECTS="--project=voicebrief-mobile --project=voicebrief-desktop" ;;
             *) PROJECTS="" ;;
           esac
           npx playwright test $PROJECTS

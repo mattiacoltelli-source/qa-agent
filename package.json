@@ -10,6 +10,7 @@
     "test:cinetracker": "playwright test --project=cinetracker-mobile --project=cinetracker-desktop",
     "test:vacanza": "playwright test --project=vacanza-mobile --project=vacanza-desktop",
     "test:prova": "playwright test --project=prova-mobile --project=prova-desktop",
+    "test:voicebrief": "playwright test --project=voicebrief-mobile --project=voicebrief-desktop",
     "test:write": "RUN_WRITE_TESTS=true playwright test --grep @write",
     "cleanup:write-residue": "node scripts/cleanup-write-residue.mjs",
     "summary": "node scripts/write-summary.mjs",

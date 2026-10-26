@@ -7,6 +7,7 @@ const APP_LABELS = {
   cinetracker: "CineTracker",
   vacanza: "Spot",
   prova: "Prova",
+  voicebrief: "VoiceBrief",
 };
 
 export function appNameFromProject(projectName) {
