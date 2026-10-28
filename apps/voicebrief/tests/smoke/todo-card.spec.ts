@@ -30,6 +30,18 @@ test.describe("VoiceBrief — Da fare", () => {
     await expect(page.locator(S.evNote)).toBeVisible();
   });
 
+  test("il nome conta solo per le cose di una terza persona (chiama Marco ≠ lo fa Marco)", async ({ page }) => {
+    // risposta reale del backend: per "chiama Marco" il modello mette name: "Marco" con owner listener
+    await mockApi(page, { event: { events: [], tasks: [{ what: "chiama Marco per il preventivo", owner: "listener", name: "Marco", when: null }] } });
+    await gotoFresh(page);
+    await seedSharedAudio(page);
+    await page.locator(S.go).click();
+    const row = page.locator(`${S.tasks} .ev-row`);
+    await expect(row).toHaveCount(1, { timeout: 15_000 });
+    await expect(row.locator("small")).toHaveText("Chi ascolta");
+    await expect(row.locator("b")).toHaveText("chiama Marco per il preventivo");
+  });
+
   test("senza cose da fare la card non compare (anche con un backend che non manda 'tasks')", async ({ page }) => {
     await mockApi(page, { event: { events: [] } });
     await gotoFresh(page);
