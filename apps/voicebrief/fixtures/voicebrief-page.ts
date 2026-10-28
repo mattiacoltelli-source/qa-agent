@@ -81,6 +81,8 @@ export interface ApiScript {
   /** Risposta per ogni chiamata; di default successo. Riceve l'indice (da 0) delle chiamate dello stesso tipo. */
   transcribe?: (n: number) => { status: number; body: unknown } | "abort";
   summarize?: (n: number) => { status: number; body: unknown } | "abort";
+  /** Corpo della risposta all'estrazione impegni/da fare (di default nessun impegno e nessun "da fare"). */
+  event?: unknown;
 }
 
 const CORS = {
@@ -110,7 +112,7 @@ export async function mockApi(page: Page, script: ApiScript = {}): Promise<ApiCa
     if (body.includes('"step":"event"')) {
       calls.push({ kind: "event", body });
       count.event++;
-      return reply(route, { status: 200, body: { events: [] } });
+      return reply(route, { status: 200, body: script.event ?? { events: [] } });
     }
     calls.push({ kind: "summarize", body });
     const n = count.summarize++;

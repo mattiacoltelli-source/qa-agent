@@ -14,6 +14,10 @@ export const S = {
   resultTitle: "#result-title",
   back: "#back",
   env: "#env",
+  tasks: "#tasks",
+  events: "#events",
+  evNote: "#ev-note",
+  copy: "#copy",
   recStart: "#rec-start",
   modeRadio: (mode: string) => `input[name=mode][value=${mode}]`,
 } as const;
