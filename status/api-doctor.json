@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-10-30T08:40:30.598Z",
+  "updatedAt": "2026-10-31T08:30:12.476Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-10-30T08:40:30.598Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "runAt": "2026-10-31T08:30:12.476Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     },
     "spot": {
       "result": "PASS",
@@ -22,19 +22,24 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-10-30T08:40:30.598Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "runAt": "2026-10-31T08:30:12.476Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     },
     "prova": {
       "result": "PASS",
-      "summary": "6/6 endpoint ok",
+      "summary": "5/6 endpoint ok",
       "metrics": {
         "total": 6,
-        "failed": 0
+        "failed": 1
       },
-      "problems": [],
-      "runAt": "2026-10-30T08:40:30.598Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "problems": [
+        {
+          "severity": "LOW",
+          "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429 [best effort: non incide sullo stato]"
+        }
+      ],
+      "runAt": "2026-10-31T08:30:12.476Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     },
     "voicebrief": {
       "result": "PASS",
@@ -44,8 +49,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-10-30T08:40:30.598Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "runAt": "2026-10-31T08:30:12.476Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     }
   }
 }
