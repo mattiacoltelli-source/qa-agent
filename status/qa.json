@@ -1,7 +1,7 @@
 {
   "agent": "qa",
   "label": "QA Agent",
-  "updatedAt": "2026-10-30T08:31:20.090Z",
+  "updatedAt": "2026-10-31T08:20:59.470Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -13,8 +13,8 @@
         "skipped": 22
       },
       "problems": [],
-      "runAt": "2026-10-30T08:31:20.090Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "runAt": "2026-10-31T08:20:59.470Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     },
     "spot": {
       "result": "PASS",
@@ -26,21 +26,30 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-10-30T08:31:20.090Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "runAt": "2026-10-31T08:20:59.470Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     },
     "prova": {
-      "result": "PASS",
-      "summary": "152 passati · 0 falliti",
+      "result": "FAIL",
+      "summary": "150 passati · 2 falliti",
       "metrics": {
-        "passed": 152,
-        "failed": 0,
+        "passed": 150,
+        "failed": 2,
         "flaky": 0,
         "skipped": 0
       },
-      "problems": [],
-      "runAt": "2026-10-30T08:31:20.090Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "problems": [
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: le due pagine sono alternative: Tech attiva al caricamento, il tab porta ai trend — Error: expect(locator).toHaveText(expected) failed Locator: locator('#tab-btn-robotics') Expected: \"Trend strutturali\" Received: \"Trend strutturaliTrend\" Timeou…"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: le due pagine sono alternative: Tech attiva al caricamento, il tab porta ai trend — Error: expect(locator).toHaveText(expected) failed Locator: locator('#tab-btn-robotics') Expected: \"Trend strutturali\" Received: \"Trend strutturaliTrend\" Timeou…"
+        }
+      ],
+      "runAt": "2026-10-31T08:20:59.470Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     },
     "voicebrief": {
       "result": "PASS",
@@ -52,8 +61,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-10-30T08:31:20.090Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41026938979"
+      "runAt": "2026-10-31T08:20:59.470Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41184189977"
     }
   }
 }
