@@ -1,7 +1,7 @@
 {
   "agent": "sentry",
   "label": "Errori (Sentry)",
-  "updatedAt": "2026-11-05T00:37:32.716Z",
+  "updatedAt": "2026-11-05T09:54:54.836Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-11-05T00:37:32.716Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41938568405"
+      "runAt": "2026-11-05T09:54:54.836Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42001761459"
     },
     "spot": {
       "result": "PASS",
@@ -22,26 +22,26 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-11-05T00:37:32.716Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41938568405"
+      "runAt": "2026-11-05T09:54:54.836Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42001761459"
     },
     "prova": {
       "result": "WARN",
-      "summary": "1 errore · 4 eventi in 24h",
+      "summary": "1 errore · 8 eventi in 24h",
       "metrics": {
         "issues": 1,
-        "eventi": 4,
+        "eventi": 8,
         "utenti": 0
       },
       "problems": [
         {
           "severity": "MEDIUM",
-          "message": "ReferenceError: Chart is not defined — renderAiTraderEquityChart(Prova/) (4 volte)",
+          "message": "ReferenceError: Chart is not defined — renderAiTraderEquityChart(Prova/) (8 volte)",
           "url": "https://mattia-e5.sentry.io/issues/158246203/"
         }
       ],
-      "runAt": "2026-11-05T00:37:32.716Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41938568405"
+      "runAt": "2026-11-05T09:54:54.836Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42001761459"
     },
     "control-center": {
       "result": "PASS",
@@ -51,8 +51,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-11-05T00:37:32.716Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/41938568405"
+      "runAt": "2026-11-05T09:54:54.836Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42001761459"
     }
   }
 }
