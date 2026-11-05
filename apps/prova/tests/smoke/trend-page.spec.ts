@@ -3,7 +3,10 @@ import {
   gotoFresh,
   pageTab,
   techPage,
+  explorePage,
   roboticsPage,
+  reportPage,
+  exploreSubTab,
   roboticsInfoPanel,
   openRoboticsPage,
   roboticsCard,
@@ -16,10 +19,11 @@ import {
 } from "../../fixtures/prova-page.ts";
 import { S } from "../../fixtures/selectors.ts";
 
-// Seconda pagina della stessa dashboard (nessuna navigazione: switchPage()
-// mostra/nasconde #page-tech e #page-robotics), rietichettata "Trend
-// strutturali" da 1fcb9c4 perché il paniere non è più solo robotica —
-// Vertiv è infrastruttura per data center AI.
+// Sotto-pagina di "Approfondimenti" (switchExplorePage() mostra/nasconde
+// #page-robotics dentro #page-explore — fino al 2026-10-30 era un tab di
+// primo livello, accorpata in 7639e24), rietichettata "Trend strutturali"
+// da 1fcb9c4 perché il paniere non è più solo robotica — Vertiv è
+// infrastruttura per data center AI.
 //
 // I dati vengono da data/robotics/<asset>/trend.jsonl, generati da
 // trend_run.py con cadenza mensile (trimestrale per Vertiv): un asset
@@ -27,28 +31,44 @@ import { S } from "../../fixtures/selectors.ts";
 // accettano sia la card popolata sia lo stato "nessuna analisi ancora
 // disponibile", mai un terzo esito.
 test.describe("AI Predictor — pagina Trend strutturali", () => {
-  test("le due pagine sono alternative: Tech attiva al caricamento, il tab porta ai trend", async ({
+  test("tre tab di primo livello: Trading AI attiva al caricamento, Tech e Approfondimenti (coi suoi trend) si raggiungono dai rispettivi tab", async ({
     page,
   }) => {
-    await gotoFresh(page);
-
-    await expect(pageTab(page, "tech")).toHaveClass(/active/);
-    await expect(pageTab(page, "robotics")).not.toHaveClass(/active/);
-    await expect(pageTab(page, "robotics")).toHaveText("Trend strutturali");
-    await expect(techPage(page)).toBeVisible();
-    await expect(roboticsPage(page)).toBeHidden();
-
-    await openRoboticsPage(page);
-    await expect(pageTab(page, "robotics")).toHaveClass(/active/);
+    // Qui serve il caricamento GREZZO della pagina (non gotoFresh(), che
+    // forza il tab Tech per tutti gli altri test di questa suite) per
+    // verificare DAVVERO quale pagina è attiva di default. Da 22b3301/
+    // 9a3a255 (2026-11-01) non è più Tech ma "Trading AI", diventata il
+    // cuore della navigazione — Tech e Approfondimenti sono le due
+    // pagine secondarie.
+    await page.goto(".");
+    await expect(pageTab(page, "aitrader")).toHaveClass(/active/);
     await expect(pageTab(page, "tech")).not.toHaveClass(/active/);
-    await expect(roboticsPage(page)).toBeVisible();
+    await expect(page.locator("#page-aitrader")).toBeVisible();
     await expect(techPage(page)).toBeHidden();
 
-    // E si torna indietro: i due tab sono un interruttore, non un vicolo
-    // cieco (la pagina Tech non viene ricostruita, solo rivelata).
+    await pageTab(page, "tech").click();
+    await expect(pageTab(page, "tech")).toHaveClass(/active/);
+    await expect(pageTab(page, "aitrader")).not.toHaveClass(/active/);
+    await expect(techPage(page)).toBeVisible();
+    await expect(page.locator("#page-aitrader")).toBeHidden();
+
+    // Approfondimenti si apre sulla sotto-pagina Trend strutturali di
+    // default (explore-btn-robotics già "active" in HTML): l'etichetta del
+    // sotto-tab è solo "Trend", non più "Trend strutturali" come quando
+    // era un tab di primo livello.
+    await pageTab(page, "explore").click();
+    await expect(pageTab(page, "explore")).toHaveClass(/active/);
+    await expect(techPage(page)).toBeHidden();
+    await expect(exploreSubTab(page, "robotics")).toHaveClass(/active/);
+    await expect(exploreSubTab(page, "robotics")).toHaveText("Trend");
+    await expect(roboticsPage(page)).toBeVisible();
+    await expect(reportPage(page)).toBeHidden();
+
+    // E si torna indietro: i tab sono un interruttore, non un vicolo
+    // cieco (le pagine non vengono ricostruite, solo rivelate/nascoste).
     await pageTab(page, "tech").click();
     await expect(techPage(page)).toBeVisible();
-    await expect(roboticsPage(page)).toBeHidden();
+    await expect(explorePage(page)).toBeHidden();
   });
 
   test("filtro asset: i cinque titoli del paniere, una card alla volta", async ({ page }) => {

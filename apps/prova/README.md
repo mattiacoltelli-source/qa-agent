@@ -17,17 +17,35 @@ generati da una pipeline Python schedulata con GitHub Actions — le
 previsioni vere e proprie non hanno nulla a che fare con questo repo di
 test.
 
-La stessa pagina ospita **due sistemi diversi**, su due tab alternativi
-(`switchPage()`: nessuna navigazione, solo `display:none`):
+La stessa pagina ospita **tre sistemi diversi**, su tre tab di primo
+livello (`switchPage()`: nessuna navigazione, solo `display:none` —
+`#tab-btn-aitrader`/`tech`/`explore` in fondo pagina, `86225fb`). **Da
+`22b3301`/`9a3a265` (2026-11-01) il tab attivo al caricamento è "Trading
+AI", non più "Tech"**: questo file e questa suite coprono solo gli ultimi
+due, il primo non ha ancora nessun test (vedi sotto).
 
+- **Trading AI** (`f838525` e seguenti, dal 2026-10-30) — esperimento di
+  trading automatico su un universo di ~58 titoli/crypto (AI reale +
+  due strategie di confronto, Momentum/Mean Reversion, via Alpaca paper
+  trading), con scanner di mercato, diario decisioni e grafico equity.
+  **Nessuna copertura di test in questa suite**: è un sistema grande e in
+  rapida evoluzione, scriverne la copertura è un lavoro a sé, non incluso
+  qui — vedi la nota in fondo al file.
 - **Tech (breve termine)** — il paniere sopra, con previsioni a 1g/7g/1m e
   la loro accuratezza misurata.
-- **Trend strutturali** (ex "Robotica", rietichettata con `1fcb9c4`) — una
-  lettura del regime di trend a 1-10 anni su THK, Harmonic Drive Systems,
-  Teradyne, Vertiv e nVent Electric (`NVT`, aggiunto il 2026-09-18), da
-  `data/robotics/<asset>/trend.jsonl`. Cadenza mensile (trimestrale solo
-  per Vertiv), nessun esito futuro da valutare: non è una previsione
-  puntuale, quindi non ha né accuratezza né `pending`.
+- **Approfondimenti** (`7639e24`, 2026-10-31: prima erano due tab di primo
+  livello) — sotto-navigazione interna (`switchExplorePage()`,
+  `#explore-btn-robotics`/`report`/`scanner`) su tre pagine:
+  - **Trend strutturali** (ex "Robotica", rietichettata con `1fcb9c4`) —
+    una lettura del regime di trend a 1-10 anni su THK, Harmonic Drive
+    Systems, Teradyne, Vertiv e nVent Electric (`NVT`, aggiunto il
+    2026-09-18), da `data/robotics/<asset>/trend.jsonl`. Cadenza mensile
+    (trimestrale solo per Vertiv), nessun esito futuro da valutare: non è
+    una previsione puntuale, quindi non ha né accuratezza né `pending`.
+    Attiva di default entrando in Approfondimenti.
+  - **Report** — vedi sotto.
+  - **Scanner** — segnali quantitativi in tempo reale sull'universo di
+    Trading AI. **Nessuna copertura di test**, stessa nota di Trading AI.
 
 ## Modello di sicurezza dei dati
 
@@ -170,9 +188,14 @@ canvas direttamente.
   `data/tradingview/fundamentals.json` (`df8b040`) — o la dichiarazione
   esplicita che sono nascosti perché lo snapshot ha più di 6 mesi
   (`17802cb`) o non è raggiungibile
+- Navigazione a tre tab di primo livello (Trading AI/Tech/Approfondimenti,
+  `22b3301`): Trading AI attiva al caricamento (non più Tech), gli altri
+  due si raggiungono dai rispettivi tab e restano un interruttore, non una
+  navigazione vera (le pagine non si ricostruiscono)
 - Pagina **"Trend strutturali"** (ex Robotica, rietichettata con
-  `1fcb9c4`): i due tab sono alternativi (Tech attiva al caricamento),
-  filtro con i cinque titoli del paniere (THK, Harmonic Drive, Teradyne,
+  `1fcb9c4`; da `7639e24` sotto-pagina di Approfondimenti invece di tab di
+  primo livello, attiva di default lì), filtro con i cinque titoli del
+  paniere (THK, Harmonic Drive, Teradyne,
   Vertiv, nVent Electric) una card alla volta, e per ogni card fase del
   ciclo, CAGR su 1/3/5/10 anni, storico correzioni dopo fasi simili, distanza da ATH e da
   massimo 52 settimane, "Storico Letture" richiudibile — oppure la
@@ -180,8 +203,8 @@ canvas direttamente.
   appena aggiunto, che è uno stato legittimo e non un errore di
   caricamento. Coperto anche il pannello "Come funziona questa pagina?"
   (paniere, cadenza mensile vs trimestrale per Vertiv, driver `^SOX`)
-- Pagina **"Report"** (`a83696d`, 2026-09-18): terzo tab, alternativo agli
-  altri due. Toggle "Paniere"/"S&P 500"/"Nasdaq" (`Paniere` attivo di
+- Pagina **"Report"** (`a83696d`, 2026-09-18; da `7639e24` sotto-pagina di
+  Approfondimenti). Toggle "Paniere"/"S&P 500"/"Nasdaq" (`Paniere` attivo di
   default), un blocco alla volta:
   - **Paniere**: sintesi mensile a livello di paniere (`c97a487`) che
     confronta i 5 titoli di Trend strutturali tra loro (nVent Electric

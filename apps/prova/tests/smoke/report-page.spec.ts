@@ -3,7 +3,9 @@ import {
   gotoFresh,
   pageTab,
   techPage,
+  explorePage,
   reportPage,
+  exploreSubTab,
   reportInfoPanel,
   openReportPage,
   reportFilterButton,
@@ -20,24 +22,24 @@ import {
 } from "../../fixtures/prova-page.ts";
 import { S } from "../../fixtures/selectors.ts";
 
-// Terza pagina della stessa dashboard (a83696d, 2026-09-18) — vedi il
+// Sotto-pagina di "Approfondimenti" (a83696d, 2026-09-18; fino al
+// 2026-10-30 tab di primo livello, accorpata in 7639e24) — vedi il
 // commento esteso sopra le funzioni "PAGINA REPORT" in fixtures/prova-page.ts
 // per come si relaziona alle altre due. Dati reali come il resto dell'app
 // (vedi README): questi test verificano comportamento e forma, mai un
 // valore o una direzione specifica.
 test.describe("AI Predictor — pagina Report", () => {
-  test("terza pagina alternativa alle altre due: Tech attiva al caricamento, il tab porta al Report", async ({
+  test("raggiungibile da Approfondimenti, alternativa a Tech e a Trend strutturali", async ({
     page,
   }) => {
     await gotoFresh(page);
 
-    await expect(pageTab(page, "report")).not.toHaveClass(/active/);
-    await expect(pageTab(page, "report")).toHaveText("Report");
     await expect(reportPage(page)).toBeHidden();
 
     await openReportPage(page);
-    await expect(pageTab(page, "report")).toHaveClass(/active/);
-    await expect(pageTab(page, "tech")).not.toHaveClass(/active/);
+    await expect(pageTab(page, "explore")).toHaveClass(/active/);
+    await expect(exploreSubTab(page, "report")).toHaveClass(/active/);
+    await expect(exploreSubTab(page, "report")).toHaveText("Report");
     await expect(reportPage(page)).toBeVisible();
     await expect(techPage(page)).toBeHidden();
 
@@ -45,7 +47,7 @@ test.describe("AI Predictor — pagina Report", () => {
     // nulla (la pagina resta nel DOM, solo display:none).
     await pageTab(page, "tech").click();
     await expect(techPage(page)).toBeVisible();
-    await expect(reportPage(page)).toBeHidden();
+    await expect(explorePage(page)).toBeHidden();
   });
 
   test('toggle "Paniere / S&P 500 / Nasdaq": un blocco alla volta, Paniere attivo di default', async ({

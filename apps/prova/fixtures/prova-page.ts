@@ -28,18 +28,26 @@ import { S } from "./selectors.ts";
 export const ASSETS = ["NVDA", "AAPL", "AMD", "MU"] as const;
 export type ProvaAsset = (typeof ASSETS)[number];
 
-/** Naviga sulla dashboard e aspetta che le card asset siano nel DOM.
- * renderAssetCards() gira sincrono al load; i dati veri (renderAssetData,
- * via fetch ai file JSONL) arrivano subito dopo in modo asincrono — i test
- * devono comunque aspettare gli elementi specifici che leggono, questo
- * helper garantisce solo che lo scheletro della pagina sia pronto.
+/** Naviga sulla dashboard, passa alla pagina "Tech" e aspetta che le card
+ * asset siano nel DOM. renderAssetCards() gira sincrono al load; i dati
+ * veri (renderAssetData, via fetch ai file JSONL) arrivano subito dopo in
+ * modo asincrono — i test devono comunque aspettare gli elementi specifici
+ * che leggono, questo helper garantisce solo che lo scheletro della pagina
+ * sia pronto.
  *
- * Attenzione: la pagina si apre SEMPRE sulla pagina "Tech" con il filtro
- * asset su ASSETS[0] (NVDA), quindi solo la sua card è visibile — le altre
- * sono nel DOM ma con display:none (vedi applyAssetFilter() in
- * Prova/index.html). Per lavorare su un altro asset serve selectAsset(). */
+ * Da 22b3301/9a3a255 (2026-11-01) la pagina si apre su "Trading AI"
+ * (#page-aitrader), diventata il cuore della navigazione — Tech non è più
+ * la pagina attiva al caricamento, per questo il click esplicito sotto.
+ * Il test che verifica DAVVERO quale pagina è attiva al caricamento (vedi
+ * trend-page.spec.ts) usa un page.goto(".") grezzo, non questo helper.
+ *
+ * Attenzione: la pagina Tech si apre SEMPRE col filtro asset su ASSETS[0]
+ * (NVDA), quindi solo la sua card è visibile — le altre sono nel DOM ma con
+ * display:none (vedi applyAssetFilter() in Prova/index.html). Per lavorare
+ * su un altro asset serve selectAsset(). */
 export async function gotoFresh(page: Page): Promise<void> {
   await page.goto(".");
+  await page.locator("#tab-btn-tech").click();
   await page.locator(S.assetsGridAssetCard).first().waitFor({ state: "visible", timeout: 10_000 });
 }
 
@@ -309,8 +317,9 @@ export function showAllButton(page: Page, asset: ProvaAsset, kind: ProvaTableKin
 }
 
 // ─── PAGINA "TREND STRUTTURALI" (ex Robotica) ──────────────────────────────
-// Seconda pagina della stessa dashboard (nessuna navigazione, solo
-// display:none su #page-tech/#page-robotics via switchPage()): legge
+// Sotto-pagina di "Approfondimenti" (fino al 2026-10-30 era un tab di primo
+// livello, accorpata in 7639e24): nessuna navigazione vera, solo
+// display:none su #page-robotics via switchExplorePage(). Legge
 // data/robotics/<asset>/trend.jsonl, un sistema separato da
 // predictions.jsonl (nessun esito futuro da valutare, solo l'ultima lettura
 // del regime di trend 1-10 anni).
@@ -327,7 +336,10 @@ export const ROBOTICS_ASSETS = [
 ] as const;
 export type ProvaRoboticsKey = (typeof ROBOTICS_ASSETS)[number]["key"];
 
-export function pageTab(page: Page, which: "tech" | "robotics" | "report"): Locator {
+/** I tre tab di primo livello (Trading AI/Tech/Approfondimenti, da
+ * 22b3301). "Trend strutturali" e "Report" non sono più tab di primo
+ * livello: sono sotto-pagine di "Approfondimenti", vedi exploreSubTab(). */
+export function pageTab(page: Page, which: "aitrader" | "tech" | "explore"): Locator {
   return page.locator(`#tab-btn-${which}`);
 }
 
@@ -335,14 +347,39 @@ export function techPage(page: Page): Locator {
   return page.locator("#page-tech");
 }
 
+export function explorePage(page: Page): Locator {
+  return page.locator("#page-explore");
+}
+
 export function roboticsPage(page: Page): Locator {
   return page.locator("#page-robotics");
 }
 
-/** Passa alla pagina "Trend strutturali" e aspetta che la prima card
- * (THK, primo asset del paniere) sia visibile. */
+/** Sotto-navigazione dentro "Approfondimenti" (Trend strutturali/Report/
+ * Scanner, accorpate il 2026-10-31 da tre tab separate — 7639e24):
+ * #explore-btn-robotics mostra ancora solo l'etichetta breve "Trend", non
+ * "Trend strutturali" (quella resta il testo del tab quando era di primo
+ * livello, vedi i commenti nei test). "Trend" è attiva di default appena
+ * si entra in Approfondimenti. */
+export function exploreSubTab(page: Page, which: "robotics" | "report" | "scanner"): Locator {
+  return page.locator(`#explore-btn-${which}`);
+}
+
+/** Passa a "Approfondimenti" (se non già lì) e aspetta che la prima card
+ * della pagina richiesta sia visibile. */
+async function openExploreSubPage(page: Page, which: "robotics" | "report" | "scanner"): Promise<void> {
+  if (!(await explorePage(page).isVisible())) {
+    await pageTab(page, "explore").click();
+  }
+  if (!(await exploreSubTab(page, which).evaluate((el) => el.classList.contains("active")))) {
+    await exploreSubTab(page, which).click();
+  }
+}
+
+/** Passa alla sotto-pagina "Trend strutturali" (dentro Approfondimenti) e
+ * aspetta che la prima card (THK, primo asset del paniere) sia visibile. */
 export async function openRoboticsPage(page: Page): Promise<void> {
-  await pageTab(page, "robotics").click();
+  await openExploreSubPage(page, "robotics");
   await roboticsCard(page, "THK").waitFor({ state: "visible", timeout: 10_000 });
 }
 
@@ -372,8 +409,9 @@ export function roboticsBody(page: Page, key: ProvaRoboticsKey): Locator {
 }
 
 // ─── PAGINA "REPORT" ────────────────────────────────────────────────────────
-// Terza pagina della stessa dashboard (a83696d, 2026-09-18): stesso
-// switchPage()/display:none delle altre due, mai una navigazione vera. Due
+// Sotto-pagina di "Approfondimenti" (a83696d, 2026-09-18; accorpata da tab
+// di primo livello in 7639e24 il 2026-10-30): stesso switchExplorePage()/
+// display:none della gemella Trend strutturali, mai una navigazione vera. Due
 // contenuti diversi dietro un toggle interno (#report-type-filter, come
 // #robotics-asset-filter ma su .report-section a livello pagina invece che
 // .asset-card per-asset):
@@ -415,11 +453,12 @@ export function reportSection(page: Page, key: ProvaReportType): Locator {
   return page.locator(`#report-${key.toLowerCase()}`);
 }
 
-/** Passa alla pagina "Report" e aspetta che sia visibile — i dati sono già
- * in caricamento da prima (vedi commento sopra), qui si aspetta solo lo
- * scheletro, stesso principio di gotoFresh()/openRoboticsPage(). */
+/** Passa alla sotto-pagina "Report" (dentro Approfondimenti) e aspetta che
+ * sia visibile — i dati sono già in caricamento da prima (vedi commento
+ * sopra), qui si aspetta solo lo scheletro, stesso principio di
+ * gotoFresh()/openRoboticsPage(). */
 export async function openReportPage(page: Page): Promise<void> {
-  await pageTab(page, "report").click();
+  await openExploreSubPage(page, "report");
   await reportPage(page).waitFor({ state: "visible", timeout: 10_000 });
 }
 
