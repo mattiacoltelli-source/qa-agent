@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-11-05T13:03:17.808Z",
+  "updatedAt": "2026-11-05T15:39:21.960Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -35,11 +35,11 @@
       "problems": [
         {
           "severity": "LOW",
-          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT) [best effort: non incide sullo stato]"
+          "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429 [best effort: non incide sullo stato]"
         }
       ],
-      "runAt": "2026-11-05T13:03:17.808Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42030855443"
+      "runAt": "2026-11-05T15:39:21.960Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42056062517"
     },
     "voicebrief": {
       "result": "PASS",
