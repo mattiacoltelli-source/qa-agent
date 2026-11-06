@@ -1,7 +1,7 @@
 {
   "agent": "qa",
   "label": "QA Agent",
-  "updatedAt": "2026-11-05T15:33:20.787Z",
+  "updatedAt": "2026-11-06T09:16:51.841Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -13,8 +13,8 @@
         "skipped": 22
       },
       "problems": [],
-      "runAt": "2026-11-05T12:53:21.515Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42030855443"
+      "runAt": "2026-11-06T09:16:51.841Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42193775307"
     },
     "spot": {
       "result": "PASS",
@@ -26,8 +26,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-11-05T12:53:21.515Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42030855443"
+      "runAt": "2026-11-06T09:16:51.841Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42193775307"
     },
     "prova": {
       "result": "FAIL",
@@ -56,8 +56,8 @@
           "message": "Test fallito: se Chart.js non si carica, le card restano leggibili: nessuna resta su \"Caricamento…\" — Error: expect(locator).toBeVisible() failed Locator: locator('#robotics-body-THK').locator('.chart-empty') Expected: visible Timeout: 5000ms Error: element(s) n…"
         }
       ],
-      "runAt": "2026-11-05T15:33:20.787Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42056062517"
+      "runAt": "2026-11-06T09:16:51.841Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42193775307"
     },
     "voicebrief": {
       "result": "PASS",
@@ -69,8 +69,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-11-05T12:53:21.515Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42030855443"
+      "runAt": "2026-11-06T09:16:51.841Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42193775307"
     }
   }
 }
