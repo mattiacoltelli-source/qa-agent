@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-11-07T16:32:17.912Z",
+  "updatedAt": "2026-11-07T20:59:17.228Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-07T16:32:17.912Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42390924417"
+      "runAt": "2026-11-07T20:59:17.228Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42412971133"
     },
     "spot": {
       "result": "PASS",
@@ -22,24 +22,19 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-07T16:32:17.912Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42390924417"
+      "runAt": "2026-11-07T20:59:17.228Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42412971133"
     },
     "prova": {
       "result": "PASS",
-      "summary": "5/6 endpoint ok",
+      "summary": "6/6 endpoint ok",
       "metrics": {
         "total": 6,
-        "failed": 1
+        "failed": 0
       },
-      "problems": [
-        {
-          "severity": "LOW",
-          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT) [best effort: non incide sullo stato]"
-        }
-      ],
-      "runAt": "2026-11-07T16:32:17.912Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42390924417"
+      "problems": [],
+      "runAt": "2026-11-07T20:59:17.228Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42412971133"
     },
     "voicebrief": {
       "result": "PASS",
@@ -49,8 +44,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-07T16:32:17.912Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42390924417"
+      "runAt": "2026-11-07T20:59:17.228Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42412971133"
     }
   }
 }
