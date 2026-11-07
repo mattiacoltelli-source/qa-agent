@@ -286,7 +286,13 @@ test.describe("AI Predictor — pagina Report", () => {
   test('se Chart.js non si carica, le card S&P 500/Nasdaq restano leggibili: nessuna resta su "Caricamento…" (stessa regressione di Trend strutturali, f97653f)', async ({
     page,
   }) => {
+    // Dal 2026-11-05 jsdelivr da solo non basta più a simulare "Chart.js
+    // assente": la pagina ripiega da sola su cdnjs se `typeof Chart ===
+    // 'undefined'` dopo il primo <script> (16 "Chart is not defined"
+    // segnalati da Sentry quel giorno) — vedi lo stesso commento esteso in
+    // trend-page.spec.ts. Va bloccato anche il CDN di ripiego.
     await page.route(/cdn\.jsdelivr\.net/, (route) => route.abort());
+    await page.route(/cdnjs\.cloudflare\.com/, (route) => route.abort());
     await gotoFresh(page);
     await openReportPage(page);
 

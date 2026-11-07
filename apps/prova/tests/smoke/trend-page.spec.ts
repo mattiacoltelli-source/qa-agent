@@ -150,7 +150,14 @@ test.describe("AI Predictor — pagina Trend strutturali", () => {
     // "Caricamento…", per sempre e senza messaggio. Bloccare il CDN qui
     // riproduce esattamente quel caso — che in produzione capita quando
     // jsdelivr è irraggiungibile, non solo in un sandbox.
+    //
+    // Dal 2026-11-05 jsdelivr da solo non basta più: la pagina ripiega da
+    // sola su cdnjs se `typeof Chart === 'undefined'` dopo il primo
+    // <script> (16 "Chart is not defined" segnalati da Sentry quel giorno),
+    // quindi va bloccato anche il CDN di ripiego perché Chart.js resti
+    // DAVVERO assente, come intende questo test.
     await page.route(/cdn\.jsdelivr\.net/, (route) => route.abort());
+    await page.route(/cdnjs\.cloudflare\.com/, (route) => route.abort());
     await gotoFresh(page);
     await openRoboticsPage(page);
 
