@@ -1,20 +1,41 @@
 {
   "agent": "qa",
   "label": "QA Agent",
-  "updatedAt": "2026-11-11T09:14:25.663Z",
+  "updatedAt": "2026-11-12T09:43:14.292Z",
   "apps": {
     "cinetracker": {
-      "result": "PASS",
-      "summary": "82 passati · 0 falliti",
+      "result": "FAIL",
+      "summary": "74 passati · 8 falliti",
       "metrics": {
-        "passed": 82,
-        "failed": 0,
+        "passed": 74,
+        "failed": 8,
         "flaky": 0,
         "skipped": 22
       },
-      "problems": [],
-      "runAt": "2026-11-11T09:14:25.663Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42993416599"
+      "problems": [
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: la bottom nav espone le 4 sezioni Home/Statistiche/Stasera/Report — Error: expect(locator).toHaveCount(expected) failed Locator: locator('.nav__btn[data-screen]') Expected: 4 Received: 3 Timeout: 5000ms Call log: - Expect \"toHav…"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: la bottom nav espone le 4 sezioni Home/Statistiche/Stasera/Report — Error: expect(locator).toHaveCount(expected) failed Locator: locator('.nav__btn[data-screen]') Expected: 4 Received: 3 Timeout: 5000ms Call log: - Expect \"toHav…"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: il pulsante consigli produce sempre un esito valido, mai un errore silenzioso o un caricamento infinito — Test timeout of 30000ms exceeded while running \"beforeEach\" hook. 12 | // invece di assumerne uno specifico — comunque a sola lettura. 13 | test.describe(\"CineT…"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: il pulsante consigli produce sempre un esito valido, mai un errore silenzioso o un caricamento infinito — Test timeout of 30000ms exceeded while running \"beforeEach\" hook. 12 | // invece di assumerne uno specifico — comunque a sola lettura. 13 | test.describe(\"CineT…"
+        },
+        {
+          "severity": "HIGH",
+          "message": "Test fallito: Scopri qualcosa di nuovo produce sempre un esito valido, mai un errore silenzioso o un caricamento infinito — Test timeout of 30000ms exceeded while running \"beforeEach\" hook. 12 | // invece di assumerne uno specifico — comunque a sola lettura. 13 | test.describe(\"CineT…"
+        }
+      ],
+      "runAt": "2026-11-12T09:43:14.292Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
     },
     "spot": {
       "result": "PASS",
@@ -26,8 +47,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-11-11T09:14:25.663Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42993416599"
+      "runAt": "2026-11-12T09:43:14.292Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
     },
     "prova": {
       "result": "PASS",
@@ -39,8 +60,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-11-11T09:14:25.663Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42993416599"
+      "runAt": "2026-11-12T09:43:14.292Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
     },
     "voicebrief": {
       "result": "PASS",
@@ -52,8 +73,8 @@
         "skipped": 0
       },
       "problems": [],
-      "runAt": "2026-11-11T09:14:25.663Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/42993416599"
+      "runAt": "2026-11-12T09:43:14.292Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
     }
   }
 }
