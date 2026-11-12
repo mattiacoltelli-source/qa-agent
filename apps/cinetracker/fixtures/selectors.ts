@@ -47,6 +47,7 @@ export const S = {
   genreViewToggleGenreViewBtnBars: "#genreViewToggle .genre-view-btn[data-genre-view=\"bars\"]",
   genreViewToggleGenreViewBtnBubbles: "#genreViewToggle .genre-view-btn[data-genre-view=\"bubbles\"]",
   libraryListListItem: "#libraryList .list-item",
+  navBtn: ".nav__btn",
   navBtnScreen: ".nav__btn[data-screen]",
   navBtnScreenHome: ".nav__btn[data-screen=\"home\"]",
   navBtnScreenStats: ".nav__btn[data-screen=\"stats\"]",

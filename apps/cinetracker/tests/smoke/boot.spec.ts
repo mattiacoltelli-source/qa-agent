@@ -14,13 +14,22 @@ test.describe("CineTracker — avvio", () => {
   );
 
   // Da 52c529c: "Backup" non ha più un tasto in nav (spostato dietro il
-  // gesto nascosto dei 7 tap, vedi openBackupViaSecretGesture) — il 4°
-  // tab è "Report". L'assert stesso (conteggio 4 bottoni data-screen)
-  // restava comunque vero, era solo il titolo del test a essere rimasto
-  // indietro.
-  test("la bottom nav espone le 4 sezioni Home/Statistiche/Stasera/Report", async ({ page }) => {
+  // gesto nascosto dei 7 tap, vedi openBackupViaSecretGesture).
+  //
+  // Da Cos90 7cfd417 (2026-11-12): "Stasera" non ha più un tasto in nav,
+  // sostituito da "Stanze" (porta a stanze.html, una pagina separata —
+  // location.href, non uno switchScreen interno, quindi niente attributo
+  // data-screen). Contare S.navBtnScreen (".nav__btn[data-screen]", le
+  // sole sezioni interne della SPA) darebbe 3, non 4: per questo qui si
+  // conta S.navBtn (".nav__btn", tutti i bottoni della barra) e si
+  // verificano le quattro etichette una per una — un conteggio generico
+  // da solo non direbbe SE sia sparita una sezione attesa o comparsa una
+  // in più al posto di un'altra.
+  test("la bottom nav espone le 4 sezioni Home/Statistiche/Stanze/Report", async ({ page }) => {
     await gotoFresh(page);
-    await expect(page.locator(S.navBtnScreen)).toHaveCount(4);
+    const buttons = page.locator(S.navBtn);
+    await expect(buttons).toHaveCount(4);
+    await expect(buttons).toContainText(["Home", "Statistiche", "Stanze", "Report"]);
   });
 
   test("le shelf vuote mostrano lo stato vuoto invece di una lista vuota silenziosa", async ({ page }) => {

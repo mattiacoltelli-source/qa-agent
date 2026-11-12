@@ -66,12 +66,23 @@ hardcoded nel bundle JS, come in CineFighi.
   `64ee2a2` (listener riagganciato a ogni `renderStats()`: il click
   espandeva e richiudeva nello stesso istante, quindi il bottone era inerte
   dalla seconda apertura in poi)
-- "Stasera cosa guardo": consigli personalizzati (`#recommendBtn`), "Scopri
+- "Stasera cosa guardo" (`tonight.spec.ts`, **SOSPESA da Cos90 `7cfd417`,
+  2026-11-12**): consigli personalizzati (`#recommendBtn`), "Scopri
   qualcosa di nuovo" con filtro genere (`#genreSelect`, `#discoverBtn`) e
   "Rivedi un classico" tra i titoli votati ≥7 (`#classicBtn`) — nessuno dei
   tre mocka la libreria: stessa scelta di leggere lo storico voti REALE
   (single-user, vedi sopra), verificando che l'app gestisca bene entrambi
-  gli stati possibili invece di assumerne uno
+  gli stati possibili invece di assumerne uno. Il bottone nav che portava a
+  questa schermata è stato sostituito da "Stanze" (vedi sotto): schermo e
+  logica restano in app.js/ui.js ma nessun utente reale può più
+  raggiungerli dalla UI, quindi la suite è sospesa (non cancellata) finché
+  non torna raggiungibile — vedi il commento esteso nel file di test.
+- **"Stanze"** (`navRooms` → `stanze.html`, da Cos90 `#27`/`7cfd417`):
+  esperienza 3D separata (porte e corridoi per genere, con voti e texture
+  dedicate) che ha preso il posto di "Stasera" nella barra di navigazione.
+  **Nessuna copertura di test**: è una pagina a sé, grande e nuova — vale
+  lo stesso principio di "Trading AI"/"Scanner" nel README di Prova,
+  scriverne la copertura è un lavoro a parte, non incluso qui
 - Watchlist e visti **in ordine cronologico, più recenti per primi**
   (`0ebf3b3`, come in CineFighi): sia nelle shelf della home sia in "Vedi
   tutto", con righe Supabase mockate deliberatamente fuori ordine per

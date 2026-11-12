@@ -10,7 +10,22 @@ import { S } from "../../fixtures/selectors.ts";
 // l'app gestisca bene ENTRAMBI gli stati possibili (libreria sotto i 3
 // titoli visti → invito ad aggiungerne di più; sopra soglia → 6 consigli),
 // invece di assumerne uno specifico — comunque a sola lettura.
-test.describe("CineTracker — Stasera cosa guardo (TMDB discover live)", () => {
+//
+// SOSPESA da Cos90 7cfd417 (2026-11-12, "Stanze: ... al posto di Stasera
+// nella barra"): il bottone nav che portava a #screen-tonight è stato
+// sostituito da #navRooms (porta a stanze.html, pagina separata). Schermo
+// e logica (#screen-tonight, switchScreen('tonight'), recommendBtn/
+// discoverBtn/classicBtn) restano intatti in app.js/ui.js — commento
+// dell'autore: "schermata e codice restano, vedi branch
+// backup/cinetracker-v1" — ma non c'è più NESSUN modo per un utente reale
+// di raggiungerli dalla UI. Richiamare switchScreen('tonight') via JS dal
+// test aggirerebbe esattamente quello che l'app oggi impedisce, il
+// contrario di "comportamento reale" che questa suite cerca ovunque
+// altrove — quindi sospesa (non cancellata: la copertura vale ancora se
+// "Stasera" torna raggiungibile) invece di far perdere tempo a un
+// fallimento che non segnala un bug, o di testare un percorso che nessun
+// utente può più percorrere.
+test.describe.skip("CineTracker — Stasera cosa guardo (TMDB discover live) — SOSPESA, vedi commento sopra", () => {
   test.beforeEach(async ({ page }) => {
     await gotoFresh(page);
     await openScreen(page, "tonight");
