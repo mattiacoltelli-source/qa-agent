@@ -1,7 +1,7 @@
 {
   "agent": "performance",
   "label": "Performance Agent",
-  "updatedAt": "2026-11-12T09:56:15.618Z",
+  "updatedAt": "2026-11-13T09:34:34.757Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -13,8 +13,8 @@
         "seo": 91
       },
       "problems": [],
-      "runAt": "2026-11-12T09:56:15.618Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
+      "runAt": "2026-11-13T09:34:34.757Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
     },
     "spot": {
       "result": "PASS",
@@ -26,8 +26,8 @@
         "seo": 90
       },
       "problems": [],
-      "runAt": "2026-11-12T09:56:15.618Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
+      "runAt": "2026-11-13T09:34:34.757Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
     }
   }
 }
