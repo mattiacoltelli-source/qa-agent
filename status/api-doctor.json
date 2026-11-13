@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-11-12T09:56:52.097Z",
+  "updatedAt": "2026-11-13T09:35:34.952Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,19 +11,24 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-12T09:56:52.097Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
+      "runAt": "2026-11-13T09:35:34.952Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
     },
     "spot": {
-      "result": "PASS",
-      "summary": "3/3 endpoint ok",
+      "result": "INFRA_ERROR",
+      "summary": "2/3 endpoint ok",
       "metrics": {
         "total": 3,
-        "failed": 0
+        "failed": 1
       },
-      "problems": [],
-      "runAt": "2026-11-12T09:56:52.097Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
+      "problems": [
+        {
+          "severity": "LOW",
+          "message": "Meteo (Open-Meteo forecast): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT)"
+        }
+      ],
+      "runAt": "2026-11-13T09:35:34.952Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
     },
     "prova": {
       "result": "PASS",
@@ -38,8 +43,8 @@
           "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429 [best effort: non incide sullo stato]"
         }
       ],
-      "runAt": "2026-11-12T09:56:52.097Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
+      "runAt": "2026-11-13T09:35:34.952Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
     },
     "voicebrief": {
       "result": "PASS",
@@ -49,8 +54,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-12T09:56:52.097Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43193870887"
+      "runAt": "2026-11-13T09:35:34.952Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
     }
   }
 }
