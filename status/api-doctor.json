@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-11-13T09:35:34.952Z",
+  "updatedAt": "2026-11-14T09:05:00.918Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-13T09:35:34.952Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
+      "runAt": "2026-11-14T09:05:00.918Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43577942991"
     },
     "spot": {
       "result": "INFRA_ERROR",
@@ -27,8 +27,8 @@
           "message": "Meteo (Open-Meteo forecast): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT)"
         }
       ],
-      "runAt": "2026-11-13T09:35:34.952Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
+      "runAt": "2026-11-14T09:05:00.918Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43577942991"
     },
     "prova": {
       "result": "PASS",
@@ -43,8 +43,8 @@
           "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429 [best effort: non incide sullo stato]"
         }
       ],
-      "runAt": "2026-11-13T09:35:34.952Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
+      "runAt": "2026-11-14T09:05:00.918Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43577942991"
     },
     "voicebrief": {
       "result": "PASS",
@@ -54,8 +54,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-13T09:35:34.952Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43401157331"
+      "runAt": "2026-11-14T09:05:00.918Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43577942991"
     }
   }
 }
