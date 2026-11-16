@@ -1,7 +1,7 @@
 {
   "agent": "sentry",
   "label": "Errori (Sentry)",
-  "updatedAt": "2026-11-15T09:22:49.154Z",
+  "updatedAt": "2026-11-16T09:37:32.074Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,8 +11,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-11-15T09:22:49.154Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43698041584"
+      "runAt": "2026-11-16T09:37:32.074Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43839974472"
     },
     "spot": {
       "result": "PASS",
@@ -22,8 +22,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-11-15T09:22:49.154Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43698041584"
+      "runAt": "2026-11-16T09:37:32.074Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43839974472"
     },
     "prova": {
       "result": "PASS",
@@ -33,8 +33,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-11-15T09:22:49.154Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43698041584"
+      "runAt": "2026-11-16T09:37:32.074Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43839974472"
     },
     "control-center": {
       "result": "PASS",
@@ -44,8 +44,8 @@
         "eventi": 0
       },
       "problems": [],
-      "runAt": "2026-11-15T09:22:49.154Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43698041584"
+      "runAt": "2026-11-16T09:37:32.074Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/43839974472"
     }
   }
 }
