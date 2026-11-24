@@ -16,7 +16,8 @@ export async function checks() {
   const results = [];
 
   const forecast = await fetchJson(
-    `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,windspeed_10m&forecast_days=1&timezone=auto`
+    `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,windspeed_10m&forecast_days=1&timezone=auto`,
+    { retryWhenRefused: true }
   );
   results.push({
     name: "Meteo (Open-Meteo forecast)",
