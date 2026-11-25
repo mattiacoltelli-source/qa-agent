@@ -1,7 +1,7 @@
 {
   "agent": "api-doctor",
   "label": "API Doctor Agent",
-  "updatedAt": "2026-11-24T12:32:06.606Z",
+  "updatedAt": "2026-11-25T11:18:34.010Z",
   "apps": {
     "cinetracker": {
       "result": "PASS",
@@ -11,24 +11,19 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-24T12:32:06.606Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45392649424"
+      "runAt": "2026-11-25T11:18:34.010Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45601819305"
     },
     "spot": {
-      "result": "INFRA_ERROR",
-      "summary": "2/3 endpoint ok",
+      "result": "PASS",
+      "summary": "3/3 endpoint ok",
       "metrics": {
         "total": 3,
-        "failed": 1
+        "failed": 0
       },
-      "problems": [
-        {
-          "severity": "LOW",
-          "message": "Meteo (Open-Meteo forecast): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT)"
-        }
-      ],
-      "runAt": "2026-11-24T12:32:06.606Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45392649424"
+      "problems": [],
+      "runAt": "2026-11-25T11:18:34.010Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45601819305"
     },
     "prova": {
       "result": "PASS",
@@ -40,11 +35,11 @@
       "problems": [
         {
           "severity": "LOW",
-          "message": "News (GDELT, NVDA): INFRA_ERROR — Errore di rete: fetch failed (UND_ERR_CONNECT_TIMEOUT) [best effort: non incide sullo stato]"
+          "message": "News (GDELT, NVDA): INFRA_ERROR (HTTP 429) — HTTP 429 [best effort: non incide sullo stato]"
         }
       ],
-      "runAt": "2026-11-24T12:32:06.606Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45392649424"
+      "runAt": "2026-11-25T11:18:34.010Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45601819305"
     },
     "voicebrief": {
       "result": "PASS",
@@ -54,8 +49,8 @@
         "failed": 0
       },
       "problems": [],
-      "runAt": "2026-11-24T12:32:06.606Z",
-      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45392649424"
+      "runAt": "2026-11-25T11:18:34.010Z",
+      "runUrl": "https://github.com/mattiacoltelli-source/qa-agent/actions/runs/45601819305"
     }
   }
 }
